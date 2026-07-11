@@ -26,15 +26,22 @@ import {
   Terminal,
   Cpu,
   Database,
+  BookOpen,
+  Sparkles,
+  Bot,
 } from 'lucide-react';
+import { AgentPanel } from './components/AgentPanel';
 import { ConstructionPanel } from './components/ConstructionPanel';
+import { EnrichmentPanel } from './components/EnrichmentPanel';
 import { GraphCanvas } from './components/GraphCanvas';
 import { GraphsPopover } from './components/GraphsPopover';
 import { HistoryPopover } from './components/HistoryPopover';
 import { IngestPanel } from './components/IngestPanel';
 import { LlmPanel } from './components/LlmPanel';
+import { OntologyPanel } from './components/OntologyPanel';
 import { QueryPanel } from './components/QueryPanel';
 import { ReasoningPanel } from './components/ReasoningPanel';
+import { TripleStorePanel } from './components/TripleStorePanel';
 import { api, type HealthResponse } from './lib/api';
 import { useGraphStore } from './stores/graphStore';
 
@@ -72,13 +79,14 @@ export function App() {
   const [leftWidth, setLeftWidth] = useState(DEFAULT_SIDEBAR);
   const [rightWidth, setRightWidth] = useState(DEFAULT_SIDEBAR);
   const [resizing, setResizing] = useState<'left' | 'right' | null>(null);
-  const [leftTab, setLeftTab] = useState<'ingest' | 'construct' | 'reason'>('ingest');
-  const [rightTab, setRightTab] = useState<'query' | 'llm'>('query');
+  const [leftTab, setLeftTab] = useState<'ingest' | 'construct' | 'reason' | 'enrich'>('ingest');
+  const [rightTab, setRightTab] = useState<'query' | 'triples' | 'ontology' | 'llm' | 'agent'>('query');
   const [showHistory, setShowHistory] = useState(false);
   const [showGraphs, setShowGraphs] = useState(false);
   const {
     nodes, edges, facts, rules, selectedNodeId, loading, iterations, autoRunning,
     loadGraph, loadHistory, loadRules, loadGraphs, loadOntology, selectNode, moveNode,
+    loadPendingFacts, loadApprovedFacts, pendingFacts,
   } = useGraphStore();
 
   useEffect(() => {
@@ -88,7 +96,9 @@ export function App() {
     void loadRules();
     void loadGraphs();
     void loadOntology();
-  }, [loadGraph, loadHistory, loadRules, loadGraphs, loadOntology]);
+    void loadPendingFacts();
+    void loadApprovedFacts();
+  }, [loadGraph, loadHistory, loadRules, loadGraphs, loadOntology, loadPendingFacts, loadApprovedFacts]);
 
   useEffect(() => {
     if (!resizing) return;
@@ -137,6 +147,16 @@ export function App() {
               <span className="font-mono text-[11px]">{facts.length} facts</span>
             </div>
           )}
+          {pendingFacts.length > 0 && (
+            <button
+              onClick={() => setLeftTab('enrich')}
+              className="flex items-center gap-1.5 text-violet-400 hover:text-violet-300 transition-colors"
+              title="Pending implicit facts awaiting review"
+            >
+              <Sparkles className="w-3 h-3" />
+              <span className="font-mono text-[11px]">{pendingFacts.length} pending</span>
+            </button>
+          )}
           {iterations > 0 && (
             <div className="flex items-center gap-1.5 text-zinc-400">
               <Zap className="w-3 h-3" />
@@ -179,6 +199,7 @@ export function App() {
                   { key: 'ingest' as const, icon: FileText, label: 'Ingest' },
                   { key: 'construct' as const, icon: Layers, label: 'Construct' },
                   { key: 'reason' as const, icon: Activity, label: 'Reason' },
+                  { key: 'enrich' as const, icon: Sparkles, label: 'Enrich' },
                 ]).map((tab) => (
                   <button
                     key={tab.key}
@@ -215,7 +236,15 @@ export function App() {
                 </button>
               </div>
               <div className="flex-1 overflow-hidden">
-                {leftTab === 'ingest' ? <IngestPanel /> : leftTab === 'construct' ? <ConstructionPanel /> : <ReasoningPanel />}
+                {leftTab === 'ingest' ? (
+                  <IngestPanel />
+                ) : leftTab === 'construct' ? (
+                  <ConstructionPanel />
+                ) : leftTab === 'reason' ? (
+                  <ReasoningPanel />
+                ) : (
+                  <EnrichmentPanel />
+                )}
               </div>
               <div
                 onMouseDown={() => setResizing('left')}
@@ -272,6 +301,22 @@ export function App() {
                   <Search className="w-2.5 h-2.5" /> Query
                 </button>
                 <button
+                  onClick={() => setRightTab('triples')}
+                  className={`flex-1 h-full text-[9px] font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-1 ${
+                    rightTab === 'triples' ? 'bg-white text-black' : 'text-zinc-500 hover:text-zinc-300'
+                  }`}
+                >
+                  <Database className="w-2.5 h-2.5" /> Triples
+                </button>
+                <button
+                  onClick={() => setRightTab('ontology')}
+                  className={`flex-1 h-full text-[9px] font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-1 ${
+                    rightTab === 'ontology' ? 'bg-white text-black' : 'text-zinc-500 hover:text-zinc-300'
+                  }`}
+                >
+                  <BookOpen className="w-2.5 h-2.5" /> Ontology
+                </button>
+                <button
                   onClick={() => setRightTab('llm')}
                   className={`flex-1 h-full text-[9px] font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-1 ${
                     rightTab === 'llm' ? 'bg-white text-black' : 'text-zinc-500 hover:text-zinc-300'
@@ -279,11 +324,31 @@ export function App() {
                 >
                   <Terminal className="w-2.5 h-2.5" /> LLM
                 </button>
+                <button
+                  onClick={() => setRightTab('agent')}
+                  className={`flex-1 h-full text-[9px] font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-1 ${
+                    rightTab === 'agent' ? 'bg-white text-black' : 'text-zinc-500 hover:text-zinc-300'
+                  }`}
+                >
+                  <Bot className="w-2.5 h-2.5" /> Agent
+                </button>
                 <button onClick={() => setRightCollapsed(true)} className="w-9 h-full flex items-center justify-center text-zinc-600 hover:text-zinc-300 transition-colors shrink-0">
                   <PanelRightClose className="w-4 h-4" />
                 </button>
               </div>
-              <div className="flex-1 overflow-hidden">{rightTab === 'query' ? <QueryPanel /> : <LlmPanel />}</div>
+              <div className="flex-1 overflow-hidden">
+                {rightTab === 'query' ? (
+                  <QueryPanel />
+                ) : rightTab === 'triples' ? (
+                  <TripleStorePanel />
+                ) : rightTab === 'ontology' ? (
+                  <OntologyPanel />
+                ) : rightTab === 'llm' ? (
+                  <LlmPanel />
+                ) : (
+                  <AgentPanel />
+                )}
+              </div>
             </>
           )}
         </div>

@@ -15,6 +15,7 @@ router = APIRouter(tags=["chat"])
 
 class ChatRequest(ApiModel):
     message: str
+    session_id: str | None = None
 
 
 class ChatResponse(ApiModel):
@@ -28,5 +29,8 @@ def chat(
     neo4j: Neo4jClient = Depends(get_neo4j),
     llm: LLMClient = Depends(get_llm),
 ) -> ChatResponse:
-    reply = chat_service.answer(neo4j=neo4j, llm=llm, graph_id=graph_id, message=request.message)
+    # Default: one continuous session per graph, so existing callers that don't
+    # send a session_id yet still get real conversational memory (PLAN.md §20 item 4).
+    session_id = request.session_id or f"{graph_id}:default"
+    reply = chat_service.answer(neo4j=neo4j, llm=llm, graph_id=graph_id, message=request.message, session_id=session_id)
     return ChatResponse(reply=reply)

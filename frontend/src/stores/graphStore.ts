@@ -4,10 +4,12 @@ import { create } from 'zustand';
 import { toast } from 'sonner';
 import {
   api,
+  type AgentIntent,
   type ApiEdge,
   type ApiNode,
   type DerivedFact,
   type GraphSummary,
+  type ImplicitFact,
   type IngestEvent,
   type QueryResultRow,
   type Rule,
@@ -22,6 +24,13 @@ export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
   content: string;
+}
+
+export interface AgentMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  intent?: AgentIntent;
 }
 
 const ACTIVE_GRAPH_KEY = 'neurosymbolic:activeGraphId';
@@ -65,10 +74,17 @@ interface GraphState {
   autoRunning: boolean;
   chatMessages: ChatMessage[];
   chatLoading: boolean;
+  agentMessages: AgentMessage[];
+  agentLoading: boolean;
   ontologyClasses: string[];
   ontologyProperties: string[];
   linkMode: string | null;
   linkSourceId: string | null;
+  pendingFacts: ImplicitFact[];
+  approvedFacts: ImplicitFact[];
+  enriching: boolean;
+  showCommunities: boolean;
+  detectingCommunities: boolean;
 
   loadGraph: () => Promise<void>;
   ingest: (text: string) => Promise<void>;
@@ -82,6 +98,7 @@ interface GraphState {
   startAutoRun: () => void;
   stopAutoRun: () => void;
   sendChatMessage: (text: string) => Promise<void>;
+  sendAgentMessage: (text: string) => Promise<void>;
   selectNode: (id: string | null) => void;
   moveNode: (id: string, x: number, y: number) => void;
   setQueryText: (text: string) => void;
@@ -95,6 +112,13 @@ interface GraphState {
   updateNodeMetadata: (nodeId: string, patch: { salience?: number; properties?: Record<string, string>; note?: string }) => Promise<void>;
   createRule: (rule: { name: string; edgeType: string; sourceType: string; targetType: string; threshold: number; weight?: number; description?: string }) => Promise<void>;
   deleteRule: (ruleId: string) => Promise<void>;
+  enrich: (text: string) => Promise<void>;
+  loadPendingFacts: () => Promise<void>;
+  loadApprovedFacts: () => Promise<void>;
+  approveFact: (factId: string) => Promise<void>;
+  rejectFact: (factId: string) => Promise<void>;
+  detectCommunities: () => Promise<void>;
+  toggleCommunities: () => void;
 }
 
 // Deterministic circular layout: the backend has no notion of position (it's
@@ -139,10 +163,17 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   autoRunning: false,
   chatMessages: [],
   chatLoading: false,
+  agentMessages: [],
+  agentLoading: false,
   ontologyClasses: [],
   ontologyProperties: [],
   linkMode: null,
   linkSourceId: null,
+  pendingFacts: [],
+  approvedFacts: [],
+  enriching: false,
+  showCommunities: false,
+  detectingCommunities: false,
 
   loadGraph: async () => {
     set({ loading: true, error: null });
@@ -209,8 +240,9 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     set({
       graphId, nodes: [], edges: [], facts: [], selectedNodeId: null,
       convergedBy: null, iterations: 0, history: [], chatMessages: [],
+      pendingFacts: [], approvedFacts: [], showCommunities: false, agentMessages: [],
     });
-    await Promise.all([get().loadGraph(), get().loadHistory()]);
+    await Promise.all([get().loadGraph(), get().loadHistory(), get().loadPendingFacts(), get().loadApprovedFacts()]);
   },
 
   reason: async () => {
@@ -255,6 +287,21 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       set({ chatMessages: [...get().chatMessages, assistantMsg], chatLoading: false });
     } catch (e) {
       set({ chatLoading: false });
+      toast.error(String(e));
+    }
+  },
+
+  sendAgentMessage: async (text: string) => {
+    const userMsg: AgentMessage = { id: `u-${Date.now()}`, role: 'user', content: text };
+    set({ agentMessages: [...get().agentMessages, userMsg], agentLoading: true });
+    try {
+      const res = await api.runAgent(get().graphId, text);
+      const assistantMsg: AgentMessage = { id: `a-${Date.now()}`, role: 'assistant', content: res.reply, intent: res.intent };
+      set({ agentMessages: [...get().agentMessages, assistantMsg], agentLoading: false });
+      // extract/enrich/reason intents mutate real Neo4j state -- refresh.
+      await Promise.all([get().loadGraph(), get().loadPendingFacts(), get().loadHistory(), get().loadGraphs()]);
+    } catch (e) {
+      set({ agentLoading: false });
       toast.error(String(e));
     }
   },
@@ -350,4 +397,69 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       toast.error(String(e));
     }
   },
+
+  enrich: async (text: string) => {
+    set({ enriching: true });
+    try {
+      const res = await api.enrich(get().graphId, text);
+      toast.success(`Found ${res.facts.length} implicit facts across ${new Set(res.facts.map((f) => f.heuristicType)).size} heuristics`);
+      set({ enriching: false });
+      await get().loadPendingFacts();
+    } catch (e) {
+      set({ enriching: false });
+      toast.error(String(e));
+    }
+  },
+
+  loadPendingFacts: async () => {
+    try {
+      const res = await api.getPendingFacts(get().graphId);
+      set({ pendingFacts: res.facts });
+    } catch (e) {
+      toast.error(String(e));
+    }
+  },
+
+  loadApprovedFacts: async () => {
+    try {
+      const res = await api.getApprovedFacts(get().graphId);
+      set({ approvedFacts: res.facts });
+    } catch (e) {
+      toast.error(String(e));
+    }
+  },
+
+  approveFact: async (factId: string) => {
+    try {
+      await api.approveFact(get().graphId, factId);
+      await Promise.all([get().loadPendingFacts(), get().loadApprovedFacts()]);
+    } catch (e) {
+      toast.error(String(e));
+    }
+  },
+
+  rejectFact: async (factId: string) => {
+    try {
+      await api.rejectFact(get().graphId, factId);
+      await get().loadPendingFacts();
+    } catch (e) {
+      toast.error(String(e));
+    }
+  },
+
+  detectCommunities: async () => {
+    set({ detectingCommunities: true });
+    try {
+      const res = await api.detectCommunities(get().graphId);
+      const communityCount = new Set(res.members.map((m) => m.communityId)).size;
+      toast.success(`Found ${communityCount} communities across ${res.members.length} entities`);
+      set({ detectingCommunities: false, showCommunities: true });
+      await get().loadGraph(); // refresh so nodes carry the new communityId
+    } catch (e) {
+      set({ detectingCommunities: false });
+      toast.error(String(e));
+    }
+  },
+
+  toggleCommunities: () => set({ showCommunities: !get().showCommunities }),
 }));

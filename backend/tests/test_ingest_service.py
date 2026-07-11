@@ -15,7 +15,7 @@ import pytest
 from app.config import get_settings
 from db.graphdb_client import GraphDBClient
 from db.neo4j_client import Neo4jClient
-from services import history_service
+from services import graph_service, history_service
 from services.ingest_service import ingest_text
 
 
@@ -101,3 +101,80 @@ def test_ingest_records_reviewable_history(services):
     assert events[0].text == "Acme Corp issued preferred stock."
     assert events[0].entity_count == 2
     assert events[0].relationship_count == 1
+
+
+def test_ingest_links_provenance_for_produced_entities_and_edges(services):
+    """PLAN.md §20 item 1: the real ingest path (not just the service function in
+    isolation) links IngestEvent-[:PRODUCED]->Entity and stamps producedByEventId
+    on the RELATES edge it creates."""
+    neo4j, graphdb, settings, graph_id = services
+    llm = FakeLLM(_PAYLOAD)
+
+    record, _ = ingest_text(
+        neo4j=neo4j, graphdb=graphdb, llm=llm, graph_id=graph_id,
+        text="Acme Corp issued preferred stock.", source_doc="d1", repository=settings.graphdb_repository,
+    )
+
+    events = history_service.list_ingest_events(neo4j, graph_id)
+    event_id = events[0].id
+    produced = history_service.get_produced_entity_ids(neo4j, graph_id=graph_id, event_id=event_id)
+    assert set(produced) == {n.id for n in record.nodes}
+
+    edge = graph_service.get_graph(neo4j, graph_id).edges[0]
+    assert edge.produced_by_event_id == event_id
+    assert edge.valid_at is not None
+
+
+def test_ingest_passes_extra_guidance_through_to_extraction(services):
+    """PLAN.md §13.2: the agent's extractor node loads the kg-extraction
+    runtime skill and threads its content through ingest_text -> extract."""
+    neo4j, graphdb, settings, graph_id = services
+
+    class CapturingFakeLLM(FakeLLM):
+        def __init__(self, response: str) -> None:
+            super().__init__(response)
+            self.all_systems: list[str] = []
+
+        def complete_json(self, *, system: str, user: str, temperature: float = 0.0) -> str:
+            self.all_systems.append(system)
+            return super().complete_json(system=system, user=user, temperature=temperature)
+
+    llm = CapturingFakeLLM(_PAYLOAD)
+
+    ingest_text(
+        neo4j=neo4j, graphdb=graphdb, llm=llm, graph_id=graph_id,
+        text="Acme Corp issued preferred stock.", source_doc="d1", repository=settings.graphdb_repository,
+        extra_guidance="Prefer precision over recall.",
+    )
+
+    assert any("Prefer precision over recall." in s for s in llm.all_systems)
+
+
+def test_ingest_generates_and_accumulates_entity_summaries(services):
+    """PLAN.md §20 item 3: a real LLM call synthesizes existing summary + new
+    source text into an updated summary, each time an entity is re-mentioned."""
+    neo4j, graphdb, settings, graph_id = services
+
+    class SummaryAwareFakeLLM:
+        """Extraction and summary generation both go through complete_json, so
+        this fakes both: extraction payload for the 'entities'/'relationships'
+        JSON call, a fixed summary string for anything else."""
+
+        def complete_json(self, *, system: str, user: str, temperature: float = 0.0) -> str:
+            if "Existing summary" in user:
+                marker = "New source text mentioning this entity:\n"
+                start = user.index(marker) + len(marker)
+                end = user.index("\n\nWrite one updated summary")
+                return f"Summary based on: {user[start:end]}"
+            return _PAYLOAD
+
+    llm = SummaryAwareFakeLLM()
+
+    record, _ = ingest_text(
+        neo4j=neo4j, graphdb=graphdb, llm=llm, graph_id=graph_id,
+        text="Acme Corp issued preferred stock.", source_doc="d1", repository=settings.graphdb_repository,
+    )
+
+    acme = next(n for n in record.nodes if n.label == "Acme Corp")
+    assert acme.summary != ""
+    assert "Acme Corp issued preferred stock." in acme.summary

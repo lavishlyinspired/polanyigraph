@@ -10,7 +10,7 @@ duplicating.
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.config import Settings, get_settings
 from app.dependencies import get_graphdb, get_neo4j
@@ -18,7 +18,7 @@ from app.schemas import ApiModel
 from db.graphdb_client import GraphDBClient
 from db.neo4j_client import Neo4jClient
 from ontology.loader import load_schema
-from services import graph_service
+from services import community_service, graph_service, history_service
 from services.ids import edge_id as make_edge_id
 from services.ids import entity_id as make_entity_id
 
@@ -35,6 +35,8 @@ class NodeResponse(ApiModel):
     salience: float = 1.0
     properties: dict[str, str] = {}
     note: str = ""
+    summary: str = ""
+    community_id: int | None = None
 
 
 class EdgeResponse(ApiModel):
@@ -43,11 +45,28 @@ class EdgeResponse(ApiModel):
     target: str
     type: str
     weight: float = 1.0
+    valid_at: str | None = None
+    invalid_at: str | None = None
+    produced_by_event_id: str | None = None
 
 
 class GraphResponse(ApiModel):
     nodes: list[NodeResponse]
     edges: list[EdgeResponse]
+
+
+class GraphEdgesResponse(ApiModel):
+    edges: list[EdgeResponse]
+
+
+class IngestEventSummary(ApiModel):
+    id: str
+    text: str
+    created_at: str
+
+
+class NodeProvenanceResponse(ApiModel):
+    events: list[IngestEventSummary]
 
 
 @router.get("/graph/{graph_id}", response_model=GraphResponse, response_model_by_alias=True)
@@ -58,11 +77,47 @@ def get_graph(graph_id: str, neo4j: Neo4jClient = Depends(get_neo4j)) -> GraphRe
             NodeResponse(
                 id=n.id, label=n.label, type=n.type,
                 activation=n.activation, derived=n.derived, source_doc=n.source_doc,
-                salience=n.salience, properties=n.properties, note=n.note,
+                salience=n.salience, properties=n.properties, note=n.note, summary=n.summary,
+                community_id=n.community_id,
             )
             for n in record.nodes
         ],
-        edges=[EdgeResponse(id=e.id, source=e.source, target=e.target, type=e.type, weight=e.weight) for e in record.edges],
+        edges=[
+            EdgeResponse(
+                id=e.id, source=e.source, target=e.target, type=e.type, weight=e.weight,
+                valid_at=e.valid_at, invalid_at=e.invalid_at, produced_by_event_id=e.produced_by_event_id,
+            )
+            for e in record.edges
+        ],
+    )
+
+
+@router.get("/graph/{graph_id}/nodes/{node_id}/provenance", response_model=NodeProvenanceResponse, response_model_by_alias=True)
+def get_node_provenance(graph_id: str, node_id: str, neo4j: Neo4jClient = Depends(get_neo4j)) -> NodeProvenanceResponse:
+    events = history_service.get_entity_provenance(neo4j, graph_id=graph_id, entity_id=node_id)
+    return NodeProvenanceResponse(
+        events=[IngestEventSummary(id=e.id, text=e.text, created_at=e.created_at) for e in events]
+    )
+
+
+@router.get("/graph/{graph_id}/relationships/history", response_model=GraphEdgesResponse, response_model_by_alias=True)
+def get_relationship_history(
+    graph_id: str,
+    source_id: str = Query(alias="sourceId"),
+    type_: str = Query(alias="type"),
+    neo4j: Neo4jClient = Depends(get_neo4j),
+) -> "GraphEdgesResponse":
+    """UI_PLAN.md §9.2.2: current + invalidated edges for a (source, relation
+    type), for a fact-history/timeline view -- get_graph() stays current-only."""
+    edges = graph_service.get_relationship_history(neo4j, graph_id=graph_id, source_id=source_id, type_=type_)
+    return GraphEdgesResponse(
+        edges=[
+            EdgeResponse(
+                id=e.id, source=e.source, target=e.target, type=e.type, weight=e.weight,
+                valid_at=e.valid_at, invalid_at=e.invalid_at, produced_by_event_id=e.produced_by_event_id,
+            )
+            for e in edges
+        ]
     )
 
 
@@ -99,6 +154,7 @@ def add_node(
     return NodeResponse(
         id=node.id, label=node.label, type=node.type, activation=node.activation, derived=node.derived,
         source_doc=node.source_doc, salience=node.salience, properties=node.properties, note=node.note,
+        summary=node.summary, community_id=node.community_id,
     )
 
 
@@ -126,6 +182,7 @@ def update_node(
     return NodeResponse(
         id=node.id, label=node.label, type=node.type, activation=node.activation, derived=node.derived,
         source_doc=node.source_doc, salience=node.salience, properties=node.properties, note=node.note,
+        summary=node.summary, community_id=node.community_id,
     )
 
 
@@ -153,5 +210,40 @@ def add_edge(
     graph_service.upsert_relationship(
         neo4j, graph_id=graph_id, edge_id=edge_id,
         source_id=request.source_id, target_id=request.target_id, type_=request.type, weight=1.0,
+        produced_by_event_id="manual-entry",
     )
-    return EdgeResponse(id=edge_id, source=request.source_id, target=request.target_id, type=request.type, weight=1.0)
+    edge = next(e for e in graph_service.get_graph(neo4j, graph_id).edges if e.id == edge_id)
+    return EdgeResponse(
+        id=edge.id, source=edge.source, target=edge.target, type=edge.type, weight=edge.weight,
+        valid_at=edge.valid_at, invalid_at=edge.invalid_at, produced_by_event_id=edge.produced_by_event_id,
+    )
+
+
+class CommunityMemberResponse(ApiModel):
+    entity_id: str
+    label: str
+    community_id: int
+
+
+class CommunitiesResponse(ApiModel):
+    members: list[CommunityMemberResponse]
+
+
+def _to_community_response(members: list) -> CommunitiesResponse:
+    return CommunitiesResponse(
+        members=[CommunityMemberResponse(entity_id=m.entity_id, label=m.label, community_id=m.community_id) for m in members]
+    )
+
+
+@router.post("/graph/{graph_id}/communities", response_model=CommunitiesResponse, response_model_by_alias=True)
+def detect_communities(graph_id: str, neo4j: Neo4jClient = Depends(get_neo4j)) -> CommunitiesResponse:
+    """PLAN.md §20 item 5: runs Neo4j GDS Louvain over the real graph_id-scoped
+    subgraph, writes communityId onto each :Entity."""
+    members = community_service.detect_communities(neo4j, graph_id)
+    return _to_community_response(members)
+
+
+@router.get("/graph/{graph_id}/communities", response_model=CommunitiesResponse, response_model_by_alias=True)
+def get_communities(graph_id: str, neo4j: Neo4jClient = Depends(get_neo4j)) -> CommunitiesResponse:
+    members = community_service.get_communities(neo4j, graph_id)
+    return _to_community_response(members)

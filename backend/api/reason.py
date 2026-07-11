@@ -9,10 +9,7 @@ from app.dependencies import get_graphdb, get_neo4j
 from app.schemas import ApiModel
 from db.graphdb_client import GraphDBClient
 from db.neo4j_client import Neo4jClient
-from ontology.loader import load_schema
-from reasoning.engine import reason as run_reasoning
-from services import graph_service
-from services.rules_store import load_all_rules
+from services import reasoning_service
 
 router = APIRouter(tags=["reason"])
 
@@ -49,14 +46,6 @@ class ReasonResponse(ApiModel):
     converged_by: str
 
 
-def _pick_source(nodes) -> str | None:
-    """No source given: pick the highest out-degree-agnostic default — first node.
-
-    MVP heuristic; a future version can rank by degree or let the UI pick.
-    """
-    return nodes[0].id if nodes else None
-
-
 @router.post("/reason/{graph_id}", response_model=ReasonResponse, response_model_by_alias=True)
 def reason_over_graph(
     graph_id: str,
@@ -65,30 +54,14 @@ def reason_over_graph(
     graphdb: GraphDBClient = Depends(get_graphdb),
     settings: Settings = Depends(get_settings),
 ) -> ReasonResponse:
-    nodes, edges = graph_service.get_entities_and_edges_for_reasoning(neo4j, graph_id)
-    if not nodes:
-        raise HTTPException(status_code=404, detail=f"Graph '{graph_id}' has no entities to reason over.")
-
-    source_id = request.source_id or _pick_source(nodes)
-    if source_id not in {n.id for n in nodes}:
-        raise HTTPException(status_code=400, detail=f"source_id '{source_id}' not found in graph '{graph_id}'.")
-
-    rules = load_all_rules(neo4j)
-    # Ontology-aware matching: rules reference generic ancestor types
-    # ("organization") while real extraction returns specific subclasses
-    # ("commercial bank") — see docs/MVP_PLAN.md §12.
-    schema = load_schema(graphdb, settings.graphdb_repository)
-    type_matches = schema.build_subclass_matcher()
-    result = run_reasoning(
-        nodes, edges, rules, source_id,
-        decay=settings.reason_decay,
-        epsilon=settings.reason_epsilon,
-        max_iterations=settings.reason_max_iterations,
-        type_matches=type_matches,
-    )
-
-    graph_service.apply_activation(neo4j, graph_id=graph_id, activation=result.activation)
-    graph_service.save_derived_facts(neo4j, graph_id=graph_id, facts=list(result.facts))
+    try:
+        result = reasoning_service.run_reasoning(
+            neo4j, graphdb, settings, graph_id=graph_id, source_id=request.source_id,
+        )
+    except reasoning_service.EmptyGraphError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+    except reasoning_service.UnknownSourceError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
     return ReasonResponse(
         activation=result.activation,

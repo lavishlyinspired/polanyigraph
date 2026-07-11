@@ -257,3 +257,154 @@ Superseding the phased plan above: the user asked for the UI to match `.claude/d
 **Graph persistence across restarts**: `graphStore.ts` persists the active `graphId` to `localStorage` (`neurosymbolic:activeGraphId`), restored on load. The graph data itself was already persistent (Neo4j) — this persists *which graph the UI shows* after a reload. Verified: restarted both servers via `dev.sh restart`, reloaded the page, same graph reappeared.
 
 **History**: unchanged from the prior turn — left-sidebar icon + popover (`HistoryPopover.tsx`), not a tab (per explicit direction).
+
+
+UI Improvements Needed — Gap Analysis
+What's in the plans but NOT in the actual frontend code:
+A. From PLAN.md §6 Frontend Architecture (v2 plan)
+Planned Component
+SkillManager.tsx — skill browsing/activation
+MemoryInspector.tsx — memory visualization
+agentStore.ts — agent state management
+websocket.ts — SSE/WS connection
+hooks/useGraph.ts
+hooks/useAgent.ts
+Streaming LLM responses
+B. From UI_PLAN.md (phases 1-6)
+Phase	Feature
+Phase 1	Icons (lucide-react)
+Phase 1	Toasts (sonner)
+Phase 1	Collapsible sidebars
+Phase 1	Header badges
+Phase 1	Empty state
+Phase 2	Grid background
+Phase 2	Zoom/pan
+Phase 2	Heatmap toggle
+Phase 2	Proof path toggle
+Phase 2	Edge markers (active/derived/proof)
+Phase 2	Type legend
+Phase 2	Depth display on nodes
+Phase 3	Salience slider
+Phase 3	Extraction confidence
+Phase 3	Proof path in inspector
+Phase 3	Rule name per fact
+Phase 3	Query examples
+Phase 3	Query history chips
+Phase 3	Query result formatting
+Phase 4	Loop progress (3-step viz)
+Phase 4	Auto-run button
+Phase 4	Auto-run badge on canvas
+Phase 4	Inference trace (per-rule fired/skipped)
+Phase 4	Activation ranked list
+Phase 5	ProofStepResponse (backend)
+Phase 5	Extended DerivedFactResponse
+Phase 6	Loading skeleton
+Phase 6	Ingest progress indicator
+Phase 6	Error retry button
+C. From prototype features not ported to production
+Prototype Feature
+Inference trace — per-rule fired/skipped with activation vs threshold, amber/zinc highlighting, CheckCircle2/AlertCircle icons
+Three manual reasoning steps — separate Spread Activation / Run Inference / Feed Back buttons
+Path highlighting on canvas — cyan edges + pulsing cyan node rings
+Derived-edge visual distinction — thick amber stroke for derived edges
+Depth label on nodes — "depth N" text below activated nodes
+Derived-by-rule name inline in node inspector
+Edge symmetric/transitive toggles
+CPU load indicator
+Auto-scroll in LLM panel
+D. Additional improvements not in any plan
+Improvement
+d3-force layout
+Mobile support
+Responsive breakpoints
+Keyboard shortcuts
+Accessibility (a11y)
+Internationalization (i18n)
+Dark/light theme toggle
+Export graph as image
+Undo/redo
+Batch operations
+Drag-resizable sidebars
+Multi-graph management
+Priority Summary
+Priority	Items
+High (core UX gaps)	Inference trace, path highlighting on canvas, depth display
+Medium (v2 plan components)	SkillManager, MemoryInspector, agentStore, websocket/SSE, streaming LLM
+Low (polish)	Auto-scroll, derived-edge distinction, edge toggles, CPU load
+Deferred (UI_PLAN.md §7)	d3-force layout, mobile support
+The most impactful missing feature is the inference trace — the prototype showed which rules fired and which were skipped at each iteration, which is critical for understanding the neurosymbolic reasoning process. The production UI only shows the final derived facts, losing the step-by-step reasoning visibility.
+▣  Plan · Big Pickle · 6m 13s
+what is a better way to place the triples and ontology instead of placing them in the sidebars.also provide . Neural Activation and 2. Symbolic Inference -> nference trace:
+1 and nference trace:  Derived facts (12): and 3. Feedback to Neural. see how '/Users/akash/KG_Projects/neurosymbolic/.claude/docs/src' it provides for the reason tab. the write to '/Users/akash/KG_Projects/neurosymbolic/.claude/docs/UI_PLAN.md'
+
+---
+
+## 9. Sync with PLAN.md §19 (Polanyi Enrichment) and §20 (Temporal Memory)
+
+**[NEW]** Neither the gap analysis above (A–D) nor any earlier phase in this document plans UI for `PLAN.md` §19 or §20 — both were speced after this document's phases were written. Backend implementation of §20 items 1–2 (provenance linking + bi-temporal facts) is starting now (`services/graph_service.py`, `services/history_service.py`); this section is the corresponding UI plan so the two docs don't drift apart again. None of this is built yet.
+
+### 9.1 Provenance (§20 item 1: `IngestEvent-[:PRODUCED]->Entity`)
+
+| Task | Files | Description |
+|---|---|---|
+| 9.1.1 Node provenance list | `InspectorPanel.tsx` (or `ConstructionPanel.tsx`'s node inspector) | **Backend done, UI not started.** Replace the current single `sourceDoc` string with the real list of ingest events that produced/touched this entity (an entity mentioned across 3 documents should show 3, not overwrite to the last one) |
+| 9.1.2 Provenance API | `backend/api/graph.py` | **[DONE]** `GET /graph/{graphId}/nodes/{nodeId}/provenance` → `{events: [{id, text, createdAt}]}`, backing 9.1.1 |
+| 9.1.3 Jump to source | `InspectorPanel.tsx` | Clicking a provenance entry opens/scrolls the existing `HistoryPopover.tsx` to that event's full text |
+| 9.1.4 Entity summary display | `InspectorPanel.tsx` | **Backend done (`node.summary`, §20 item 3), UI not started.** Show the accumulated, LLM-synthesized summary in the node inspector — richer than a single provenance snippet, since it synthesizes across every ingest that touched the entity |
+
+### 9.2 Bi-temporal facts (§20 item 2: `validAt`/`invalidAt` on `:RELATES`)
+
+| Task | Files | Description |
+|---|---|---|
+| 9.2.1 "Superseded" badge | `GraphCanvas.tsx`, `QueryPanel.tsx` | **Backend done, UI not started.** An edge with `invalidAt` set is historical, not current — needs visual distinction (dim/dashed) wherever edges render, so invalidated facts aren't confused with live ones |
+| 9.2.2 Fact history view | `QueryPanel.tsx` or a new tab | **Backend + API done (see 9.2.3), UI not started.** Toggle "show historical facts" — when a query/predicate has more than one value over time (e.g. `hasDomicile("Acme", X)` returning both Zurich (invalidated) and Geneva (current)), show both with their validity window instead of only the current one |
+| 9.2.3 History API | `backend/api/graph.py` | **[DONE]** `EdgeResponse` carries `validAt`/`invalidAt`/`producedByEventId`; `get_graph`/`load_triples` stay current-state-only by default. New `GET /graph/{graphId}/relationships/history?sourceId=&type=` returns full history (current + invalidated) — backs 9.2.2. Verified live: two real ingests asserting Zurich then Geneva for the same (Acme, "is domiciled in") correctly show Zurich invalidated, Geneva current. |
+
+### 9.3 Polanyi enrichment (§19: 11 heuristics, `:ImplicitFact`, human-in-the-loop)
+
+**[DONE]** Backend and frontend both complete. `enrichment/heuristics/` has all 11 modules + a registry (`ALL_HEURISTIC_MODULES`) so a single `/enrich` call produces facts across every category. `EnrichmentPanel.tsx` (new, wired as a 4th left-sidebar tab "Enrich" alongside Ingest/Construct/Reason) implements 9.3.1/9.3.2/9.3.5. **Live-verified in the browser** against the real running app + real graph: pasted text, ran enrichment (real LLM, ~13s for 11 heuristic calls), got 33 real pending facts across 10 heuristic types with distinct color-coded badges, confidence-sorted (95% down to 60%); approved one (moved to a collapsible Approved section, header "N pending" badge decremented); rejected another (removed from pending entirely, count decremented). Header gained a clickable "N pending" badge (violet, Sparkles icon) that jumps to the Enrich tab.
+
+| Task | Files | Description |
+|---|---|---|
+| 9.3.1 Enrichment tab or section | `EnrichmentPanel.tsx`, wired into `App.tsx` as left-sidebar tab 4 (Ingest/Construct/Reason/**Enrich**) | **[DONE]** Lists pending `:ImplicitFact` assertions, each with a heuristic-type badge (same hash-hue coloring approach as `GraphCanvas.tsx`'s node types) |
+| 9.3.2 Approve/reject UI | `EnrichmentPanel.tsx` | **[DONE]** Approve/Reject buttons per card, wired to `graphStore.ts`'s `approveFact`/`rejectFact`. Confirmed live: `symbolic_coercion`'s speculative low-confidence facts (the known limitation from §19.6) are exactly what a reviewer sees and can reject here |
+| 9.3.3 Enrichment API | `backend/api/enrich.py` | **[DONE]** `POST /enrich/{graphId}`, `GET /enrich/{graphId}/pending`, `GET /enrich/{graphId}/approved`, `POST /enrich/{graphId}/{factId}/approve\|reject` |
+| 9.3.4 Canvas indicator | `GraphCanvas.tsx` | **[DONE]** Nodes anchored by a pending or approved `:ImplicitFact` get a small fuchsia dot badge (distinct from amber `derived` ring and violet proof-path dashing), plus a bottom-left "N nodes with implicit facts" legend. Live-verified: ran enrichment, 4 nodes correctly marked. |
+| 9.3.5 Confidence-sorted review queue | `EnrichmentPanel.tsx` | **[DONE]** Pending list sorts by confidence descending client-side; live-verified the weakest facts (e.g. a 60% `symbolic_coercion`) surface for easy rejection instead of being buried in generation order |
+
+**Remaining**: none — §19.6 step 5 / UI_PLAN.md §9.3 fully complete, backend and frontend.
+
+### 9.4 Chat session memory (§20 item 4: `:ChatSession`/`:ChatMessage`) — **[NEW] backend done, UI not started**
+
+`POST /chat/{graphId}` now accepts an optional `sessionId` and defaults to one continuous session per graph server-side if the client sends none — so `LlmPanel.tsx` needs **no changes to keep working**, but currently gets no UI control over sessions (can't start a fresh conversation without a fresh graph). Verified live: two calls with no `sessionId`, second one correctly recalled the first's content.
+
+| Task | Files | Description |
+|---|---|---|
+| 9.4.1 "New conversation" button | `LlmPanel.tsx` | Generates a new `sessionId` (e.g. `${graphId}:${uuid}`), stored in Zustand/localStorage similar to `activeGraphId` (`UI_PLAN.md` §8's "Graph persistence" pattern), sent on every `/chat` call from then on |
+| 9.4.2 Session-aware chat client | `lib/api.ts` | `chat(graphId, message, sessionId?)` passes `sessionId` through; omit for the existing default-session behavior |
+
+### 9.5 Community detection (§20 item 5: Neo4j GDS Louvain) — **[DONE]**
+
+`services/community_service.py` + `POST`/`GET /graph/{graphId}/communities` are real and live-verified. Frontend complete: `GraphCanvas.tsx` toolbar gained a "Detect Communities" button (`Boxes` icon, spinner while running) and a "color by community" toggle (only shown once at least one node has a `communityId`), which swaps the top-left legend from Types to Communities (color swatch + member count per community) and recolors node fill/stroke by `communityId` hash instead of type hash, reusing the same hash-hue function.
+
+| Task | Files | Description |
+|---|---|---|
+| 9.5.1 "Detect Communities" action | `GraphCanvas.tsx` toolbar | **[DONE]** Button calling `POST /graph/{graphId}/communities` via `graphStore.ts`'s `detectCommunities()`, reloads the graph afterward so `communityId` populates, turns on community-coloring automatically. Live-verified: toast "Found 2 communities across 7 entities" on the real `default` graph. |
+| 9.5.2 Community coloring/grouping on canvas | `GraphCanvas.tsx` | **[DONE]** Toggleable "color by community" mode (node fill/stroke keyed on `communityId` instead of `type`) plus a Communities legend. Not built: a background halo/region grouping (considered, deprehensioned as unnecessary complexity — color-by-community was sufficient and matches the existing type-legend visual language). |
+| 9.5.3 Community API client | `lib/api.ts` | **[DONE]** `detectCommunities(graphId)`, `getCommunities(graphId)`, `CommunityMember`/`CommunitiesResponse` types, `ApiNode.communityId` field |
+
+**Remaining**: none for the MVP slice of this feature.
+
+---
+
+## 10. Agent tab (MVP_PLAN.md Phase 6, PLAN.md §8 Agent Layer) — **[DONE]**
+
+New right-sidebar tab "Agent" (`AgentPanel.tsx`, 5th tab alongside Query/Triples/Ontology/LLM), distinct from the existing "LLM" tab: LLM (`LlmPanel.tsx`) hits `POST /chat`, read-only Q&A grounded in graph state; Agent hits `POST /agent`, a real LangGraph agent (`backend/agents/graph.py`) that classifies intent and can mutate the graph for real — extract new entities, run reasoning, run Polanyi enrichment, answer a structured query, or describe a visualization.
+
+| Task | Files | Description |
+|---|---|---|
+| Chat-style UI | `AgentPanel.tsx` | Same message-bubble visual language as `LlmPanel.tsx`, plus a color-coded intent badge per assistant reply (emerald=extract, violet=enrich, sky=query, amber=reason, fuchsia=visualize) so the user sees what the router decided, not just the reply |
+| Agent API client | `lib/api.ts` | `AgentResponse` type (reply, intent, entitiesExtracted, relationshipsExtracted, factsDerived, enrichmentFactTexts, queryResults, queryError), `runAgent(graphId, text, sessionId?)` |
+| Store wiring | `graphStore.ts` | `agentMessages`, `agentLoading`, `sendAgentMessage()` — since extract/enrich/reason intents mutate real Neo4j state, a successful call also reloads the graph, pending facts, history, and graphs list (unlike `sendChatMessage`, which is read-only and doesn't refresh anything) |
+
+**Live-verified in the browser** against the real running app + real graph (25 entities, 14 edges, from a real HDFC/SEC/Credit Suisse ingest): "Show me an overview of the graph." correctly routed to `visualize`, replied grounded in the real entity types and names present ("thing in role", "Credit Suisse", "UBS Group"). `is regulated by("Credit Suisse", X)` correctly routed to `query`, replied "Credit Suisse is regulated by 'FINMA'" — matching the real stored fact. Neither call mutated node/edge counts, confirming read-only intents stay read-only.

@@ -13,6 +13,7 @@ export interface ApiNode {
   salience?: number;
   properties?: Record<string, string>;
   note?: string;
+  communityId?: number | null;
 }
 
 export interface ApiEdge {
@@ -175,6 +176,62 @@ export interface ChatResponse {
   reply: string;
 }
 
+// Polanyi enrichment (PLAN.md §19): implicit facts inferred by 11 fixed
+// cognitive/pragmatic heuristics, kept separate from ontology-typed entities
+// and rule-derived facts. Pending until a human approves or rejects them.
+export type HeuristicType =
+  | 'presupposition'
+  | 'conversational_implicature'
+  | 'factual_impact'
+  | 'image_schema'
+  | 'metonymic_coercion'
+  | 'moral_value_coercion'
+  | 'symbolic_coercion'
+  | 'event_sequence'
+  | 'causal_relation'
+  | 'implied_future_event'
+  | 'implied_non_event';
+
+export interface ImplicitFact {
+  id: string;
+  heuristicType: HeuristicType;
+  text: string;
+  confidence: number;
+  status: 'pending' | 'approved' | 'rejected';
+  anchorEntityIds: string[];
+}
+
+export interface ImplicitFactListResponse {
+  facts: ImplicitFact[];
+}
+
+// Community detection (PLAN.md §20 item 5, Neo4j GDS Louvain).
+export interface CommunityMember {
+  entityId: string;
+  label: string;
+  communityId: number;
+}
+
+export interface CommunitiesResponse {
+  members: CommunityMember[];
+}
+
+// LangGraph agent (MVP_PLAN.md Phase 6, PLAN.md §8): one message in, the
+// agent classifies intent (extract/enrich/query/reason/visualize) and does
+// real work -- unlike /chat, this can mutate the graph.
+export type AgentIntent = 'extract' | 'enrich' | 'query' | 'reason' | 'visualize' | '';
+
+export interface AgentResponse {
+  reply: string;
+  intent: AgentIntent;
+  entitiesExtracted: number;
+  relationshipsExtracted: number;
+  factsDerived: number;
+  enrichmentFactTexts: string[];
+  queryResults: string[];
+  queryError: string;
+}
+
 export interface HealthResponse {
   status: string;
   profile: string;
@@ -274,4 +331,33 @@ export const api = {
     }).then(json<Rule>),
 
   deleteRule: (ruleId: string) => fetch(`${BASE}/rules/${ruleId}`, { method: 'DELETE' }).then(json<{ deleted: boolean }>),
+
+  enrich: (graphId: string, text: string) =>
+    fetch(`${BASE}/enrich/${graphId}`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ text }),
+    }).then(json<ImplicitFactListResponse>),
+
+  getPendingFacts: (graphId: string) => fetch(`${BASE}/enrich/${graphId}/pending`).then(json<ImplicitFactListResponse>),
+
+  getApprovedFacts: (graphId: string) => fetch(`${BASE}/enrich/${graphId}/approved`).then(json<ImplicitFactListResponse>),
+
+  approveFact: (graphId: string, factId: string) =>
+    fetch(`${BASE}/enrich/${graphId}/${factId}/approve`, { method: 'POST' }).then(json<ImplicitFactListResponse>),
+
+  rejectFact: (graphId: string, factId: string) =>
+    fetch(`${BASE}/enrich/${graphId}/${factId}/reject`, { method: 'POST' }).then(json<ImplicitFactListResponse>),
+
+  detectCommunities: (graphId: string) =>
+    fetch(`${BASE}/graph/${graphId}/communities`, { method: 'POST' }).then(json<CommunitiesResponse>),
+
+  getCommunities: (graphId: string) => fetch(`${BASE}/graph/${graphId}/communities`).then(json<CommunitiesResponse>),
+
+  runAgent: (graphId: string, text: string, sessionId?: string) =>
+    fetch(`${BASE}/agent/${graphId}`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ text, sessionId: sessionId ?? null }),
+    }).then(json<AgentResponse>),
 };

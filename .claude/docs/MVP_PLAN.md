@@ -2,6 +2,7 @@
 
 > **Created**: July 11, 2026
 > **Relationship to PLAN.md**: PLAN.md is the full v1+ architecture. This is the *walking skeleton* — the smallest end-to-end slice that produces real value for a business analyst, with **zero demo/mock data**. Everything here is a strict subset of PLAN.md; nothing contradicts it.
+> **[UPDATED] Status**: **All 10 phases below are now DONE, and EDGAR (originally "optional") is also now done.** Phase 6 (LangGraph wrap) — the last original MVP item — is implemented, tested, and live-verified; see §9 Phase 6. PLAN.md §1.1 cross-references this file's phase numbers against its own (broader, non-matching) §16 phase list — read that note if "Phase N" is ambiguous between the two docs.
 
 ---
 
@@ -26,7 +27,7 @@ If that flow works end-to-end on a real 8-K or press release, the MVP is done. E
 | MCP servers (all 4) | No external agent surface needed to prove the slice. |
 | Dual dev/runtime skill system + **Neo4j skill graph** | Skill graph stays a **v1** feature (PLAN.md §18); the MVP hardcodes the pipeline. |
 | Five-memory-system layer (episodic/semantic/long-term) | MVP keeps only conversation checkpointing + the graph itself. |
-| Polanyi 11-heuristic enrichment | MVP does extraction + reasoning; enrichment is v1. |
+| Polanyi 11-heuristic enrichment | **[UPDATED]** All 11 heuristics now implemented and live-verified running together (25 real facts across 10 heuristic types on one real scenario) as a v1 addition beyond the original MVP scope — see `PLAN.md` §19.6 steps 1–4. Only the frontend (Enrich tab, `UI_PLAN.md` §9.3) still not started. |
 | NL → Cypher | MVP ships the structured triple query (`predicate(subject, object)`) that already exists; NL→Cypher is v1. |
 | Multi-agent router/enricher/etc. | MVP LangGraph = `extractor → reasoner → responder` only. |
 
@@ -62,7 +63,7 @@ If that flow works end-to-end on a real 8-K or press release, the MVP is done. E
 
 ## 5. Backend spec
 
-**Stack**: FastAPI, `neo4j` driver, `httpx` (GraphDB SPARQL), `openai` SDK (pointed at the NVIDIA endpoint), `pydantic` v2. TDD throughout (pytest, 82 tests). LangGraph is a Phase 6 dependency, not yet wired in.
+**Stack**: FastAPI, `neo4j` driver, `httpx` (GraphDB SPARQL), `openai` SDK (pointed at the NVIDIA endpoint), `pydantic` v2, `langgraph` (Phase 6, now wired in — `backend/agents/`). TDD throughout (pytest, 198 tests).
 
 **Models**: OpenAI-compatible endpoint, model configurable via `NVIDIA_MODEL`/`LLM_BASE_URL`. Default is `meta/llama-3.1-8b-instruct` (§11 — `z-ai/glm-5.2` hangs on real chat completions in this environment). No vendor hardcoded — call sites depend only on `llm.client.LLMClient`.
 
@@ -71,8 +72,17 @@ If that flow works end-to-end on a real 8-K or press release, the MVP is done. E
 | Method | Path | Body / params | Returns |
 |---|---|---|---|
 | `GET` | `/health` | — | `{status, neo4j, graphdb, llm}` reachability |
-| `POST` | `/ingest` | `{graphId, source: {type:"text", text}}` | `{nodes, edges, dropped}` written to Neo4j. **Not implemented as SSE** — plain synchronous POST; EDGAR source type not implemented (paste-only, per §11) |
-| `GET` | `/graph/{graphId}` | — | `{nodes, edges}` (real, from Neo4j) |
+| `POST` | `/ingest` | `{graphId, source: {type:"text", text}}` or `{graphId, source: {type:"edgar", ticker, formType}}` | `{nodes, edges, dropped}` written to Neo4j. **Not implemented as SSE** — plain synchronous POST. **[UPDATED]** `source.type: "edgar"` now real — fetches the real filing from SEC's public API via `services/edgar_service.py`, feeds the same extraction pipeline; 404 if no such ticker/form. Each node also carries a real LLM-generated `summary` that accumulates across ingests (PLAN.md §20 item 3). |
+| `GET` | `/graph/{graphId}` | — | `{nodes, edges}` (real, from Neo4j). **[UPDATED]** Edges now also carry `validAt`/`invalidAt`/`producedByEventId` (PLAN.md §20 items 1–2); `get_graph` returns current (non-invalidated) edges only. |
+| `GET` | `/graph/{graphId}/nodes/{nodeId}/provenance` | — | **[NEW]** `{events}` — every ingest event that produced/touched this entity, via a real `IngestEvent-[:PRODUCED]->Entity` traversal, not a `sourceDoc` string match (PLAN.md §20 item 1) |
+| `GET` | `/graph/{graphId}/relationships/history` | `?sourceId=&type=` | **[NEW]** `{edges}` — full history (current + invalidated) for a (source, relation type), including `validAt`/`invalidAt` (PLAN.md §20 item 2) |
+| `POST` | `/enrich/{graphId}` | `{text}` | **[NEW, UPDATED]** Runs all 11 Polanyi heuristics (PLAN.md §19, §19.2 — they ship together) against the real graph + given text, one real LLM call per heuristic (~11 sequential calls), returns newly created pending `:ImplicitFact` assertions |
+| `GET` | `/enrich/{graphId}/pending` | — | **[NEW]** `{facts}` — pending `:ImplicitFact` assertions awaiting approval |
+| `GET` | `/enrich/{graphId}/approved` | — | **[NEW]** `{facts}` — approved `:ImplicitFact` assertions |
+| `POST` | `/enrich/{graphId}/{factId}/approve` \| `/reject` | — | **[NEW]** Human-in-the-loop approval/rejection (PLAN.md §7.3); rejected facts are kept with `status: "rejected"`, not deleted |
+| `POST` | `/graph/{graphId}/communities` | — | **[NEW]** Runs Neo4j GDS Louvain over the real graph, writes `communityId` onto each entity (PLAN.md §20 item 5) |
+| `GET` | `/graph/{graphId}/communities` | — | **[NEW]** `{members}` — reads the last-computed community assignment without recomputing |
+| `POST` | `/agent/{graphId}` | `{text, sessionId?}` | **[NEW]** Phase 6 — LangGraph-orchestrated `extractor → reasoner → responder` (`backend/agents/graph.py`). One message in, real extraction + real reasoning + a grounded natural-language reply out. Loads the `kg-extraction` runtime skill (`backend/skills/`, PLAN.md §13.2) for real, not just specced. |
 | `POST` | `/reason/{graphId}` | `{sourceId?}` | `{activation, facts, iterations, convergedBy}` (§5.3), each fact carries `ruleName` + `proofPath`; each proof step carries `typeResolution` when the rule fired via ontology subclass match rather than exact type equality |
 | `POST` | `/query/{graphId}` | `{query}` e.g. `regulates("FINMA", X)` | `{results, error}` over stored + derived triples |
 | `GET` | `/history/{graphId}` | — | `{events}` — every past ingest for this graph: full posted text, timestamp, entity/relationship/dropped counts, most recent first |
@@ -80,7 +90,7 @@ If that flow works end-to-end on a real 8-K or press release, the MVP is done. E
 | `POST` | `/rules` | `{name, edgeType, sourceType, targetType, threshold, weight?, description?}` | Creates a custom rule, validated against the live ontology; participates in `/reason` immediately |
 | `DELETE` | `/rules/{ruleId}` | — | Deletes a custom rule (400 if the id isn't `custom-*`, i.e. a seed rule) |
 | `GET` | `/graphs` | — | `{graphs}` — every graph that has entities, with node/edge counts + last ingest time, for the UI's graph switcher |
-| `POST` | `/chat/{graphId}` | `{message}` | `{reply}` — real LLM call grounded in the graph's actual entities/relationships/derived facts (`services/chat_service.py`) |
+| `POST` | `/chat/{graphId}` | `{message, sessionId?}` | `{reply}` — real LLM call grounded in the graph's actual entities/relationships/derived facts (`services/chat_service.py`). **[UPDATED]** Also grounded in real conversation history for `sessionId` (PLAN.md §20 item 4); omitting `sessionId` defaults to one continuous session per graph. |
 | `GET` | `/ontology` | — | `{classLabels, propertyLabels}` — real vocabulary from the loaded ontology, for the Construct tab's Add Node/Edge/Rule pickers |
 | `POST` | `/graph/{graphId}/nodes` | `{label, type}` | Manually add an entity (Construct tab), validated against the ontology, `sourceDoc: "manual-entry"`, same id-slug scheme as extraction so it merges with a later real extraction of the same entity |
 | `POST` | `/graph/{graphId}/edges` | `{sourceId, targetId, type}` | Manually add a relationship, validated against the ontology + that both nodes exist |
@@ -114,7 +124,7 @@ If that flow works end-to-end on a real 8-K or press release, the MVP is done. E
 ## 7. Real data sources
 
 - **Primary (always available)**: analyst pastes real text (a real 8-K, press release, or filing excerpt).
-- **Convenience**: SEC EDGAR full-text/submissions API — fetch a real filing by ticker + form type (free, no key). Backend downloads, strips to text, feeds the same extraction pipeline.
+- **Convenience**: **[DONE]** SEC EDGAR full-text/submissions API — fetch a real filing by ticker + form type (free, no key). `services/edgar_service.py` downloads, strips HTML to text, skips past the XBRL cover-page metadata block to the real narrative section (a real ~430K-character 10-K's first ~39K characters are machine-readable tags, not prose — found and fixed via live verification, not caught by unit tests), truncates to `MAX_FILING_CHARS` (8000) since a whole filing blows past any practical LLM context/latency budget, feeds the same extraction pipeline. Live-verified: a real Tesla 10-K correctly produced entities like "Full Self-Driving (FSD)", "Robotaxi", "Optimus", "Cybertruck", "Powerwall" — genuine business content, not boilerplate.
 - **Ontology**: whatever OWL is loaded into the GraphDB repository (`fibo` today). Domain-agnostic — reference data lives in GraphDB, not the code.
 
 No synthetic/seed graph is ever loaded. An empty `graph_id` shows an empty canvas with an "ingest a document" prompt.
@@ -135,7 +145,7 @@ No synthetic/seed graph is ever loaded. An empty `graph_id` shows an empty canva
 3. **[DONE] Graph read + render** — `/graph/{id}`; `GraphCanvas.tsx`/`InspectorPanel.tsx` rewired (domain-agnostic: type-hash coloring instead of the prototype's FIBO-enum coloring) to `graphStore.ts` + `api.ts`; verified rendering a real extracted graph live in Chrome.
 4. **[DONE] Reasoning (§8.4)** — `reasoning/engine.py` with the fixes, `backend/tests/test_reasoning.py` green (persistent activation, directed spread, multi-hop, honest `converged_by`); `/reason` endpoint persists `:DerivedFact` + activation to Neo4j; `data/rules/fibo_rules.json` hand-authored against real FIBO vocabulary. Ontology-aware subclass matching (§12) is now implemented and verified against the exact live scenario that exposed the gap.
 5. **[DONE] Query** — `services/query_engine.py` ports the triple-query language (fixed a real bug found via TDD: naive comma-split broke multi-word predicates like "is regulated by"); `/query/{id}` wired to the query panel; verified live.
-6. **[TODO] LangGraph wrap (+ optional EDGAR)** — wrap extractor→reasoner→responder in a minimal LangGraph with `Neo4jSaver`; optional EDGAR ingest source. Not yet started. **This is the only remaining item from the original MVP scope.**
+6. **[DONE] LangGraph wrap** — `backend/agents/state.py` (`AgentState`), `backend/agents/graph.py` (`extractor → reasoner → responder`, each node calling the same real, already-tested service functions the REST endpoints use — `ingest_service`, `reasoning_service`, not a parallel reimplementation). `POST /agent/{graphId}` (`api/agent.py`). Checkpointing uses LangGraph's built-in `InMemorySaver`, not a custom `Neo4jSaver` — see `backend/agents/graph.py`'s module docstring for the reasoning (a real `langgraph-checkpoint-neo4j` package exists but is pre-1.0/0.0.1, installing it was declined as an unvetted external dependency; the actual cross-session-memory need is already served by `chat_history_service.py`, §20 item 4). Tests: `test_agent_graph.py`, `test_api_agent.py`, plus the extracted `test_reasoning_service.py` (a small refactor pulling `api/reason.py`'s inline logic into `services/reasoning_service.py` so both the REST endpoint and the agent's reasoner node share one tested implementation). **Live-verified against the real running server, real LLM**: real extraction (2 entities, 1 relationship), real reasoning (1 derived fact, `activation: 0.95`), a grounded natural-language reply — and a **real bug found and fixed via live verification, not caught by unit tests alone**: the first version's responder prompt only carried bare counts, and the LLM correctly refused to summarize ("I don't have any information about the text you're referring to") since it had nothing real to reference — fixed by grounding the responder in the actual extracted entity labels and derived fact text, re-verified live. EDGAR ingest source (marked "optional" in the original scope) is now also done — see §5.1/§7 above. **[UPDATED]** The agent now also has a real 5-intent router (extract/enrich/query/reason/visualize — `backend/agents/graph.py`), all 6 runtime skills wired for real (`backend/skills/`), a formal Tool Layer (`backend/agents/tools.py`), a real MCP server (`backend/mcp_server.py`), and a frontend UI (`AgentPanel.tsx`, `UI_PLAN.md` §10) — see `PLAN.md` §1.1's Implementation Status matrix for the full picture.
 7. **[DONE] Polish** — loading/error states, empty-graph prompt, provenance display in `InspectorPanel` — all verified live in the browser.
 8. **[DONE, beyond original scope] Manual construction + ontology-aware UI parity** — `GET /ontology`, `POST`/`PATCH /graph/{id}/nodes`, `POST /graph/{id}/edges` (Add Node/Edge, ontology-validated, same id-slug scheme as extraction so it merges cleanly); Rules Manager CRUD (`POST`/`DELETE /rules`, custom rules stored in Neo4j, participate in real `/reason` calls); `POST /chat/{graphId}` (real LLM console grounded in actual graph state, replacing the prototype's random-canned-response mock); full prototype-parity UI (Construct/Reason/Ingest left tabs, Query/LLM right tabs, resizable sidebars, domain-agnostic node coloring). See §3 and UI_PLAN.md §8.
 
@@ -154,7 +164,7 @@ No synthetic/seed graph is ever loaded. An empty `graph_id` shows an empty canva
 - **[RESOLVED] Extraction model**: `z-ai/glm-5.2` was tried first (it's listed in NVIDIA's catalog and `/v1/models` reaches it) but hangs indefinitely on real `/chat/completions` calls (confirmed via direct curl: 30s+, zero bytes back). `meta/llama-3.1-8b-instruct` on the same key/endpoint responds in ~0.3s — switched to it as the default (user decision). `z-ai/glm-5.2` can be swapped back in `NVIDIA_MODEL` once its availability is confirmed working.
 - **[RESOLVED] Rules seed**: hand-authored `backend/data/rules/fibo_rules.json`, referencing real FIBO vocabulary confirmed live against the repo (`issues`, `is regulated by`, `is domiciled in`, `governs`; `organization`, `security`, `regulatory agency`, `jurisdiction`).
 - **[RESOLVED] Rule language for reasoning**: single-premise pattern rules, as shipped in `reasoning/engine.py`.
-- **[RESOLVED] EDGAR/source fetch**: paste-only for MVP; EDGAR deferred to Phase 6 (not yet started).
+- **[RESOLVED, DONE]** EDGAR/source fetch: paste-only was the MVP default; EDGAR is now also implemented (`services/edgar_service.py`, `api/ingest.py` `source.type: "edgar"`), live-verified against the real SEC API.
 
 ## 12. [FIXED] Rule matching is now ontology-aware (was exact-string)
 

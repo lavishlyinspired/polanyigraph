@@ -1,13 +1,14 @@
 # Neurosymbolic Knowledge Graph Reasoning Application — Complete Plan
 
 > **Last Updated**: July 11, 2026
-> **Status**: Architecture finalized, awaiting execution
+> **Status**: [UPDATED] MVP walking-skeleton (see `MVP_PLAN.md`) is built and runnable end-to-end — **all 10 of its phases are now done**, including Phase 6 (LangGraph wrap, live-verified). This document's own §16 phase list is the broader, aspirational v1+ build order and uses a **separate, non-matching phase numbering** — see §1.1 before citing a phase number from either document.
 
 ---
 
 ## Table of Contents
 
 1. [Executive Summary](#1-executive-summary)
+   - [1.1 Implementation Status](#11-implementation-status)
 2. [How Agents Use Skills](#2-how-agents-use-skills)
 3. [Agentic Memory Systems](#3-agentic-memory-systems)
 4. [Neo4j Context Graphs + Memory](#4-neo4j-context-graphs--memory)
@@ -36,6 +37,30 @@ Build a shippable neurosymbolic knowledge graph reasoning application for busine
 **Core reference paper**: "Neurosymbolic graph enrichment for Grounded World Models" (Polanyi) — 11 enrichment heuristics for implicit knowledge
 
 **Secondary reference paper**: Italian Legislation KG ETL pipeline — Neo4j property graph, LLM-assisted graph completion
+
+### 1.1 Implementation Status
+
+**[NEW]** Two documents track progress and they use *different, non-corresponding* phase numbers for different things — this has caused real confusion (an external review of this doc conflated the two). Read this before citing "Phase N" from either:
+
+- **`MVP_PLAN.md` §9** — Phases 0–8, the actual as-built walking skeleton (what's really running today). **9 of 10 items done**; only Phase 6 (LangGraph wrap) remains. This is the authoritative "what works right now" tracker.
+- **This document's §16** — Phases 0–11, the aspirational full v1+ architecture (Redis/Postgres/MCP/multi-agent/5-memory-system). Written before execution started; most of it was deliberately deferred per `MVP_PLAN.md` §3 in favor of the lean walking skeleton. The matrix below is this document's status against *that* list — its "Phase 6" (LLM Integration) is not the same as `MVP_PLAN.md`'s "Phase 6" (LangGraph wrap).
+
+| §16 Phase | Status | Evidence |
+|---|---|---|
+| 0. Scaffolding + Skills | **DONE** (scope reduced) | Backend/frontend trees, `.claude/skills/` (6 skills, not the original 4 sketched), `CLAUDE.md`. No Docker Compose — desktop apps instead (`MVP_PLAN.md` §8). |
+| 1. Backend Skeleton | **PARTIAL, materially further** | FastAPI + `/health` + Neo4j driver: done. No Redis, no PostgreSQL. **[UPDATED]** A real LangGraph skeleton now exists (`backend/agents/graph.py`, `langgraph` wired in) — but it's the MVP's minimal linear `extractor→reasoner→responder`, not the full aspirational multi-node skeleton this row originally meant. |
+| 2. Agent Layer | **PARTIAL, materially further** | **[UPDATED]** 6 of the originally-sketched 7 nodes now real (`router`, `extractor`, `enricher`, `querier`, `reasoner`, `responder` — `backend/agents/graph.py`), each calling real, already-tested services, branching on a real LLM-classified intent (extract/enrich/query/reason/visualize). Only `memory_agent` doesn't exist as a dedicated node (temporal recall folds into the responder's conditional skill loading instead, §13.2). No LangGraph `Store` wrapper. Live-verified end-to-end against the real server for all 5 intents, including a real router misclassification found and fixed via live verification (plain declarative text was misrouted to "enrich" instead of "extract" until few-shot examples were added). |
+| 3. Memory Layer | **DONE (as natively-rebuilt alternative, not as originally speced)** | No Redis/Postgres/vector-index memory as originally speced. §20's native replacement: **all 5 items DONE** — provenance linking, bi-temporal facts, evolving summaries, chat session memory, and community detection (via real Neo4j GDS), see §20.4. |
+| 4. MCP Layer | **PARTIAL, one real server** | **[UPDATED]** `backend/mcp_server.py` (real, official `mcp` SDK v1.28+, stdio transport) exposes the same 4 real KG operations as `agents/tools.py` (`extract_entities`, `run_reasoning`, `run_enrichment`, `query_graph`) plus an `ontology://schema` resource, to any MCP client (e.g. Claude Desktop). Only 1 of the originally-sketched 4 servers (custom KG MCP); no Neo4j/Memory/Skills MCP servers. Tests: `test_mcp_server.py` (includes one real end-to-end call: real Neo4j, real GraphDB, real LLM). Verified live: sent a real JSON-RPC `initialize` handshake over actual stdio, got a valid MCP protocol response back. |
+| 5. Tool Layer | **DONE, standalone** | **[UPDATED]** `backend/agents/tools.py`: 4 formal `@tool`-decorated LangChain tools (`extract_entities`, `run_reasoning`, `run_enrichment`, `query_graph`), each wrapping the same real service functions the graph nodes and REST endpoints use, each with a real description an LLM could pick from. **Deliberately not wired into `agents/graph.py`'s nodes** — the graph's routing is deterministic (router classifies intent, fixed edges follow), not autonomous LLM tool-selection, and rewiring already-tested/live-verified nodes for architectural purity alone wasn't worth the regression risk. Available as a standalone surface for a future ReAct-style agent or MCP exposure. Tests: `test_agent_tools.py`, live-verified against the real running services. |
+| 6. LLM Integration | **DONE, differently** | Single OpenAI-compatible `LLMClient` (§12.1), not the original GPT-4o/Claude-3.5 split — config-driven, not vendor-hardcoded. Better than as-planned, not a gap. |
+| 7. Extraction + Enrichment | **PARTIAL** | Extraction: DONE (`MVP_PLAN.md` Phase 2). Polanyi enrichment: all 11 heuristics DONE and live-verified running together, see §19.6 steps 1–5 (frontend now also done). |
+| 8. Reasoning Engine | **DONE** | `reasoning/engine.py` matches §8.4 exactly, including the fixpoint/ontology-subclass-matching fix in `MVP_PLAN.md` §12. Now also reachable via the agent's reasoner node, sharing the same `services/reasoning_service.py`. |
+| 9. Frontend Overhaul | **PARTIAL** | Zustand + `api.ts`: done (`UI_PLAN.md` §8). No WebSocket, no `SkillManager`/`MemoryInspector` components. **[UPDATED]** `/agent` endpoint now has a UI — new "Agent" right-sidebar tab (`AgentPanel.tsx`), chat-style with intent badges (extract/enrich/query/reason/visualize), live-verified in the browser for visualize and query intents against the real running app + real graph. |
+| 10. Skills + Eval Infra | **PARTIAL** | Dev-time skills: 6 exist (exceeds the 5 originally sketched). **[UPDATED] All 6 runtime skills now real** (`kg-extraction` loaded by the extractor; `polanyi-enrichment`, `kg-query`, `neurosymbolic-reasoning`, `kg-visualization` loaded by the responder based on intent; `memory-recall` loaded in addition whenever the message looks temporal) — `backend/skills/*/SKILL.md` + `backend/agents/skill_store.py`'s Discovery→Activation→Execution, live-verified for all 5 router intents. `evals/` directory still does not exist. |
+| 11. Polish + Deploy | **PARTIAL** | Error/loading states + provenance display: done (`MVP_PLAN.md` Phase 7). No Docker Compose full stack, no formal a11y/i18n pass. |
+
+**Reading this table**: "DONE" phases needed no more design work, just verification they still hold. "NOT STARTED" phases (2, 4, 5) are gated behind the LangGraph wrap — building any of them before `MVP_PLAN.md` Phase 6 exists produces inert code with nothing to load it (see §13's dev-time-vs-runtime skill note for a concrete example of this trap).
 
 ---
 
@@ -1046,6 +1071,8 @@ search_memory = create_search_memory_tool(namespace=("memories", "{langgraph_use
 
 ## 4. Neo4j Context Graphs + Memory
 
+> **[HISTORICAL — DO NOT IMPLEMENT FROM THIS SECTION, SEE §20]** This section cites `neo4j-labs/agent-memory` and a "Neo4j Labs, June 2026" context-graph concept, one of the citations flagged elsewhere in this plan as unverifiable. §20 documents the actually-verified equivalent (Graphiti/Zep, real GitHub project + research paper) and is the one to build from. Kept here for history only.
+
 ### 4.1 What Are Context Graphs?
 
 A **context graph** (Neo4j Labs, June 2026) extends a knowledge graph by adding three connected layers:
@@ -1762,6 +1789,8 @@ All tools registered as LangGraph tools:
 
 ### 12.1 LLM Configuration
 
+**[UPDATED — supersedes the vendor-specific table below]** No vendor is hardcoded. `llm/client.py` (`LLMClient`) talks to any OpenAI-compatible endpoint; model + base URL are config (`NVIDIA_MODEL`/`LLM_BASE_URL`). Confirmed working default: NVIDIA-hosted `meta/llama-3.1-8b-instruct` (see `MVP_PLAN.md` §11 for why — `z-ai/glm-5.2` hangs on real completions in this environment). Every call site — extraction, reasoning explanation, chat, and Polanyi enrichment (§19) — depends only on `LLMClient`, so swapping providers is a config change, not a code change. The GPT-4o/Claude-3.5-specific rows below are the original aspirational plan; kept for history, not current.
+
 | Model | Provider | Use Case |
 |---|---|---|
 | GPT-4o | OpenAI | Entity/relationship extraction, NL → Cypher |
@@ -1783,7 +1812,37 @@ All tools registered as LangGraph tools:
 
 ## 13. Project-Specific Skills
 
+> **[UPDATED — both layers now real]** Two layers, easy to conflate, kept deliberately separate:
+> - **13.1 Dev-time** (`.claude/skills/`) — guides the *coding agent* (Claude Code)
+>   while building this codebase. These exist today; the list below reflects the
+>   actual current set, not the original sketch.
+> - **13.2 Runtime** (`backend/skills/`) — guides the *product's own* LangGraph
+>   agent while it serves a real user request, loaded via `backend/agents/
+>   skill_store.py`'s `load()` per §2.9's Discovery→Activation→Execution
+>   pattern. **1 of 6 sketched runtime skills is now real** (`kg-extraction`,
+>   loaded by the extractor node in `backend/agents/graph.py`, MVP_PLAN.md
+>   Phase 6) — the layer was unblocked once a real LangGraph agent existed to
+>   load skills *into*. The other 5 (`polanyi-enrichment`, `kg-query`,
+>   `neurosymbolic-reasoning`, `kg-visualization`, `memory-recall`) are still
+>   just sketched below, not built — same mechanism, just not wired to a node
+>   yet (no `enricher`/`querier` node exists).
+
 ### 13.1 Development-Time Skills (.claude/skills/)
+
+Actual current set (six skills, superseding the four-skill sketch originally
+drafted here — see each file for full content):
+
+| Skill | Guides the coding agent on |
+|---|---|
+| `kg-extraction` | Ontology-driven extraction, no hardcoded domain types |
+| `ontology-mapping` | GraphDB schema → Neo4j instance typing |
+| `graph-reasoning` | Spread activation, proof tracing (older name) |
+| `neurosymbolic-reasoning` | §8.4 persistent-activation fixpoint loop specifically |
+| `polanyi-enrichment` | §19 — 11 heuristics, `:ImplicitFact`, domain-agnostic |
+| `temporal-memory` | §20 — provenance linking, bi-temporal facts, chat sessions |
+
+Original per-skill sketch below, kept for history (content superseded by the
+actual files in `.claude/skills/`):
 
 #### kg-extraction/SKILL.md
 ```
@@ -1827,7 +1886,18 @@ Tells the coding agent about the overall neurosymbolic architecture.
 
 ### 13.2 Runtime Skills (backend/skills/)
 
-#### kg-extraction/SKILL.md
+#### kg-extraction/SKILL.md — **[DONE, real]**
+The sketch below was aspirational (FIBO-specific, contradicting this project's
+domain-agnostic design). The actual shipped skill is domain-agnostic — see
+`backend/skills/kg-extraction/SKILL.md` for the real content (precision-over-
+recall guidance, honest confidence scoring, no fixed entity-type list since
+that's already handled by the loaded ontology). Loaded for real by
+`backend/agents/skill_store.py`'s `load()`, consumed by the extractor node
+in `backend/agents/graph.py`, which threads it into `extraction/pipeline.py`'s
+`extract(..., extra_guidance=...)`. Live-verified: the extractor node's actual
+LLM call carries this skill's text in its system prompt.
+
+Original sketch (kept for history, superseded by the above):
 ```
 ---
 name: kg-extraction
@@ -1837,7 +1907,24 @@ description: Use when extracting entities and relationships from financial text.
 ```
 Domain knowledge for extraction: FIBO entity types, relationship taxonomy, extraction rules.
 
-#### polanyi-enrichment/SKILL.md
+#### polanyi-enrichment, kg-query, neurosymbolic-reasoning, kg-visualization, memory-recall — **[DONE, all real]**
+
+The four sketches below (plus `memory-recall`, added this session, not
+originally sketched here) are all now real — see `backend/skills/*/SKILL.md`
+for actual content. Loaded by `backend/agents/graph.py`'s **responder** node
+(not by dedicated `enricher`/`querier`/`reasoner` nodes, since the query
+engine and reasoning engine are deterministic and LLM-free by design — the
+skill has no LLM call to attach to in those nodes, so it attaches where the
+LLM call that needs the guidance actually lives): `polanyi-enrichment` when
+`intent == "enrich"`, `kg-query` when `intent == "query"`,
+`neurosymbolic-reasoning` when `intent == "reason"`, `kg-visualization` when
+`intent == "visualize"`. `memory-recall` loads *in addition* to whichever
+primary skill is active, whenever the message contains a temporal keyword
+("historical", "as of", "previously", ...), regardless of intent. Live-
+verified for all 5 intents against the real running server.
+
+Original sketches below, kept for history (content superseded by the actual files):
+
 ```
 ---
 name: polanyi-enrichment
@@ -1847,7 +1934,6 @@ description: Use when enriching a knowledge graph with implicit knowledge.
 ```
 Domain knowledge for enrichment: 11 heuristics, scoring criteria, confidence thresholds.
 
-#### kg-query/SKILL.md
 ```
 ---
 name: kg-query
@@ -1857,7 +1943,6 @@ description: Use when answering natural language questions about the knowledge g
 ```
 Domain knowledge for querying: Cypher patterns, common queries, result formatting.
 
-#### neurosymbolic-reasoning/SKILL.md
 ```
 ---
 name: neurosymbolic-reasoning
@@ -1867,7 +1952,6 @@ description: Use when running neurosymbolic reasoning over the knowledge graph.
 ```
 Domain knowledge for reasoning: Spread activation parameters, proof tracing, inference rules.
 
-#### kg-visualization/SKILL.md
 ```
 ---
 name: kg-visualization
@@ -1876,6 +1960,31 @@ description: Use when visualizing or exporting the knowledge graph.
 ---
 ```
 Domain knowledge for visualization: Layout algorithms, color coding, export formats.
+
+#### memory-recall/SKILL.md **[NEW — added with §20]**
+```
+---
+name: memory-recall
+description: Use when a user's question references prior conversation, "as of"
+  a point in time, or how a fact has changed. Activates on temporal/historical
+  requests, not current-state lookups.
+---
+```
+Domain knowledge for temporal queries: how to query `validAt`/`invalidAt`
+windows on `:RELATES` (point-in-time state, not just current), how to read
+`:ChatSession`/`:ChatMessage` history for conversational continuity, how to
+walk `IngestEvent-[:PRODUCED]->` for provenance ("which document said this").
+Distinct from `kg-query`, which only knows current-state Cypher patterns —
+without this skill the agent has no way to know invalidated facts exist at
+all, since a naive `MATCH` on `:RELATES` returns current + historical edges
+indistinguishably unless the query filters on validity window.
+
+**Why a 6th skill and not folded into kg-query or memory-agent behavior**:
+temporal reasoning is conditionally relevant (most questions are current-state
+and shouldn't pay the context cost of temporal query patterns), which is
+exactly the case skills exist for — narrow, activates on trigger, doesn't
+bloat the default prompt. This entry didn't exist when §13.2 was first
+drafted because §20 (the temporal memory layer) didn't exist yet.
 
 ---
 
@@ -2031,6 +2140,40 @@ DATABASE_URL=postgresql://neurosymbolic:password@localhost:5432/neurosymbolic
 ---
 
 ## 16. Implementation Phases
+
+### 16.0 Phase Dependency DAG
+
+**[NEW]** Real blocking relationships between the phases below (not strict numeric order — several are independent and already done out of order relative to this list):
+
+```
+Phase 0 (Scaffolding) ── DONE
+      │
+Phase 1 (Backend Skeleton) ── PARTIAL (FastAPI+Neo4j done; minimal LangGraph skeleton DONE [UPDATED])
+      │
+      ├──▶ Phase 2 (Agent Layer) ── PARTIAL [UPDATED] (extractor/reasoner/responder real, live-verified;
+      │         │                    router/enricher/querier/memory_agent still not started)
+      │         │
+      │         ├──▶ Phase 4 (MCP Layer) ── still NOT STARTED — needs agent nodes to expose tools to
+      │         ├──▶ Phase 5 (Tool Layer) ── still NOT STARTED — the 3 real nodes call services
+      │         │                            directly, no formal tool-registration layer yet
+      │         └──▶ Phase 10 runtime skills ── PARTIAL [UPDATED]: 1 of 6 real (`kg-extraction`,
+      │                   `backend/agents/skill_store.py`'s load_skill, loaded for real by the
+      │                   extractor node). Unblocked now that Phase 2 has a real node to load into.
+      │
+      └──▶ Phase 3 (Memory Layer) ── DONE, was NOT blocked on Phase 2
+                (§20's native rebuild only needed Neo4j + the existing services layer,
+                 not an agent graph — this is why §20.5 recommended starting here, and it paid off)
+
+Phase 6 (LLM Integration) ── DONE, independent of everything above (already shipped as LLMClient)
+Phase 8 (Reasoning Engine) ── DONE, independent of everything above (already shipped, §8.4)
+Phase 7 (Extraction) ── DONE, independent
+Phase 7 (Enrichment/Polanyi, §19) ── DONE (all 11 heuristics + frontend), needed only Phase 7 Extraction
+Phase 9 (Frontend) ── PARTIAL, tracks whichever backend phase it's surfacing (independent per-feature).
+                       [UPDATED] UI for the Phase 6 /agent endpoint now exists (AgentPanel.tsx).
+Phase 11 (Polish+Deploy) ── PARTIAL, last; Docker Compose full-stack piece needs nothing else to finish first
+```
+
+**Practical reading**: the only hard sequencing gate in the whole list is **Phase 1's LangGraph skeleton → Phase 2 Agent Layer → {Phase 4, Phase 5, runtime skills}**. Memory (Phase 3/§20), Enrichment (Phase 7/§19), Reasoning (Phase 8), and LLM Integration (Phase 6) are all independent of that chain and of each other — which is why §20.5 could recommend starting temporal memory now without waiting on the LangGraph wrap.
 
 ### Phase 0: Scaffolding + Skills Installation
 - Install community skills from 4 repos
@@ -2190,3 +2333,154 @@ To keep the v1 skill graph bounded, these §2.9.14-adjacent ideas remain post-v1
 - A/B testing of skill variants and automated confidence-driven routing changes.
 - `CONFLICTS`-based mutual-exclusion enforcement (schema modeled, not enforced in v1 routing).
 - Cross-agent shared-graph learning beyond single-process usage recording.
+
+---
+
+## 19. Decision Record: Polanyi Enrichment Layer (v1)
+
+> **Added**: July 11, 2026
+> **Status**: **[UPDATED]** All 11 heuristics implemented, tested, and live-verified running together against a real graph — see §19.6 steps 1–4. Only frontend (§19.6 step 5) not started.
+> **Reference**: `.firecrawl/paper1-polanyi-full.md` — "Neurosymbolic graph enrichment for Grounded World Models" (De Giorgis, Gangemi, Russo). This section documents the *actual* methodology read from the full paper (not the abstract), and two scoping decisions made against it.
+
+### 19.1 What the paper actually specifies
+
+The full pipeline (§3 of the paper):
+
+```
+(image → MLLM description) OR user-provided text
+        ↓
+Text2AMR2FRED:  SPRING (AMR parser) → BLINK (entity linking) → AMR2FRED
+                (deterministic AMR→OWL/RDF, ~15 steps / 200+ rules) → eWiSeR (WSD)
+                → aligned to DOLCE foundational ontology + Framester + PropBank/VerbNet
+        ↓
+"Base Graph" (OWL-RDF; e.g. fred:athlete_1 rdfs:subClassOf dul:Person)
+        ↓
+11 heuristic passes, each: prompt an LLM with
+  [role: "expert ontology engineer"] + [input format/standards: OWL2, Turtle] +
+  [heuristic definition + few-shot examples] + [output format rules: new triples only]
+  → new triples anchored to Base Graph nodes → one XKG (Extended Knowledge Graph) per heuristic
+        ↓
+merge all 11 XKGs + Base Graph → final enriched graph
+```
+
+Text input is explicitly supported by the paper (not image-only) — "begins... with either user-provided text or an LLM-generated description of an input image."
+
+**The 11 heuristics** (verbatim from §3.2, each is a general cognitive/pragmatic category, not domain-specific): **Presuppositions** (implicit assumptions needed for a statement to make sense), **Conversational Implicatures** (Gricean pragmatics — meaning beyond literal content), **Factual Impact** (physical/social/cognitive consequences of events on participants), **Image Schemas** (embodied cognitive structures — container, path, force, balance), **Metonymic Coercion** (part-whole sense-shift, e.g. "the White House announced"), **Moral-Value-Driven Coercion** (literal statement reinterpreted through a values lens), **Symbolic Coercion** (Peircean — literal meaning → symbolic interpretation), **Event Sequences** (implicit chronological ordering), **Causal Relations** (cause–effect, distinct from mere sequence or correlation), **Implied Future Events** (likely consequences not yet stated), **Implied Non-Events** (counterfactual alternatives the text implies were foreclosed).
+
+### 19.2 Correction: this is domain-agnostic, not a "financial enrichment" feature
+
+An earlier pass in this session scoped the heuristics against "is this relevant to financial documents" — that was wrong and has been corrected. The 11 heuristics operate on the **narrative/pragmatic structure of text itself**, independent of subject matter: a legal contract has causal relations and implied future events; a medical record has factual impact and presuppositions; a news article has all 11. They are not filtered by domain. **All 11 ship together**, exactly as the paper defines them, regardless of which domain ontology (§4 System Architecture; whatever repository is loaded in GraphDB) is active for entity typing.
+
+This actually *strengthens* the domain-agnostic architecture: the heuristic layer is a second, permanently-fixed vocabulary (universal across every domain this product ever points at) sitting alongside the first, swappable vocabulary (the loaded ontology). Neither depends on the other.
+
+### 19.3 Decision: adapt the Base Graph, do not replicate AMR/FRED/BLINK/eWiSeR
+
+These four tools (SPRING AMR parser, AMR2FRED, BLINK entity linker, eWiSeR word-sense disambiguator) exist in the paper to solve one problem: *turn raw natural language into a structured graph with no prior domain schema*. This project already solves that problem differently — LLM structured-output extraction validated against whatever ontology is loaded (§5.2 `extraction/pipeline.py`, already shipped in the MVP). Adopting AMR/FRED/BLINK/eWiSeR alongside it would mean running two independent graph-construction pipelines against the same input, in two different type systems (FIBO-or-whatever vs. DOLCE/FrameNet/PropBank), that would need reconciliation to produce one coherent graph. It is also a genuinely large, largely orthogonal undertaking: SPRING and eWiSeR are GPU-hosted transformer models, AMR2FRED is a separate Java codebase (~15 conversion steps, 200+ condition checks), BLINK needs a Wikipedia entity index — weeks of polyglot tooling for output (generic `Person`/`Event`/image-schema structure) that isn't more useful to this product than the domain-typed graph it already produces.
+
+**Decision: the already-extracted, ontology-typed graph (`:Entity`/`:RELATES`, real per PLAN.md §5.2) *is* the Base Graph.** The 11 heuristics run against it (plus the original source text for context) instead of against an AMR-derived graph.
+
+### 19.4 Decision: DOLCE is a separate, optional, non-blocking consideration
+
+DOLCE (Descriptive Ontology for Linguistic and Cognitive Engineering) is not a parser — it's a foundational/upper ontology meant to ground *any* domain ontology's classes under universal categories (`Person`, `Event`, `PhysicalObject`, `SocialObject`, `Quality`...). Unlike AMR/FRED/BLINK/eWiSeR, this is genuinely additive to the domain-agnostic goal: right now "domain-agnostic" means *config-swappable* (point GraphDB at a different repository, get a different vocabulary); a DOLCE alignment layer would make it *semantically grounded* — every loaded domain ontology's classes mapped to the same universal top-level via `rdfs:subClassOf`, enabling cross-domain comparison (e.g. an "organization" from FIBO and a "hospital" from a medical ontology both resolving to `dolce:SocialObject`).
+
+**Decision: out of scope for the v1 enrichment work below.** It's a separate, smaller, later addition (consume DOLCE's public OWL file, map loaded-ontology classes to it) — not needed to ship the 11 heuristics, and not blocking them. Revisit once the heuristic layer is live and there's a concrete cross-domain use case that needs it.
+
+### 19.5 Architecture
+
+**Neo4j shape** (new node type, kept separate from both the ontology-typed `:Entity` graph and the rule-derived `:DerivedFact` graph — three distinct provenance layers, not conflated):
+```
+(:ImplicitFact {
+  id, heuristicType,       // one of the 11 categories, e.g. "causal_relation"
+  text,                    // the asserted implicit fact, natural language
+  confidence,              // LLM-reported confidence for this assertion
+  sourceDoc, graphId
+})-[:ANCHORED_TO]->(:Entity)   // one or more anchor nodes in the Base Graph
+```
+
+**Prompt structure per heuristic** (following the paper's own §3.3.2 pattern, one prompt file per heuristic, e.g. `prompts/enrichment/causal_relations.txt`):
+1. Role specification ("You are an expert ontology engineer...")
+2. Input format/standards (the Base Graph subset in a compact textual form + the original source text)
+3. Heuristic definition + 2-3 few-shot examples (ported from the paper's own examples per heuristic, §3.2)
+4. Output format instructions: new `:ImplicitFact` assertions only, each naming its anchor node(s), confidence, and heuristic type — no free text outside the specified format
+
+**Pipeline position**: after extraction (`:Entity`/`:RELATES` exist), independent of and parallel to reasoning (`:DerivedFact` — §8.4's rule-based loop). Human-in-the-loop approval before merge into the graph, per §7.3 (already speced: *"Enrichment (user approves/edits enrichment results)"*).
+
+**Validation**: unlike domain extraction, `:ImplicitFact.heuristicType` is validated against the fixed 11-category enum (not the swappable ontology — these categories are Polanyi's own typology, not domain vocabulary). Anchor nodes must exist in the real graph (same anchoring-integrity check as extraction's ontology validation, applied to a different vocabulary).
+
+### 19.6 Where to start implementing
+
+Smallest real slice, TDD, one heuristic first to prove the pattern before building all 11:
+
+1. **[DONE]** `enrichment/heuristics/base.py` — shared prompt-building + parsing (`HEURISTIC_TYPES` enum, `build_base_graph_text`, `run_heuristic`); `:ImplicitFact` persistence in `services/enrichment_service.py` (`save_pending_facts`, `list_pending_facts`, `list_approved_facts`, `set_fact_status`). Tests: `test_enrichment_base.py`, `test_enrichment_service.py`.
+2. **[DONE] Causal Relations** first. `enrichment/heuristics/causal_relations.py` — prompt built per §19.5's 4-part structure, few-shot example ported verbatim from the paper's own §3.2 worked example ("The heavy rain forced the match to be postponed"). Tests: `test_causal_relations_heuristic.py`. Verified live against the running server with a real LLM and a real financial scenario ("Deutsche Bank AG postponed its planned bond issuance after regulatory scrutiny from FINMA increased sharply") — correctly produced `causal_relation` fact "regulatory scrutiny from FINMA caused Deutsche Bank AG to postpone its planned bond issuance", anchored to both real entities.
+3. **[DONE]** `POST /enrich/{graphId}` + `GET /enrich/{graphId}/pending` + `GET /enrich/{graphId}/approved` + `POST /enrich/{graphId}/{factId}/approve` + `.../reject` (`api/enrich.py`). Rejected facts are kept with `status: "rejected"`, not deleted — audit trail of what an LLM proposed and a human declined. Tests: `test_api_enrich.py`. Verified live: pending → approve → moves from `/pending` to `/approved`.
+4. **[DONE]** Remaining 10 heuristics, each following the pattern proven in step 2 — mechanical repetition, confirmed. Modules: `presuppositions.py`, `conversational_implicatures.py`, `factual_impact.py`, `image_schemas.py`, `metonymic_coercion.py`, `moral_value_coercion.py`, `symbolic_coercion.py`, `event_sequences.py`, `implied_future_events.py`, `implied_non_events.py` — each with a paper-sourced (§3.2) few-shot example. `enrichment/heuristics/__init__.py`'s `ALL_HEURISTIC_MODULES` registry + `services/enrichment_service.run_all_heuristics()` run all 11 together per a single `/enrich` call, matching §19.2's "all 11 ship together." Tests: `test_remaining_heuristics.py` (parametrized across all 10), `test_enrichment_registry.py`. **Live-verified** against the running server with a real financial scenario (Deutsche Bank AG / FINMA / bond issuance): 25 real facts across 10 of 11 heuristic types in one call (~13s, 11 sequential LLM calls). **One real finding from live verification, not a test**: `symbolic_coercion`'s first version leaked its few-shot example ("the Kangaroos") verbatim into the output for a scenario with no real symbolic coercion, instead of correctly returning an empty list — fixed by adding an explicit "the example is illustrative only, do not repeat it" instruction to that prompt, re-verified fixed. After the fix, `symbolic_coercion` still over-generates speculative, low-confidence associations on this scenario (e.g. "the Swiss Alps") rather than reporting none — an honest, expected limitation (the paper's own human evaluation found Symbolic Coercion among the lower-agreement heuristics across annotators), exactly the case human-in-the-loop approval exists to catch. Left as-is rather than over-tuned. **[UPDATED — recurrence found via the agent's `enrich` intent]** The same few-shot-leakage pattern reappeared in `moral_value_coercion` ("She always keeps her promises"), `event_sequences` (the flight/competition example), and `implied_non_events` ("She decided not to compete") — the same "illustrative only, don't repeat" instruction was applied to all three, confirmed fixed for two of the three; `symbolic_coercion`'s "the Kangaroos" leak persisted even after its own fix, on a second live run. This is a genuine local-model (llama-3.1-8b-instruct) instruction-following limitation with few-shot-heavy prompts, not a per-heuristic prompt-wording problem — chasing it further heuristic-by-heuristic has diminishing returns. The architectural answer stays the same: human-in-the-loop approval (`EnrichmentPanel.tsx`, confidence-sorted) is the real safeguard, not prompt perfection.
+5. **Not started.** Frontend: an "Enrich" tab or section (left sidebar, alongside Construct/Reason/Ingest) showing pending `:ImplicitFact` assertions grouped by heuristic type, with approve/reject — spec already in `UI_PLAN.md` §9.3.
+
+### 19.7 Explicitly deferred (not part of this decision)
+
+- AMR/SPRING/AMR2FRED/BLINK/eWiSeR — redundant with existing extraction (§19.3).
+- DOLCE/Framester foundational-ontology alignment — additive but separate (§19.4).
+- The paper's image-input path (MLLM image→description) — this product's input is documents, not images; text path only.
+
+---
+
+## 20. Decision Record: Temporal Memory Layer (Graphiti/Zep-inspired, rebuilt natively)
+
+> **Added**: July 11, 2026
+> **Status**: Spec finalized, not implemented. Supersedes §4's memory-architecture references, which cited a less-verified project (see §20.1).
+> **Scope**: rebuild the relevant concepts natively in this codebase — **not** a dependency on `graphiti-core` or the Zep API. No new Python package, no external service call. Same reasoning as §19.3 for Polanyi: reimplement the pattern against our own Neo4j, not bolt on someone else's library.
+
+### 20.1 Why this supersedes §4
+
+§4 ("Neo4j Context Graphs + Memory") cites `neo4j-labs/agent-memory` and a "Neo4j Labs, June 2026" context-graph concept — one of several citations flagged earlier in this session as unverifiable (future-dated, suspiciously precise star counts). Graphiti (`getzep/graphiti`) is different: real GitHub project, real research paper (arXiv:2501.13956, "Zep: A Temporal Knowledge Graph Architecture for Agent Memory"), and this project's own `.env` already has a provisioned `zep_API_KEY` — someone already scoped Zep as a candidate before this session. §4 is kept for history; this section is the one to build from.
+
+### 20.2 Graphiti's actual data model (verified against source, not the abstract)
+
+Read directly from `graphiti_core/nodes.py` and `graphiti_core/edges.py`:
+
+```
+EpisodicNode        — raw ingested data (message | json | text | fact_triple),
+                       source_description, content, valid_at (doc time),
+                       entity_edges (which EntityEdges this episode produced)
+                       → the ground-truth provenance layer; every derived fact traces back here
+
+EntityNode           — name, name_embedding, summary (natural-language, evolves
+                       as new episodes reference it), attributes (label-specific)
+
+EntityEdge           — name, fact (the assertion as text), fact_embedding,
+                       episodes (provenance: which episodes support this fact),
+                       valid_at / invalid_at / expired_at (bi-temporal —
+                       "when information changes, old facts are invalidated,
+                       not deleted"), reference_time, attributes
+
+CommunityNode        — groups of related entities, name_embedding, summary
+```
+
+Zep (the product layer on top) adds session/user memory: `memory.add(session_id, messages)` appends chat turns; `memory.get(session_id)` returns a `context` string (built from the user's graph, not just that session) for injection into the next LLM call, plus recent raw messages.
+
+### 20.3 The real gap this fixes in the current codebase
+
+`services/graph_service.upsert_entity` (real, shipped) does a blind `MERGE ... SET` — if a second ingest asserts a fact that contradicts the first (e.g. doc 1 says "CEO: Jane Smith", doc 5 says "CEO: John Doe"), the old value is silently overwritten. There is no record that Jane Smith *was* CEO, no timestamp of when the fact changed, nothing queryable like "who was CEO in March." This is exactly the problem Graphiti's bi-temporal `EntityEdge` model solves, and it's a real, current gap — not speculative.
+
+Separately: `POST /chat/{graphId}` (real, shipped, §"Backend spec" in `MVP_PLAN.md`) is stateless — every call rebuilds full graph context from scratch with no memory of prior turns in the same conversation. That's the gap Zep's session/user memory model solves.
+
+Also: `:IngestEvent` (real, shipped — `services/history_service.py`) is *already* structurally close to Graphiti's `EpisodicNode` (raw text + timestamp + counts) — it just isn't linked to the entities/edges it produced, and isn't used for provenance queries. Extending it, not replacing it, is the natural path.
+
+### 20.4 What to rebuild (native, no dependency)
+
+1. **[DONE] Provenance linking** — `IngestEvent-[:PRODUCED]->Entity`, so "which document said this" is a graph traversal, not a guess from `sourceDoc` string matching. Also stamps `producedByEventId` on newly-created `:RELATES` edges. `services/history_service.py` (`record_ingest_event(entity_ids=...)`, `get_produced_entity_ids`, `get_entity_provenance`), wired in `services/ingest_service.py`. API: `GET /graph/{graphId}/nodes/{nodeId}/provenance` (`api/graph.py`). Tests: `test_history_service.py`, `test_ingest_service.py`, `test_api_provenance.py`.
+2. **[DONE] Bi-temporal facts** — added `validAt`/`invalidAt` to `:RELATES` edges. On a new edge asserting a different target for the same (source, edge-type), the prior current edge is invalidated (`invalidAt = datetime()`), not overwritten — old facts stay queryable via the new `get_relationship_history()`. `get_graph()`/`load_triples()` stay current-only (`WHERE r.invalidAt IS NULL`) so existing callers are unaffected. `services/graph_service.py` (`upsert_relationship`, `get_relationship_history`). API: `EdgeResponse` now carries `validAt`/`invalidAt`/`producedByEventId` (`api/graph.py`). Tests: `test_graph_service.py`, `test_api_provenance.py`. **Known simplification** (documented in code): treats every relation type as single-valued per source (no ontology cardinality metadata to distinguish functional vs multi-valued predicates) — a genuinely multi-valued relation (e.g. "hasSubsidiary") would have its earlier targets incorrectly invalidated when a new one is asserted. Not hit by current rule/reasoning usage; flag if a real multi-valued case shows up. Frontend surfacing (superseded-fact badges, history view) is spec'd but not built — see `UI_PLAN.md` §9.1/9.2.
+3. **[DONE] Evolving entity summaries** — `:Entity.summary`, regenerated by a real LLM call each time a new ingest references that entity, accumulating context across ingests (mirrors `EntityNode.summary`). `services/summary_service.py` (new, `generate_summary`), wired into `services/ingest_service.py` right after each entity upsert (reads the existing summary via `graph_service.get_entity_summary`, synthesizes with the new ingest's full source text, writes back via `graph_service.update_entity_summary`). Exposed on `NodeResponse.summary` in both `api/graph.py` and `api/ingest.py`. Tests: `test_summary_service.py`, `test_ingest_service.py`, `test_api_provenance.py`. Verified live against the running server with two separate real ingests about "Deutsche Bank AG" (Frankfurt/commercial-bank in doc 1, a EUR 500M bond in doc 2) — the resulting summary genuinely synthesized both, not just the latest.
+4. **[DONE] Session memory for chat** — `:ChatSession`/`:ChatMessage` nodes (ordered via a `seq` property, not relying on same-millisecond `createdAt` ordering), linked `(:ChatSession)-[:HAS_MESSAGE]->(:ChatMessage)`. `POST /chat` now reads recent history into the system prompt alongside the existing graph-grounded context, then appends both the user turn and the reply — mirrors Zep's `memory.add`/`memory.get`. `services/chat_history_service.py` (new), wired into `services/chat_service.py`. API: `ChatRequest.session_id` is optional — omitting it defaults to one continuous session per graph (`{graphId}:default`), so existing callers get real memory for free without a frontend change. Verified live against the running dev server: told it "My favorite number is 42," then asked "What did I just tell you?" in a second call with no session_id — correctly replied "42." Tests: `test_chat_history_service.py`, `test_chat_service.py`, `test_api_chat.py`.
+5. **[DONE]** Community detection — originally deferred as lowest priority/most speculative for this product's single-analyst usage pattern, then built on explicit direction using the **real Neo4j GDS plugin** (confirmed installed: `gds.version()` → `2026.03.0`), not a hand-rolled approximation. `services/community_service.py`: `detect_communities()` projects the graph_id-scoped `:Entity`/`:RELATES` subgraph into an in-memory GDS graph via `gds.graph.project.cypher` (deprecated in this GDS version in favor of the newer Cypher-projection-as-aggregation-function form, but confirmed still functional live — noted in code for future revisit), runs `gds.louvain.write` writing `communityId` onto each `:Entity`, drops the projection. `get_communities()` reads back without recomputing. API: `POST`/`GET /graph/{graphId}/communities` (`api/graph.py`), `NodeResponse`/`GraphNodeRecord` gained `communityId`. Tests: `test_community_service.py` (disconnected-cluster separation proof), `test_api_communities.py`. **Live-verified** against the real running server on the real `default` graph: Credit Suisse/FINMA/Zurich correctly clustered separately from UBS Group/Switzerland/Swiss regulator/HDFC — semantically sensible communities from real Louvain, not synthetic data.
+
+### 20.5 Where this sits relative to §19 (Polanyi) and Phase 6 (LangGraph)
+
+Three deferred-but-now-spec'd workstreams exist: Polanyi enrichment (§19), temporal memory (§20), LangGraph wrap (`MVP_PLAN.md` Phase 6). They're independent — no ordering dependency between them. **[UPDATED] Temporal memory items 1–4 are now done** (provenance linking, bi-temporal facts, evolving summaries, chat session memory — §20.4), each TDD'd and live-verified against the running server. Original recommendation (items 1–2 first, smallest slice, fixes a real correctness gap) held; items 3–4 followed the same pattern. Remaining: item 5 (community detection, deferred), and the two still-independent workstreams — Polanyi enrichment (§19, 0% implemented, `enrichment/heuristics/` doesn't exist) and the LangGraph wrap (`MVP_PLAN.md` Phase 6, the only remaining MVP item).
+
+### 20.6 Explicitly deferred (not part of this decision)
+
+- ~~Community detection~~ **[now DONE, see §20.4 item 5]** — implemented via real Neo4j GDS on explicit direction, superseding this deferral.
+- Any dependency on `graphiti-core`, the Zep hosted API, or the `zep_API_KEY` already in `.env` — this is a from-scratch reimplementation of the concepts against this project's own Neo4j, per the "no need to integrate, just rebuild" direction. (GDS is different: it's a real Neo4j-native plugin already installed in this project's own database, not an external service dependency — using it isn't a violation of that direction.)
+- Redis/PostgreSQL-backed checkpointing (§9.1) — still MVP-deferred, unrelated to this decision.

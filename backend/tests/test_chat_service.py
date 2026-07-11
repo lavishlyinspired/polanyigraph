@@ -36,6 +36,7 @@ def neo4j():
     yield client, graph_id
     client.run("MATCH (e:Entity {graphId: $gid}) DETACH DELETE e", gid=graph_id)
     client.run("MATCH (f:DerivedFact {graphId: $gid}) DETACH DELETE f", gid=graph_id)
+    client.run("MATCH (s:ChatSession {graphId: $gid}) DETACH DELETE s", gid=graph_id)
     client.close()
 
 
@@ -49,7 +50,7 @@ def test_chat_grounds_prompt_in_real_graph_data(neo4j):
     graph_service.save_derived_facts(client, graph_id=graph_id, facts=[fact])
 
     llm = FakeLLM("Deutsche Bank AG is a commercial bank regulated by the ECB.")
-    reply = chat_service.answer(neo4j=client, llm=llm, graph_id=graph_id, message="Who regulates Deutsche Bank?")
+    reply = chat_service.answer(neo4j=client, llm=llm, graph_id=graph_id, message="Who regulates Deutsche Bank?", session_id="s1")
 
     assert reply == "Deutsche Bank AG is a commercial bank regulated by the ECB."
     assert llm.last_call is not None
@@ -62,5 +63,30 @@ def test_chat_grounds_prompt_in_real_graph_data(neo4j):
 def test_chat_on_empty_graph_still_answers(neo4j):
     client, graph_id = neo4j
     llm = FakeLLM("This graph is empty. Ingest a document to populate it.")
-    reply = chat_service.answer(neo4j=client, llm=llm, graph_id=graph_id, message="What's in the graph?")
+    reply = chat_service.answer(neo4j=client, llm=llm, graph_id=graph_id, message="What's in the graph?", session_id="s1")
     assert reply == "This graph is empty. Ingest a document to populate it."
+
+
+def test_chat_remembers_prior_turns_in_same_session(neo4j):
+    """PLAN.md §20 item 4: a second call in the same session should see the
+    first turn in its prompt -- proving real continuity, not just grounding."""
+    client, graph_id = neo4j
+    llm = FakeLLM("first reply")
+    chat_service.answer(neo4j=client, llm=llm, graph_id=graph_id, message="My favorite number is 42.", session_id="s1")
+
+    llm2 = FakeLLM("second reply")
+    chat_service.answer(neo4j=client, llm=llm2, graph_id=graph_id, message="What's my favorite number?", session_id="s1")
+
+    assert "My favorite number is 42." in llm2.last_call["system"]
+    assert "first reply" in llm2.last_call["system"]
+
+
+def test_chat_sessions_do_not_leak_across_each_other(neo4j):
+    client, graph_id = neo4j
+    llm = FakeLLM("reply in session A")
+    chat_service.answer(neo4j=client, llm=llm, graph_id=graph_id, message="Session A message.", session_id="session-a")
+
+    llm2 = FakeLLM("reply in session B")
+    chat_service.answer(neo4j=client, llm=llm2, graph_id=graph_id, message="Session B message.", session_id="session-b")
+
+    assert "Session A message." not in llm2.last_call["system"]

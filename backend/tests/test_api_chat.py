@@ -14,8 +14,10 @@ from db.neo4j_client import Neo4jClient
 class FakeLLM:
     def __init__(self, response: str) -> None:
         self._response = response
+        self.last_call: dict[str, str] | None = None
 
     def complete_json(self, *, system: str, user: str, temperature: float = 0.0) -> str:
+        self.last_call = {"system": system, "user": user}
         return self._response
 
 
@@ -39,6 +41,7 @@ def client_and_graph():
 
     app.dependency_overrides.clear()
     neo4j.run("MATCH (e:Entity {graphId: $gid}) DETACH DELETE e", gid=graph_id)
+    neo4j.run("MATCH (s:ChatSession {graphId: $gid}) DETACH DELETE s", gid=graph_id)
     neo4j.close()
 
 
@@ -47,3 +50,18 @@ def test_chat_returns_reply(client_and_graph):
     resp = client.post(f"/chat/{graph_id}", json={"message": "What's in this graph?"})
     assert resp.status_code == 200
     assert resp.json()["reply"] == "Grounded real answer."
+
+
+def test_chat_remembers_prior_turns_without_explicit_session_id(client_and_graph):
+    """No session_id sent by the client -> defaults to one continuous session
+    per graph, so existing frontend calls get real memory for free."""
+    client, graph_id = client_and_graph
+    from app.dependencies import get_llm
+    from app.main import app
+
+    llm2 = FakeLLM("second reply")
+    client.post(f"/chat/{graph_id}", json={"message": "My favorite number is 42."})
+    app.dependency_overrides[get_llm] = lambda: llm2
+    client.post(f"/chat/{graph_id}", json={"message": "What's my favorite number?"})
+
+    assert "My favorite number is 42." in llm2.last_call["system"]

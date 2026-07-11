@@ -14,7 +14,7 @@ import pytest
 
 from app.config import get_settings
 from db.neo4j_client import Neo4jClient
-from services import history_service
+from services import graph_service, history_service
 
 
 @pytest.fixture
@@ -76,3 +76,33 @@ def test_history_is_scoped_per_graph(neo4j):
 def test_empty_graph_has_no_history(neo4j):
     client, graph_id = neo4j
     assert history_service.list_ingest_events(client, graph_id) == []
+
+
+def test_record_ingest_event_links_produced_entities(neo4j):
+    """PLAN.md §20 item 1: provenance is a graph traversal, not a sourceDoc string."""
+    client, graph_id = neo4j
+    entity_id = f"{graph_id}:e1"
+    try:
+        graph_service.upsert_entity(
+            client, graph_id=graph_id, entity_id=entity_id, label="Acme Corp", type_="BusinessEntity",
+            source_doc="doc-1", extraction_confidence=0.9,
+        )
+
+        history_service.record_ingest_event(
+            client, graph_id=graph_id, event_id="evt-1", text="Acme Corp exists.",
+            entity_count=1, relationship_count=0, dropped_count=0, entity_ids=[entity_id],
+        )
+
+        produced = history_service.get_produced_entity_ids(client, graph_id=graph_id, event_id="evt-1")
+        assert produced == [entity_id]
+    finally:
+        client.run("MATCH (e:Entity {graphId: $gid}) DETACH DELETE e", gid=graph_id)
+
+
+def test_record_ingest_event_with_no_entities_is_fine(neo4j):
+    client, graph_id = neo4j
+    history_service.record_ingest_event(
+        client, graph_id=graph_id, event_id="evt-1", text="nothing extracted",
+        entity_count=0, relationship_count=0, dropped_count=1,
+    )
+    assert history_service.get_produced_entity_ids(client, graph_id=graph_id, event_id="evt-1") == []

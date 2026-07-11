@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import json
 
-from extraction.pipeline import extract
+from extraction.pipeline import build_prompt, extract
 from ontology.schema import OntologyClass, OntologyProperty, OntologySchema
 
 
@@ -115,3 +115,17 @@ def test_prompt_includes_real_ontology_vocabulary():
     extract("some text", schema=_schema(), llm=llm)
     assert llm.last_call is not None
     assert "organization" in llm.last_call["system"] or "organization" in llm.last_call["user"]
+
+
+def test_extra_guidance_is_appended_to_prompt_when_given():
+    """PLAN.md §13.2: the agent's extractor node loads the kg-extraction
+    runtime skill and passes its content through as extra_guidance."""
+    system, _ = build_prompt("some text", _schema(), extra_guidance="Prefer precision over recall.")
+    assert "Prefer precision over recall." in system
+
+
+def test_extra_guidance_is_optional_and_prompt_unchanged_without_it():
+    with_guidance, _ = build_prompt("some text", _schema(), extra_guidance="Extra rule.")
+    without_guidance, _ = build_prompt("some text", _schema())
+    assert without_guidance != with_guidance
+    assert "Extra rule." not in without_guidance

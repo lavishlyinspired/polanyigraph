@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ApiEdge } from '../lib/api';
 import type { LayoutNode } from '../stores/graphStore';
 import { useGraphStore } from '../stores/graphStore';
-import { ZoomIn, ZoomOut, Maximize2, Layers, Eye, GitBranch, X } from 'lucide-react';
+import { ZoomIn, ZoomOut, Maximize2, Layers, Eye, GitBranch, X, Boxes, Sparkles } from 'lucide-react';
 
 interface GraphCanvasProps {
   nodes: LayoutNode[];
@@ -14,18 +14,29 @@ interface GraphCanvasProps {
   onMoveNode: (id: string, x: number, y: number) => void;
 }
 
-function typeHue(type: string): number {
+function hashHue(value: string): number {
   let hash = 0;
-  for (let i = 0; i < type.length; i++) hash = (hash * 31 + type.charCodeAt(i)) >>> 0;
+  for (let i = 0; i < value.length; i++) hash = (hash * 31 + value.charCodeAt(i)) >>> 0;
   return hash % 360;
 }
 
 function typeColor(type: string): string {
-  return `hsl(${typeHue(type)}, 55%, 55%)`;
+  return `hsl(${hashHue(type)}, 55%, 55%)`;
 }
 
 function typeColorDark(type: string): string {
-  return `hsl(${typeHue(type)}, 30%, 18%)`;
+  return `hsl(${hashHue(type)}, 30%, 18%)`;
+}
+
+// UI_PLAN.md §9.5.2: same hash-hue approach applied to communityId (a number,
+// not a string) so "color by community" mode reuses the same visual language
+// as domain-agnostic type coloring, just keyed on a different node attribute.
+function communityColor(communityId: number): string {
+  return `hsl(${hashHue(String(communityId))}, 55%, 55%)`;
+}
+
+function communityColorDark(communityId: number): string {
+  return `hsl(${hashHue(String(communityId))}, 30%, 18%)`;
 }
 
 function activationGlow(activation: number): string {
@@ -40,7 +51,11 @@ export function GraphCanvas({ nodes, edges, selectedNodeId, onSelectNode, onMove
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [panning, setPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
-  const { zoom, pan, setZoom, setPan, showHeatmap, showProofPath, toggleHeatmap, toggleProofPath, linkMode, linkSourceId, setLinkMode, handleCanvasNodeClick } = useGraphStore();
+  const {
+    zoom, pan, setZoom, setPan, showHeatmap, showProofPath, toggleHeatmap, toggleProofPath,
+    linkMode, linkSourceId, setLinkMode, handleCanvasNodeClick,
+    pendingFacts, approvedFacts, showCommunities, detectingCommunities, detectCommunities, toggleCommunities,
+  } = useGraphStore();
 
   const handleWheel = useCallback((e: React.WheelEvent) => {
     e.preventDefault();
@@ -106,6 +121,26 @@ export function GraphCanvas({ nodes, edges, selectedNodeId, onSelectNode, onMove
     const set = new Set(nodes.map((n) => n.type));
     return [...set].sort();
   }, [nodes]);
+
+  const uniqueCommunities = useMemo(() => {
+    const counts = new Map<number, number>();
+    for (const n of nodes) {
+      if (n.communityId == null) continue;
+      counts.set(n.communityId, (counts.get(n.communityId) ?? 0) + 1);
+    }
+    return [...counts.entries()].sort((a, b) => a[0] - b[0]);
+  }, [nodes]);
+
+  // UI_PLAN.md §9.3.4: nodes anchored by a pending or approved implicit fact
+  // get a distinct marker, separate from `derived` (an :ImplicitFact is
+  // pragmatic/cognitive inference, not a rule-derived fact).
+  const implicitFactNodeIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const f of [...pendingFacts, ...approvedFacts]) {
+      for (const anchorId of f.anchorEntityIds) ids.add(anchorId);
+    }
+    return ids;
+  }, [pendingFacts, approvedFacts]);
 
   const proofEdgeTypes = useMemo(() => {
     if (!showProofPath) return new Set<string>();
@@ -187,8 +222,9 @@ export function GraphCanvas({ nodes, edges, selectedNodeId, onSelectNode, onMove
             const isProofNode = showProofPath && proofEdgeTypes.size > 0 && edges.some(
               (e) => proofEdgeTypes.has(e.type) && (e.source === node.id || e.target === node.id),
             );
-            const color = typeColor(node.type);
-            const darkColor = typeColorDark(node.type);
+            const hasImplicitFact = implicitFactNodeIds.has(node.id);
+            const color = showCommunities && node.communityId != null ? communityColor(node.communityId) : typeColor(node.type);
+            const darkColor = showCommunities && node.communityId != null ? communityColorDark(node.communityId) : typeColorDark(node.type);
             const r = 18;
             const activation = node.activation ?? 0;
             const glowOpacity = Math.min(activation, 1);
@@ -217,6 +253,15 @@ export function GraphCanvas({ nodes, edges, selectedNodeId, onSelectNode, onMove
 
                 {isProofNode && (
                   <circle r={r + 11} fill="none" stroke="#a78bfa" strokeWidth={1.5} strokeDasharray="4 3" opacity={0.7} className="pointer-events-none" />
+                )}
+
+                {/* UI_PLAN.md §9.3.4: implicit-fact marker, distinct from `derived`
+                    (amber) and proof-path (violet dashed) -- fuchsia dot badge. */}
+                {hasImplicitFact && (
+                  <g transform={`translate(${r - 4}, ${-r + 4})`} className="pointer-events-none">
+                    <circle r={6} fill="#d946ef" stroke="#18181b" strokeWidth={1.5} />
+                    <text y={2.5} textAnchor="middle" className="fill-white text-[7px] font-bold select-none">✦</text>
+                  </g>
                 )}
 
                 <circle
@@ -295,6 +340,30 @@ export function GraphCanvas({ nodes, edges, selectedNodeId, onSelectNode, onMove
         >
           <Eye className="w-3.5 h-3.5" />
         </button>
+        <div className="h-px bg-zinc-800 my-1" />
+        <button
+          onClick={() => void detectCommunities()}
+          disabled={detectingCommunities || nodes.length === 0}
+          className="w-7 h-7 rounded flex items-center justify-center transition-colors border bg-zinc-900 border-zinc-800 text-zinc-500 hover:text-white disabled:opacity-40"
+          title="Detect communities (Neo4j GDS Louvain)"
+        >
+          {detectingCommunities ? (
+            <div className="w-3 h-3 border-2 border-zinc-400 border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <Boxes className="w-3.5 h-3.5" />
+          )}
+        </button>
+        {uniqueCommunities.length > 0 && (
+          <button
+            onClick={toggleCommunities}
+            className={`w-7 h-7 rounded flex items-center justify-center transition-colors border ${
+              showCommunities ? 'bg-sky-400/20 border-sky-400/40 text-sky-400' : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:text-white'
+            }`}
+            title="Toggle color by community"
+          >
+            <GitBranch className="w-3.5 h-3.5 rotate-90" />
+          </button>
+        )}
       </div>
 
       {/* Zoom indicator */}
@@ -302,18 +371,42 @@ export function GraphCanvas({ nodes, edges, selectedNodeId, onSelectNode, onMove
         {(zoom * 100).toFixed(0)}%
       </div>
 
-      {/* Type legend */}
-      {uniqueTypes.length > 0 && (
-        <div className="absolute top-3 left-3 bg-zinc-900/90 border border-zinc-800 rounded p-2 max-w-40">
-          <div className="text-[9px] text-zinc-500 uppercase tracking-wider mb-1.5 font-bold">Types</div>
+      {/* Type / Community legend */}
+      {showCommunities && uniqueCommunities.length > 0 ? (
+        <div className="absolute top-3 left-3 bg-zinc-900/90 border border-zinc-800 rounded p-2 max-w-44">
+          <div className="text-[9px] text-sky-400 uppercase tracking-wider mb-1.5 font-bold flex items-center gap-1">
+            <Boxes className="w-2.5 h-2.5" /> Communities
+          </div>
           <div className="space-y-1">
-            {uniqueTypes.map((t) => (
-              <div key={t} className="flex items-center gap-1.5">
-                <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: typeColor(t) }} />
-                <span className="text-[9px] text-zinc-400 truncate">{t}</span>
+            {uniqueCommunities.map(([id, count]) => (
+              <div key={id} className="flex items-center gap-1.5">
+                <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: communityColor(id) }} />
+                <span className="text-[9px] text-zinc-400 truncate">Community {id} ({count})</span>
               </div>
             ))}
           </div>
+        </div>
+      ) : (
+        uniqueTypes.length > 0 && (
+          <div className="absolute top-3 left-3 bg-zinc-900/90 border border-zinc-800 rounded p-2 max-w-40">
+            <div className="text-[9px] text-zinc-500 uppercase tracking-wider mb-1.5 font-bold">Types</div>
+            <div className="space-y-1">
+              {uniqueTypes.map((t) => (
+                <div key={t} className="flex items-center gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: typeColor(t) }} />
+                  <span className="text-[9px] text-zinc-400 truncate">{t}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+      )}
+
+      {/* Implicit-fact legend note, only when relevant */}
+      {implicitFactNodeIds.size > 0 && (
+        <div className="absolute bottom-3 left-3 bg-zinc-900/90 border border-zinc-800 rounded px-2 py-1.5 flex items-center gap-1.5">
+          <Sparkles className="w-3 h-3 text-fuchsia-400" />
+          <span className="text-[9px] text-zinc-400">{implicitFactNodeIds.size} node{implicitFactNodeIds.size === 1 ? '' : 's'} with implicit facts</span>
         </div>
       )}
     </div>

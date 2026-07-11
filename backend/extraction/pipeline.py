@@ -77,16 +77,21 @@ def _rank_by_overlap(labels: list[str], text_tokens: set[str], limit: int) -> li
     return ranked[:limit]
 
 
-def build_prompt(text: str, schema: OntologySchema) -> tuple[str, str]:
+def build_prompt(text: str, schema: OntologySchema, extra_guidance: str = "") -> tuple[str, str]:
     tokens = _tokenize(text)
     classes = _rank_by_overlap(schema.class_labels, tokens, _MAX_PROMPT_CLASSES)
     properties = _rank_by_overlap(schema.property_labels, tokens, _MAX_PROMPT_PROPERTIES)
     system = _SYSTEM_TEMPLATE.format(classes="\n".join(f"- {c}" for c in classes), properties="\n".join(f"- {p}" for p in properties))
+    # PLAN.md §13.2: the agent's extractor node loads the kg-extraction
+    # runtime skill (backend/skills/) and passes its content through here --
+    # optional so extraction/ingest_service.py's direct callers are unaffected.
+    if extra_guidance:
+        system = f"{system}\n\n{extra_guidance}"
     return system, text
 
 
-def extract(text: str, *, schema: OntologySchema, llm: LLMClient) -> ExtractionResult:
-    system, user = build_prompt(text, schema)
+def extract(text: str, *, schema: OntologySchema, llm: LLMClient, extra_guidance: str = "") -> ExtractionResult:
+    system, user = build_prompt(text, schema, extra_guidance)
     raw = llm.complete_json(system=system, user=user)
 
     try:
