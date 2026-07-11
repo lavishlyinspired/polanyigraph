@@ -1,0 +1,304 @@
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { Toolbar } from './components/Toolbar';
+import { GraphCanvas } from './components/GraphCanvas';
+import { InspectorPanel } from './components/InspectorPanel';
+import type { GraphNode, GraphEdge, NodeType, EdgeType, DerivedFact, Rule } from './types';
+
+let idCounter = 100;
+const nextId = (prefix: string) => `${prefix}-${++idCounter}`;
+
+const INITIAL_NODES: GraphNode[] = [
+  { id: 'n-launch', label: 'Product Launch', type: 'concept', x: 400, y: 200, vx: 0, vy: 0, tags: ['decision'], note: 'Should we launch next quarter?', activation: 0, derived: false },
+  { id: 'n-risk', label: 'Launch Risk', type: 'question', x: 200, y: 120, vx: 0, vy: 0, tags: ['risk'], note: 'What could go wrong?', activation: 0, derived: false },
+  { id: 'n-bug', label: 'Critical Bug #42', type: 'evidence', x: 100, y: 280, vx: 0, vy: 0, tags: ['blocker'], note: 'Payment flow crashes on Safari.', activation: 0, derived: false },
+  { id: 'n-fix', label: 'Fix in Sprint 14', type: 'concept', x: 300, y: 380, vx: 0, vy: 0, tags: ['plan'], note: 'Scheduled for next sprint.', activation: 0, derived: false },
+  { id: 'n-mitigation', label: 'Mitigation Plan', type: 'concept', x: 550, y: 340, vx: 0, vy: 0, tags: ['safety'], note: 'Feature flag to roll back.', activation: 0, derived: false },
+  { id: 'n-revenue', label: 'Revenue Impact', type: 'question', x: 650, y: 130, vx: 0, vy: 0, tags: ['business'], note: 'How much revenue is at stake?', activation: 0, derived: false },
+  { id: 'n-blocked', label: 'Launch Blocked', type: 'conclusion', x: 450, y: 480, vx: 0, vy: 0, tags: ['derived'], note: '', activation: 0, derived: true },
+];
+
+const INITIAL_EDGES: GraphEdge[] = [
+  { id: 'e1', source: 'n-risk', target: 'n-launch', type: 'related', weight: 1 },
+  { id: 'e2', source: 'n-bug', target: 'n-risk', type: 'causes', weight: 1 },
+  { id: 'e3', source: 'n-fix', target: 'n-bug', type: 'depends-on', weight: 1 },
+  { id: 'e4', source: 'n-mitigation', target: 'n-risk', type: 'implies', weight: 0.6 },
+  { id: 'e5', source: 'n-revenue', target: 'n-launch', type: 'related', weight: 1 },
+  { id: 'e6', source: 'n-blocked', target: 'n-bug', type: 'implies', weight: 1 },
+];
+
+const RULES: Rule[] = [
+  {
+    id: 'r-blocked',
+    if: 'evidence -> causes -> question',
+    then: 'conclusion: question is blocked by evidence',
+    description: 'If evidence causes a question to be open, derive a blocking conclusion.',
+  },
+  {
+    id: 'r-mitigated',
+    if: 'concept -> implies -> question AND concept has tag "safety"',
+    then: 'conclusion: risk is mitigated',
+    description: 'A safety-tagged concept implying a question means the risk is mitigated.',
+  },
+];
+
+export default function App() {
+  const [nodes, setNodes] = useState<GraphNode[]>(INITIAL_NODES);
+  const [edges, setEdges] = useState<GraphEdge[]>(INITIAL_EDGES);
+  const [selectedId, setSelectedId] = useState<string | null>('n-risk');
+  const [linkMode, setLinkMode] = useState<EdgeType | null>(null);
+  const [pendingLinkFrom, setPendingLinkFrom] = useState<string | null>(null);
+  const [derivedFacts, setDerivedFacts] = useState<DerivedFact[]>([]);
+  const animRef = useRef<number | null>(null);
+
+  // Force simulation — simple spring + repulsion
+  useEffect(() => {
+    const tick = () => {
+      setNodes((prev) => {
+        if (prev.length === 0) return prev;
+        const next = prev.map((n) => ({ ...n, vx: 0, vy: 0 }));
+
+        // Repulsion
+        for (let i = 0; i < next.length; i++) {
+          for (let j = i + 1; j < next.length; j++) {
+            const dx = next[i].x - next[j].x;
+            const dy = next[i].y - next[j].y;
+            const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+            const force = 4000 / (dist * dist);
+            const fx = (dx / dist) * force;
+            const fy = (dy / dist) * force;
+            next[i].vx += fx; next[i].vy += fy;
+            next[j].vx -= fx; next[j].vy -= fy;
+          }
+        }
+
+        // Spring attraction along edges
+        for (const edge of edges) {
+          const s = next.find((n) => n.id === edge.source);
+          const t = next.find((n) => n.id === edge.target);
+          if (!s || !t) continue;
+          const dx = t.x - s.x;
+          const dy = t.y - s.y;
+          const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+          const target = 160;
+          const force = (dist - target) * 0.02;
+          const fx = (dx / dist) * force;
+          const fy = (dy / dist) * force;
+          s.vx += fx; s.vy += fy;
+          t.vx -= fx; t.vy -= fy;
+        }
+
+        // Apply velocity with damping, keep in bounds
+        for (const n of next) {
+          n.x += n.vx * 0.5;
+          n.y += n.vy * 0.5;
+          n.x = Math.max(60, Math.min(740, n.x));
+          n.y = Math.max(60, Math.min(520, n.y));
+        }
+        return next;
+      });
+      animRef.current = requestAnimationFrame(tick);
+    };
+    animRef.current = requestAnimationFrame(tick);
+    return () => { if (animRef.current) cancelAnimationFrame(animRef.current); };
+  }, [edges]);
+
+  const selectedNode = nodes.find((n) => n.id === selectedId) ?? null;
+
+  const handleNodeClick = useCallback((id: string) => {
+    if (linkMode && pendingLinkFrom && pendingLinkFrom !== id) {
+      setEdges((prev) => [...prev, {
+        id: nextId('e'),
+        source: pendingLinkFrom,
+        target: id,
+        type: linkMode,
+        weight: 1,
+      }]);
+      setPendingLinkFrom(null);
+      setLinkMode(null);
+      return;
+    }
+    if (linkMode) {
+      setPendingLinkFrom(id);
+      return;
+    }
+    setSelectedId(id);
+  }, [linkMode, pendingLinkFrom]);
+
+  const handleNodeDrag = useCallback((id: string, x: number, y: number) => {
+    setNodes((prev) => prev.map((n) => n.id === id ? { ...n, x, y } : n));
+  }, []);
+
+  const handleBackgroundClick = useCallback(() => {
+    setSelectedId(null);
+    if (linkMode) {
+      setLinkMode(null);
+      setPendingLinkFrom(null);
+    }
+  }, [linkMode]);
+
+  const handleRunActivation = useCallback((sourceId: string) => {
+    setNodes((prev) => {
+      const next = prev.map((n) => ({ ...n, activation: 0 }));
+      const source = next.find((n) => n.id === sourceId);
+      if (!source) return next;
+      source.activation = 1;
+
+      // BFS spreading with decay
+      const visited = new Set<string>([sourceId]);
+      let frontier = [{ id: sourceId, act: 1 }];
+      const decay = 0.5;
+
+      for (let depth = 0; depth < 4 && frontier.length > 0; depth++) {
+        const nextFrontier: { id: string; act: number }[] = [];
+        for (const { id, act } of frontier) {
+          for (const edge of edges) {
+            const neighborId = edge.source === id ? edge.target : edge.target === id ? edge.source : null;
+            if (!neighborId || visited.has(neighborId)) continue;
+            visited.add(neighborId);
+            const newAct = act * decay * edge.weight;
+            const neighbor = next.find((n) => n.id === neighborId);
+            if (neighbor && newAct > neighbor.activation) {
+              neighbor.activation = newAct;
+              nextFrontier.push({ id: neighborId, act: newAct });
+            }
+          }
+        }
+        frontier = nextFrontier;
+      }
+      return next;
+    });
+  }, [edges]);
+
+  const handleClearActivation = useCallback(() => {
+    setNodes((prev) => prev.map((n) => ({ ...n, activation: 0 })));
+  }, []);
+
+  const handleUpdateNote = useCallback((id: string, note: string) => {
+    setNodes((prev) => prev.map((n) => n.id === id ? { ...n, note } : n));
+  }, []);
+
+  const handleAddNode = useCallback((label: string, type: NodeType) => {
+    const newNode: GraphNode = {
+      id: nextId('n'),
+      label,
+      type,
+      x: 350 + Math.random() * 200,
+      y: 250 + Math.random() * 100,
+      vx: 0, vy: 0,
+      tags: [],
+      note: '',
+      activation: 0,
+      derived: false,
+    };
+    setNodes((prev) => [...prev, newNode]);
+    setSelectedId(newNode.id);
+  }, []);
+
+  const handleLinkMode = useCallback((type: EdgeType | null) => {
+    setLinkMode(type);
+    setPendingLinkFrom(null);
+  }, []);
+
+  const handleRunInference = useCallback(() => {
+    const facts: DerivedFact[] = [];
+
+    // Rule 1: evidence -> causes -> question  =>  blocked
+    for (const edge of edges) {
+      if (edge.type !== 'causes') continue;
+      const src = nodes.find((n) => n.id === edge.source);
+      const tgt = nodes.find((n) => n.id === edge.target);
+      if (!src || !tgt) continue;
+      if (src.type === 'evidence' && tgt.type === 'question') {
+        facts.push({
+          id: nextId('f'),
+          rule: 'r-blocked',
+          fact: `"${tgt.label}" is blocked by evidence: "${src.label}"`,
+          confidence: 0.9,
+        });
+      }
+    }
+
+    // Rule 2: concept(safety) -> implies -> question  =>  mitigated
+    for (const edge of edges) {
+      if (edge.type !== 'implies') continue;
+      const src = nodes.find((n) => n.id === edge.source);
+      const tgt = nodes.find((n) => n.id === edge.target);
+      if (!src || !tgt) continue;
+      if (src.type === 'concept' && src.tags.includes('safety') && tgt.type === 'question') {
+        facts.push({
+          id: nextId('f'),
+          rule: 'r-mitigated',
+          fact: `"${tgt.label}" is mitigated by: "${src.label}"`,
+          confidence: 0.75,
+        });
+      }
+    }
+
+    setDerivedFacts(facts);
+
+    // Highlight derived conclusion nodes
+    if (facts.some((f) => f.rule === 'r-blocked')) {
+      setNodes((prev) => prev.map((n) =>
+        n.type === 'conclusion' && n.label.includes('Blocked')
+          ? { ...n, activation: Math.max(n.activation, 0.8) }
+          : n
+      ));
+    }
+  }, [edges, nodes]);
+
+  const handleClearFacts = useCallback(() => setDerivedFacts([]), []);
+
+  const handleReset = useCallback(() => {
+    setNodes(INITIAL_NODES.map((n) => ({ ...n, activation: 0 })));
+    setEdges(INITIAL_EDGES);
+    setDerivedFacts([]);
+    setSelectedId('n-risk');
+    setLinkMode(null);
+    setPendingLinkFrom(null);
+  }, []);
+
+  return (
+    <div className="h-screen flex flex-col bg-slate-50">
+      <Toolbar
+        nodeCount={nodes.length}
+        edgeCount={edges.length}
+        onRunInference={handleRunInference}
+        onClearActivation={handleClearActivation}
+        onReset={handleReset}
+      />
+      <div className="flex-1 flex overflow-hidden">
+        <div className="flex-1 relative bg-slate-50 border-r border-slate-200">
+          <GraphCanvas
+            nodes={nodes}
+            edges={edges}
+            selectedId={selectedId}
+            linkMode={linkMode}
+            pendingLinkFrom={pendingLinkFrom}
+            onNodeClick={handleNodeClick}
+            onNodeDrag={handleNodeDrag}
+            onBackgroundClick={handleBackgroundClick}
+          />
+          {linkMode && (
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-amber-600 text-white text-xs font-medium px-4 py-2 rounded-full shadow-lg">
+              {pendingLinkFrom ? 'Click a target node…' : `Link mode: ${linkMode} — click a source node`}
+            </div>
+          )}
+        </div>
+        <div className="w-80 bg-white border-l border-slate-200">
+          <InspectorPanel
+            selectedNode={selectedNode}
+            derivedFacts={derivedFacts}
+            onRunActivation={handleRunActivation}
+            onClearActivation={handleClearActivation}
+            onUpdateNote={handleUpdateNote}
+            onAddNode={handleAddNode}
+            onLinkMode={handleLinkMode}
+            linkMode={linkMode}
+            onRunInference={handleRunInference}
+            onClearFacts={handleClearFacts}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}

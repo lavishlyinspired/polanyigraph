@@ -1,0 +1,25 @@
+# Secrets — never commit real credentials
+.env
+.env.*
+!.env.example
+docs/.env
+
+# Python
+backend/.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+
+# Node / frontend
+node_modules/
+frontend/dist/
+frontend/.vite/
+
+# OS / editor
+.DS_Store
+*.swp
+
+# Data / archives
+*.zip
+backend/data/**/*.owl.cache

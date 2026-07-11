@@ -1,0 +1,42 @@
+[
+  {
+    "id": "issues-security",
+    "name": "Organization Issues Security",
+    "edge_type": "issues",
+    "source_type": "organization",
+    "target_type": "security",
+    "threshold": 0.3,
+    "weight": 1.0,
+    "description": "{source} issues {target}"
+  },
+  {
+    "id": "regulated-by",
+    "name": "Organization Regulated By Agency",
+    "edge_type": "is regulated by",
+    "source_type": "organization",
+    "target_type": "regulatory agency",
+    "threshold": 0.3,
+    "weight": 1.0,
+    "description": "{source} is regulated by {target}"
+  },
+  {
+    "id": "domiciled-in",
+    "name": "Organization Domiciled In Jurisdiction",
+    "edge_type": "is domiciled in",
+    "source_type": "organization",
+    "target_type": "jurisdiction",
+    "threshold": 0.3,
+    "weight": 1.0,
+    "description": "{source} is domiciled in {target}"
+  },
+  {
+    "id": "governs",
+    "name": "Jurisdiction Governs Regulatory Agency",
+    "edge_type": "governs",
+    "source_type": "jurisdiction",
+    "target_type": "regulatory agency",
+    "threshold": 0.3,
+    "weight": 0.8,
+    "description": "{source} governs {target}"
+  }
+]

@@ -1,0 +1,1045 @@
+INFO:     Will watch for changes in these directories: ['/Users/akash/KG_Projects/neurosymbolic/backend']
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [13736] using WatchFiles
+INFO:     Started server process [13743]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:50497 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50496 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50504 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50498 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50495 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50507 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50511 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50513 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50494 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50519 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50540 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50539 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50558 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50604 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50603 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50601 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50605 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50612 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50613 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50616 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50618 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50598 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50624 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50708 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50709 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50725 - "POST /reason/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50729 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50928 - "POST /chat/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51030 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51029 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51099 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51098 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51535 - "POST /reason/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51539 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51548 - "POST /reason/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51551 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51564 - "POST /reason/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51568 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51579 - "POST /reason/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51583 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51594 - "POST /reason/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51598 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51611 - "POST /reason/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51615 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51622 - "POST /reason/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51627 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51635 - "POST /reason/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51639 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51750 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51748 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51751 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51746 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51755 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51760 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51764 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51763 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51745 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51768 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51786 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51785 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51787 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51784 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51790 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51794 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51795 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51798 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51807 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51806 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51783 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51811 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51817 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51816 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51832 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51831 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51867 - "POST /chat/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51891 - "POST /query/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51900 - "POST /query/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51907 - "POST /query/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51912 - "POST /query/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51916 - "POST /query/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51921 - "POST /query/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51934 - "POST /query/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51949 - "POST /query/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52277 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52280 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52281 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52275 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52290 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52288 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52296 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52293 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52291 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52299 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52305 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52315 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52308 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52307 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52313 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52322 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52327 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52325 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52323 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52331 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52334 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52336 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52340 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52342 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52271 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52345 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52348 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52351 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52354 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52357 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52381 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52380 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52386 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52379 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52382 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52389 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52392 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52395 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52378 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52398 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52417 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52416 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52420 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52415 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52418 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52423 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52427 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52429 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52414 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52432 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52454 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52452 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52457 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52455 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52451 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52460 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52466 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52464 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52450 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52469 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52651 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52652 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52671 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52672 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52669 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52677 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52673 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52683 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52684 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52686 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52668 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52690 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52959 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52958 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52957 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52961 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52968 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52971 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52977 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52972 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52974 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52981 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52984 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52986 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52953 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52992 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52995 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53033 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53031 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53029 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53038 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53034 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53049 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53045 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53046 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53051 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53055 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53058 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53060 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53028 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53063 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53066 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53422 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53421 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53423 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53420 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53427 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53430 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53436 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53434 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53419 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53439 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53546 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53545 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53547 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53544 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53550 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53556 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53560 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53558 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53543 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53563 - "GET /health HTTP/1.1" 200 OK
+WARNING:  WatchFiles detected changes in 'tests/test_api_ontology.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [13743]
+INFO:     Started server process [15646]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'tests/test_api_ontology.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [15646]
+INFO:     Started server process [15652]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'api/ontology.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [15652]
+INFO:     Started server process [15670]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'app/main.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [15670]
+INFO:     Started server process [15690]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'services/ids.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [15690]
+INFO:     Started server process [15723]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'services/ingest_service.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [15723]
+INFO:     Started server process [15733]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'services/ingest_service.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [15733]
+INFO:     Started server process [15773]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'tests/test_manual_construction.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [15773]
+INFO:     Started server process [15820]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'api/graph.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [15820]
+INFO:     Started server process [15890]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:54304 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54311 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54302 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54303 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54305 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54317 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54315 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54320 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54301 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54327 - "GET /health HTTP/1.1" 200 OK
+WARNING:  WatchFiles detected changes in 'api/graph.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [15890]
+INFO:     Started server process [15915]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'tests/test_node_metadata.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [15915]
+INFO:     Started server process [15942]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'services/graph_service.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [15942]
+INFO:     Started server process [16003]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'services/graph_service.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [16003]
+INFO:     Started server process [16007]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:54559 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54558 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54568 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54561 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54555 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54577 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54578 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54579 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54554 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54583 - "GET /health HTTP/1.1" 200 OK
+WARNING:  WatchFiles detected changes in 'services/graph_service.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [16007]
+INFO:     Started server process [16025]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'services/graph_service.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [16025]
+INFO:     Started server process [16030]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'services/graph_service.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [16030]
+INFO:     Started server process [16056]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'api/graph.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [16056]
+INFO:     Started server process [16089]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'api/graph.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [16089]
+INFO:     Started server process [16129]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'api/graph.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [16129]
+INFO:     Started server process [16160]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'tests/test_api_node_metadata.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [16160]
+INFO:     Started server process [16168]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:54896 - "POST /chat/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55021 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55028 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55019 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55020 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55022 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55035 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55036 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55038 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55018 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55041 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55056 - "POST /chat/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55083 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55082 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55081 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55089 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55084 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55092 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55095 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55098 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55080 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55101 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55116 - "POST /chat/default HTTP/1.1" 200 OK
+WARNING:  WatchFiles detected changes in 'tests/test_rules_store.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [16168]
+INFO:     Started server process [16217]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'services/rules_store.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [16217]
+INFO:     Started server process [16235]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'services/rules_store.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [16235]
+INFO:     Started server process [16273]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'services/rules_store.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [16273]
+INFO:     Started server process [16277]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'api/reason.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [16277]
+INFO:     Started server process [16287]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'api/reason.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [16287]
+INFO:     Started server process [16298]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'api/rules.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [16298]
+INFO:     Started server process [16368]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'tests/test_api_rules.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [16368]
+INFO:     Started server process [16380]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'tests/test_api_rules_crud.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [16380]
+INFO:     Started server process [16412]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:55771 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55768 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55772 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55773 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55767 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55826 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55829 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55825 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55830 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55824 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55884 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55886 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55885 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55887 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55881 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55967 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55964 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55968 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55963 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55962 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56001 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56005 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55999 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56004 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55998 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56052 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56048 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56047 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56051 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56046 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56092 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56091 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56088 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56093 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56087 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56123 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56126 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56122 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56127 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56119 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56135 - "POST /query/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56177 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56179 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56175 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56180 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56174 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56652 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56654 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56650 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56656 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56663 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56669 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56672 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56671 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56657 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56675 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56648 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56681 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56925 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56929 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56999 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57003 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56996 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57000 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57017 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57012 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57016 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57014 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57004 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56995 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57021 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57025 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57140 - "PATCH /graph/default/nodes/default%3Acredit-suisse HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57143 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57180 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57251 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57250 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57248 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57255 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57264 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57263 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57266 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57269 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57254 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57247 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57273 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57276 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57409 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57710 - "POST /graph/default/nodes HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57717 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57716 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58159 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58163 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58161 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58157 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58177 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58174 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58178 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58172 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58164 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58156 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58182 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58185 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58236 - "POST /graph/default/edges HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58240 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58290 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58287 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58292 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58288 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58293 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58310 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58309 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58306 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58312 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58314 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58285 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58317 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58377 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58403 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58400 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58399 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58404 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58416 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58420 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58418 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58417 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58423 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58427 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58430 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58432 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58435 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58438 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58444 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58442 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58406 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58448 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58398 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58454 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58453 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58457 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58460 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58463 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58830 - "POST /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58866 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58868 - "DELETE /rules/custom-33aeb07543b7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58870 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59402 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59403 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59401 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59404 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59413 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59414 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59417 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59419 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59405 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59423 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59400 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59429 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59894 - "GET /planner/config HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:59895 - "GET /auth/session HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:59896 - "GET /runtime/processes HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:59977 - "PATCH /graph/default/nodes/default%3Aswitzerland HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59980 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60722 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60723 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60724 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60721 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60731 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60734 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60739 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60738 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60725 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60719 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60745 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60748 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60963 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60960 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60959 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60964 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60975 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60978 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60974 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60980 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60983 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60987 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60990 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60992 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60998 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60995 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61004 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61003 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60966 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61008 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60958 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61013 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61016 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61019 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61022 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61025 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61063 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61061 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61062 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61060 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61071 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61072 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61077 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61078 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61064 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61059 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61082 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61085 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61265 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61266 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61264 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61267 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61275 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61277 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61282 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61279 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61268 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61263 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61286 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61289 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61416 - "POST /graph/default/nodes HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61422 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61424 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61506 - "PATCH /graph/default/nodes/default%3Ahdfc HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61509 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61557 - "PATCH /graph/default/nodes/default%3Ahdfc HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61559 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61662 - "POST /graph/default/edges HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61666 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61723 - "POST /reason/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61728 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61740 - "POST /reason/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61743 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61756 - "POST /reason/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61759 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61773 - "POST /reason/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61776 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61789 - "POST /reason/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61793 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61809 - "POST /reason/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61812 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61825 - "POST /reason/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61828 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61838 - "POST /reason/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61841 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61856 - "POST /reason/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61860 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61870 - "POST /reason/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61873 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61885 - "POST /reason/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61888 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61907 - "POST /reason/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61910 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61925 - "POST /reason/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61928 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61941 - "POST /reason/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61944 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61957 - "POST /reason/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61960 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61970 - "POST /reason/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61973 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61982 - "POST /reason/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61985 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61994 - "POST /reason/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61998 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62007 - "POST /reason/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62010 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62021 - "POST /reason/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62024 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62032 - "POST /reason/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62035 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62046 - "POST /reason/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62050 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62058 - "POST /reason/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62061 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62071 - "POST /reason/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62075 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62084 - "POST /reason/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62088 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62097 - "POST /reason/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62101 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62110 - "POST /reason/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62114 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62122 - "POST /reason/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62127 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62134 - "POST /reason/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62137 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62148 - "POST /reason/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62152 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62159 - "POST /reason/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62162 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62172 - "POST /reason/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62175 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62188 - "POST /reason/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62191 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62313 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62317 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62316 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62312 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62330 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62326 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62328 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62333 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62319 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62309 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62338 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62341 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62555 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62554 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62551 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62556 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62558 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62550 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62575 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62576 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62574 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62579 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62571 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62580 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62641 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62642 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62639 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62644 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62646 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62638 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62664 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62662 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62660 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62665 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62658 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62667 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62688 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62689 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62687 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62692 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62686 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62693 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62708 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62712 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62705 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62710 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62706 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62713 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62820 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62821 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62819 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62822 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62831 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62830 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62838 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62837 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62823 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62818 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62841 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62844 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63068 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63069 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63072 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63067 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63073 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63065 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63090 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63092 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63093 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63088 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63086 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63095 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63127 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63128 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63129 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63126 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63138 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63141 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63143 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63146 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63130 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63125 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63150 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63153 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63175 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63177 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63173 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63180 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63172 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63181 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63195 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63198 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63193 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63199 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63191 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63200 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63444 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63440 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63439 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63443 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63456 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63454 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63460 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63458 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63446 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63463 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63438 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63467 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63527 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63532 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63526 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63531 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63544 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63543 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63548 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63546 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63533 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63524 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63553 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63556 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63619 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63618 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63617 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63620 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63631 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63628 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63635 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63632 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63621 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63639 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63616 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63642 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63873 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63870 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63869 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63874 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63884 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63887 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63890 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63888 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63876 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63868 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63896 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63899 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64029 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64030 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64031 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64038 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64044 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64043 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64028 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64050 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64032 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64027 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64056 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64053 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64112 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64115 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64111 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64116 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64117 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64109 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64129 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64127 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64135 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64136 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64126 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64138 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64182 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64185 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64186 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64180 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64197 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64196 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64199 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64201 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64187 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64205 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64181 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64210 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64246 - "POST /query/default HTTP/1.1" 200 OK
+WARNING:  WatchFiles detected changes in 'services/path_engine.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [16412]
+INFO:     Started server process [22943]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'api/query.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [22943]
+INFO:     Started server process [23031]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'api/query.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [23031]
+INFO:     Started server process [23042]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'api/ontology.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [23042]
+INFO:     Started server process [23084]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:65287 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65289 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65288 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65290 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65303 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65301 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65309 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65307 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65291 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65315 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65286 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65319 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65349 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65345 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65348 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65344 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65365 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65362 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65366 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65361 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65351 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65343 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65369 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65372 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65402 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65403 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65401 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65405 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65418 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65417 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65421 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65420 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65406 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65424 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65400 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65427 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65450 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65454 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65449 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65453 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65463 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65467 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65468 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65464 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65448 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65456 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65471 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65474 - "GET /ontology HTTP/1.1" 200 OK

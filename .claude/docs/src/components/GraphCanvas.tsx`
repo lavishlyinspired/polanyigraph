@@ -1,0 +1,156 @@
+import { useRef, useEffect, useCallback } from 'react';
+import { cn } from '@/lib/utils';
+import type { GraphNode, GraphEdge, EdgeType } from '../types';
+
+interface GraphCanvasProps {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+  selectedId: string | null;
+  linkMode: string | null;
+  pendingLinkFrom: string | null;
+  onNodeClick: (id: string) => void;
+  onNodeDrag: (id: string, x: number, y: number) => void;
+  onBackgroundClick: () => void;
+}
+
+const EDGE_COLORS: Record<EdgeType, string> = {
+  'causes': '#d97706',
+  'implies': '#0891b2',
+  'contradicts': '#dc2626',
+  'depends-on': '#7c3aed',
+  'related': '#94a3b8',
+};
+
+const TYPE_STYLES = {
+  concept: { fill: '#fef3c7', stroke: '#d97706', icon: 'C' },
+  evidence: { fill: '#dcfce7', stroke: '#16a34a', icon: 'E' },
+  question: { fill: '#dbeafe', stroke: '#2563eb', icon: '?' },
+  conclusion: { fill: '#fce7f3', stroke: '#db2777', icon: '!' },
+};
+
+export function GraphCanvas({
+  nodes, edges, selectedId, linkMode, pendingLinkFrom,
+  onNodeClick, onNodeDrag, onBackgroundClick,
+}: GraphCanvasProps) {
+  const svgRef = useRef<SVGSVGElement>(null);
+  const draggingRef = useRef<string | null>(null);
+  const offsetRef = useRef({ x: 0, y: 0 });
+
+  const toSvgCoords = useCallback((clientX: number, clientY: number) => {
+    const svg = svgRef.current;
+    if (!svg) return { x: 0, y: 0 };
+    const rect = svg.getBoundingClientRect();
+    return { x: clientX - rect.left, y: clientY - rect.top };
+  }, []);
+
+  useEffect(() => {
+    const handleMove = (e: PointerEvent) => {
+      if (!draggingRef.current) return;
+      const { x, y } = toSvgCoords(e.clientX, e.clientY);
+      onNodeDrag(draggingRef.current, x - offsetRef.current.x, y - offsetRef.current.y);
+    };
+    const handleUp = () => { draggingRef.current = null; };
+    window.addEventListener('pointermove', handleMove);
+    window.addEventListener('pointerup', handleUp);
+    return () => {
+      window.removeEventListener('pointermove', handleMove);
+      window.removeEventListener('pointerup', handleUp);
+    };
+  }, [onNodeDrag, toSvgCoords]);
+
+  return (
+    <svg
+      ref={svgRef}
+      className="w-full h-full touch-none select-none"
+      onPointerDown={(e) => {
+        if (e.target === svgRef.current) onBackgroundClick();
+      }}
+    >
+      <defs>
+        <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+          <circle cx="1.5" cy="1.5" r="1.2" fill="#e2e8f0" />
+        </pattern>
+        <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="6" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#grid)" />
+
+      {edges.map((edge) => {
+        const s = nodes.find((n) => n.id === edge.source);
+        const t = nodes.find((n) => n.id === edge.target);
+        if (!s || !t) return null;
+        const mx = (s.x + t.x) / 2;
+        const my = (s.y + t.y) / 2;
+        const active = s.activation > 0.05 || t.activation > 0.05;
+        return (
+          <g key={edge.id}>
+            <line
+              x1={s.x} y1={s.y} x2={t.x} y2={t.y}
+              stroke={EDGE_COLORS[edge.type]}
+              strokeWidth={active ? 2.5 : 1.5}
+              strokeOpacity={active ? 0.9 : 0.4}
+              strokeDasharray={edge.type === 'contradicts' ? '6 4' : undefined}
+            />
+            <text x={mx} y={my - 4} textAnchor="middle" className="fill-slate-500 text-[9px] font-medium pointer-events-none">
+              {edge.type}
+            </text>
+          </g>
+        );
+      })}
+
+      {nodes.map((node) => {
+        const style = TYPE_STYLES[node.type];
+        const isSelected = node.id === selectedId;
+        const isPending = node.id === pendingLinkFrom;
+        const r = 26 + node.activation * 14;
+        return (
+          <g
+            key={node.id}
+            transform={`translate(${node.x}, ${node.y})`}
+            className="cursor-pointer"
+            onPointerDown={(e) => {
+              e.stopPropagation();
+              if (linkMode) {
+                onNodeClick(node.id);
+                return;
+              }
+              const { x, y } = toSvgCoords(e.clientX, e.clientY);
+              offsetRef.current = { x: x - node.x, y: y - node.y };
+              draggingRef.current = node.id;
+              onNodeClick(node.id);
+            }}
+          >
+            {node.activation > 0.05 && (
+              <circle r={r + 8} fill="#f59e0b" fillOpacity={node.activation * 0.25} filter="url(#glow)" />
+            )}
+            <circle
+              r={r}
+              fill={style.fill}
+              stroke={isSelected || isPending ? '#0f172a' : style.stroke}
+              strokeWidth={isSelected || isPending ? 3 : 2}
+            />
+            <text textAnchor="middle" dy="-2" className="fill-slate-700 text-xs font-bold pointer-events-none">
+              {style.icon}
+            </text>
+            <text textAnchor="middle" dy="12" className="fill-slate-600 text-[8px] pointer-events-none">
+              {node.activation > 0.05 ? `${Math.round(node.activation * 100)}%` : ''}
+            </text>
+            <text textAnchor="middle" y={r + 14} className="fill-slate-800 text-[11px] font-semibold pointer-events-none">
+              {node.label.length > 22 ? node.label.slice(0, 20) + '…' : node.label}
+            </text>
+            {node.derived && (
+              <text textAnchor="middle" y={r + 26} className="fill-amber-600 text-[8px] font-bold pointer-events-none">
+                DERIVED
+              </text>
+            )}
+          </g>
+        );
+      })}
+    </svg>
+  );
+}

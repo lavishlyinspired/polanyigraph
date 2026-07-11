@@ -1,0 +1,64 @@
+
+> neurosymbolic-frontend@0.1.0 dev
+> vite
+
+
+  VITE v5.4.21  ready in 115 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+7:23:50 pm [vite] hmr update /src/components/GraphCanvas.tsx, /src/index.css
+7:24:12 pm [vite] hmr update /src/components/GraphCanvas.tsx, /src/index.css
+7:25:12 pm [vite] hmr update /src/components/ConstructionPanel.tsx, /src/index.css
+7:26:11 pm [vite] hmr update /src/App.tsx, /src/index.css
+7:28:48 pm [vite] hmr update /src/App.tsx, /src/index.css
+7:28:58 pm [vite] hmr update /src/App.tsx, /src/index.css
+7:42:46 pm [vite] hmr update /src/App.tsx, /src/index.css, /src/components/LlmPanel.tsx, /src/components/HistoryPopover.tsx, /src/components/QueryPanel.tsx, /src/components/GraphCanvas.tsx, /src/components/ConstructionPanel.tsx, /src/components/ReasoningPanel.tsx, /src/components/IngestPanel.tsx, /src/components/GraphsPopover.tsx
+7:42:59 pm [vite] hmr update /src/App.tsx, /src/index.css, /src/components/LlmPanel.tsx, /src/components/HistoryPopover.tsx, /src/components/QueryPanel.tsx, /src/components/GraphCanvas.tsx, /src/components/ConstructionPanel.tsx, /src/components/ReasoningPanel.tsx, /src/components/IngestPanel.tsx, /src/components/GraphsPopover.tsx
+7:43:17 pm [vite] hmr update /src/App.tsx, /src/index.css, /src/components/LlmPanel.tsx, /src/components/HistoryPopover.tsx, /src/components/QueryPanel.tsx, /src/components/GraphCanvas.tsx, /src/components/ConstructionPanel.tsx, /src/components/ReasoningPanel.tsx, /src/components/IngestPanel.tsx, /src/components/GraphsPopover.tsx
+7:43:42 pm [vite] hmr update /src/App.tsx, /src/index.css, /src/components/LlmPanel.tsx, /src/components/HistoryPopover.tsx, /src/components/QueryPanel.tsx, /src/components/GraphCanvas.tsx, /src/components/ConstructionPanel.tsx, /src/components/ReasoningPanel.tsx, /src/components/IngestPanel.tsx, /src/components/GraphsPopover.tsx
+7:43:51 pm [vite] hmr update /src/App.tsx, /src/index.css, /src/components/LlmPanel.tsx, /src/components/HistoryPopover.tsx, /src/components/QueryPanel.tsx, /src/components/GraphCanvas.tsx, /src/components/ConstructionPanel.tsx, /src/components/ReasoningPanel.tsx, /src/components/IngestPanel.tsx, /src/components/GraphsPopover.tsx
+7:44:03 pm [vite] hmr update /src/App.tsx, /src/index.css, /src/components/LlmPanel.tsx, /src/components/HistoryPopover.tsx, /src/components/QueryPanel.tsx, /src/components/GraphCanvas.tsx, /src/components/ConstructionPanel.tsx, /src/components/ReasoningPanel.tsx, /src/components/IngestPanel.tsx, /src/components/GraphsPopover.tsx
+7:44:14 pm [vite] hmr update /src/App.tsx, /src/index.css, /src/components/LlmPanel.tsx, /src/components/HistoryPopover.tsx, /src/components/QueryPanel.tsx, /src/components/GraphCanvas.tsx, /src/components/ConstructionPanel.tsx, /src/components/ReasoningPanel.tsx, /src/components/IngestPanel.tsx, /src/components/GraphsPopover.tsx
+7:44:21 pm [vite] hmr update /src/App.tsx, /src/index.css, /src/components/LlmPanel.tsx, /src/components/HistoryPopover.tsx, /src/components/QueryPanel.tsx, /src/components/GraphCanvas.tsx, /src/components/ConstructionPanel.tsx, /src/components/ReasoningPanel.tsx, /src/components/IngestPanel.tsx, /src/components/GraphsPopover.tsx
+7:44:34 pm [vite] hmr update /src/App.tsx, /src/index.css, /src/components/LlmPanel.tsx, /src/components/HistoryPopover.tsx, /src/components/QueryPanel.tsx, /src/components/GraphCanvas.tsx, /src/components/ConstructionPanel.tsx, /src/components/ReasoningPanel.tsx, /src/components/IngestPanel.tsx, /src/components/GraphsPopover.tsx
+7:45:06 pm [vite] hmr update /src/components/GraphCanvas.tsx, /src/index.css
+7:45:14 pm [vite] hmr update /src/components/GraphCanvas.tsx, /src/index.css
+7:45:32 pm [vite] hmr update /src/components/GraphCanvas.tsx, /src/index.css
+7:45:38 pm [vite] hmr update /src/components/GraphCanvas.tsx, /src/index.css
+7:45:54 pm [vite] hmr update /src/components/GraphCanvas.tsx, /src/index.css
+7:46:08 pm [vite] hmr update /src/components/GraphCanvas.tsx, /src/index.css
+7:47:20 pm [vite] hmr update /src/components/ConstructionPanel.tsx, /src/index.css
+7:47:39 pm [vite] hmr update /src/App.tsx, /src/index.css
+7:55:39 pm [vite] hmr update /src/App.tsx, /src/index.css
+7:56:03 pm [vite] hmr update /src/App.tsx, /src/index.css
+7:56:15 pm [vite] hmr update /src/App.tsx, /src/index.css
+7:56:23 pm [vite] hmr update /src/App.tsx, /src/index.css
+7:57:17 pm [vite] hmr update /src/components/IngestPanel.tsx, /src/index.css
+7:57:41 pm [vite] hmr update /src/components/ConstructionPanel.tsx, /src/index.css
+7:57:54 pm [vite] hmr update /src/components/ConstructionPanel.tsx, /src/index.css
+7:58:11 pm [vite] hmr update /src/components/ConstructionPanel.tsx, /src/index.css
+7:58:27 pm [vite] hmr update /src/components/ConstructionPanel.tsx, /src/index.css
+7:59:09 pm [vite] hmr update /src/components/ConstructionPanel.tsx, /src/index.css
+7:59:31 pm [vite] hmr update /src/components/ConstructionPanel.tsx, /src/index.css
+7:59:42 pm [vite] hmr update /src/components/ConstructionPanel.tsx, /src/index.css
+7:59:49 pm [vite] hmr update /src/components/IngestPanel.tsx, /src/index.css
+8:06:54 pm [vite] hmr update /src/components/GraphCanvas.tsx, /src/index.css
+8:07:21 pm [vite] hmr update /src/components/GraphCanvas.tsx, /src/index.css
+8:09:26 pm [vite] hmr update /src/components/ConstructionPanel.tsx, /src/index.css
+8:13:59 pm [vite] hmr update /src/App.tsx, /src/index.css
+8:14:20 pm [vite] hmr update /src/App.tsx, /src/index.css
+8:14:25 pm [vite] hmr update /src/App.tsx, /src/index.css, /src/components/LlmPanel.tsx, /src/components/HistoryPopover.tsx, /src/components/QueryPanel.tsx, /src/components/GraphCanvas.tsx, /src/components/ConstructionPanel.tsx, /src/components/ReasoningPanel.tsx, /src/components/IngestPanel.tsx, /src/components/GraphsPopover.tsx
+8:16:36 pm [vite] hmr update /src/App.tsx, /src/index.css
+8:16:48 pm [vite] hmr update /src/App.tsx, /src/index.css
+8:18:20 pm [vite] hmr update /src/App.tsx, /src/index.css
+8:18:33 pm [vite] hmr update /src/components/ReasoningPanel.tsx, /src/index.css
+8:18:40 pm [vite] hmr update /src/components/ReasoningPanel.tsx, /src/index.css
+8:18:53 pm [vite] hmr update /src/components/ReasoningPanel.tsx, /src/index.css
+8:20:28 pm [vite] hmr update /src/App.tsx, /src/index.css
+8:20:49 pm [vite] hmr update /src/App.tsx, /src/index.css
+8:24:20 pm [vite] hmr update /src/App.tsx, /src/index.css, /src/components/LlmPanel.tsx, /src/components/HistoryPopover.tsx, /src/components/QueryPanel.tsx, /src/components/GraphCanvas.tsx, /src/components/ConstructionPanel.tsx, /src/components/ReasoningPanel.tsx, /src/components/IngestPanel.tsx, /src/components/GraphsPopover.tsx
+8:24:26 pm [vite] hmr update /src/App.tsx, /src/index.css, /src/components/LlmPanel.tsx, /src/components/HistoryPopover.tsx, /src/components/QueryPanel.tsx, /src/components/GraphCanvas.tsx, /src/components/ConstructionPanel.tsx, /src/components/ReasoningPanel.tsx, /src/components/IngestPanel.tsx, /src/components/GraphsPopover.tsx
+8:24:32 pm [vite] hmr update /src/App.tsx, /src/index.css, /src/components/LlmPanel.tsx, /src/components/HistoryPopover.tsx, /src/components/QueryPanel.tsx, /src/components/GraphCanvas.tsx, /src/components/ConstructionPanel.tsx, /src/components/ReasoningPanel.tsx, /src/components/IngestPanel.tsx, /src/components/GraphsPopover.tsx
+8:24:37 pm [vite] hmr update /src/App.tsx, /src/index.css, /src/components/LlmPanel.tsx, /src/components/HistoryPopover.tsx, /src/components/QueryPanel.tsx, /src/components/GraphCanvas.tsx, /src/components/ConstructionPanel.tsx, /src/components/ReasoningPanel.tsx, /src/components/IngestPanel.tsx, /src/components/GraphsPopover.tsx
+8:25:42 pm [vite] hmr update /src/components/QueryPanel.tsx, /src/index.css
