@@ -42,6 +42,7 @@ export interface DerivedFact {
   targetId: string;
   ruleName: string;
   proofPath: ProofStep[];
+  fedBack: boolean;
 }
 
 export interface ProofStep {
@@ -61,6 +62,40 @@ export interface ReasonResponse {
   facts: DerivedFact[];
   iterations: number;
   convergedBy: 'fixpoint' | 'max_iterations';
+}
+
+// Reason tab manual step-by-step mode (prototype parity, PLAN.md §16 Phase 9):
+// Spread Activation / Run Inference / Feed Back as three separate real calls,
+// each reading/writing real persisted Neo4j state -- not the prototype's
+// client-side-only mock engine.
+export interface TraceEntry {
+  ruleName: string;
+  edgeType: string;
+  sourceLabel: string;
+  targetLabel: string;
+  sourceActivation: number;
+  threshold: number;
+  fired: boolean;
+  iteration: number;
+  skipReason: string | null;
+  factId: string | null;
+}
+
+export interface SpreadResponse {
+  activation: Record<string, number>;
+}
+
+export interface InferResponse {
+  facts: DerivedFact[];
+  trace: TraceEntry[];
+}
+
+export interface FeedbackResponse {
+  activation: Record<string, number>;
+}
+
+export interface FactsListResponse {
+  facts: DerivedFact[];
 }
 
 export interface QueryResultRow {
@@ -360,4 +395,23 @@ export const api = {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ text, sessionId: sessionId ?? null }),
     }).then(json<AgentResponse>),
+
+  spreadActivation: (graphId: string, sourceId?: string) =>
+    fetch(`${BASE}/reason/${graphId}/spread`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ sourceId: sourceId ?? null }),
+    }).then(json<SpreadResponse>),
+
+  runInferenceStep: (graphId: string) =>
+    fetch(`${BASE}/reason/${graphId}/infer`, { method: 'POST' }).then(json<InferResponse>),
+
+  feedBack: (graphId: string) =>
+    fetch(`${BASE}/reason/${graphId}/feedback`, { method: 'POST' }).then(json<FeedbackResponse>),
+
+  getReasonFacts: (graphId: string) => fetch(`${BASE}/reason/${graphId}/facts`).then(json<FactsListResponse>),
+
+  clearActivation: (graphId: string) => fetch(`${BASE}/reason/${graphId}/clear-activation`, { method: 'POST' }).then(json<{ cleared: boolean }>),
+
+  clearFacts: (graphId: string) => fetch(`${BASE}/reason/${graphId}/clear-facts`, { method: 'POST' }).then(json<{ cleared: boolean }>),
 };

@@ -10,8 +10,12 @@ from app.config import Settings
 from db.graphdb_client import GraphDBClient
 from db.neo4j_client import Neo4jClient
 from ontology.loader import load_schema
-from reasoning.engine import ReasoningResult
+from reasoning.engine import DerivedFact as ReasoningDerivedFact
+from reasoning.engine import InferenceTraceEntry, ReasoningResult
+from reasoning.engine import feed_back_activation as feed_back_activation_engine
 from reasoning.engine import reason as run_reasoning_engine
+from reasoning.engine import run_inference as run_inference_engine
+from reasoning.engine import spread_activation as spread_activation_engine
 from services import graph_service
 from services.rules_store import load_all_rules
 
@@ -71,3 +75,93 @@ def run_reasoning(
     graph_service.save_derived_facts(neo4j, graph_id=graph_id, facts=list(result.facts))
 
     return result
+
+
+# --- Manual step-by-step mode (Reason tab prototype parity) -----------------
+# The prototype lets a user manually trigger Spread Activation / Run
+# Inference / Feed Back as three separate steps rather than only the atomic
+# run_reasoning() above. Each step here reads whatever's currently persisted
+# in Neo4j, calls the same pure engine function run_reasoning() uses
+# internally, and persists the result -- so state survives across separate
+# HTTP calls, not just one request's lifetime.
+
+def _entity_activation_map(neo4j: Neo4jClient, graph_id: str) -> dict[str, float]:
+    record = graph_service.get_graph(neo4j, graph_id)
+    return {n.id: (n.activation or 0.0) for n in record.nodes}
+
+
+def spread_activation_step(
+    neo4j: Neo4jClient, graph_id: str, source_id: str | None, *, decay: float,
+) -> dict[str, float]:
+    """Spread activation from source_id alone, seeded with whatever's already
+    persisted (so repeated manual spreads accumulate, matching §8.4's
+    persistent-activation design), without running inference or feedback."""
+    nodes, edges = graph_service.get_entities_and_edges_for_reasoning(neo4j, graph_id)
+    if not nodes:
+        raise EmptyGraphError(f"Graph '{graph_id}' has no entities to reason over.")
+    resolved_source_id = source_id or _pick_source(nodes)
+    if resolved_source_id not in {n.id for n in nodes}:
+        raise UnknownSourceError(f"source_id '{resolved_source_id}' not found in graph '{graph_id}'.")
+
+    seed = _entity_activation_map(neo4j, graph_id)
+    activation = spread_activation_engine(nodes, edges, resolved_source_id, decay=decay, seed=seed)
+    graph_service.apply_activation(neo4j, graph_id=graph_id, activation=activation)
+    return activation
+
+
+def run_inference_step(
+    neo4j: Neo4jClient, graphdb: GraphDBClient, settings: Settings, graph_id: str,
+) -> tuple[list[ReasoningDerivedFact], list[InferenceTraceEntry]]:
+    """Fire rules against whatever activation is currently persisted, without
+    spreading first. Facts already derived (by id) don't fire again."""
+    nodes, edges = graph_service.get_entities_and_edges_for_reasoning(neo4j, graph_id)
+    if not nodes:
+        raise EmptyGraphError(f"Graph '{graph_id}' has no entities to reason over.")
+
+    activation = _entity_activation_map(neo4j, graph_id)
+    existing = graph_service.get_derived_facts_full(neo4j, graph_id)
+    existing_ids = frozenset(f.id for f in existing)
+    facts_by_target = {
+        f.target_id: ReasoningDerivedFact(
+            id=f.id, rule_id=f.rule_id, rule_name=f.rule_name, source_id=f.source_id,
+            target_id=f.target_id, fact=f.fact, confidence=f.confidence, iteration=f.iteration,
+            proof_path=f.proof_path,
+        )
+        for f in existing
+    }
+    iteration = max((f.iteration for f in existing), default=0) + 1
+
+    rules = load_all_rules(neo4j)
+    schema = load_schema(graphdb, settings.graphdb_repository)
+    type_matches = schema.build_subclass_matcher()
+
+    new_facts, trace = run_inference_engine(
+        nodes, edges, rules, activation,
+        iteration=iteration, existing_fact_ids=existing_ids, facts_by_target=facts_by_target,
+        type_matches=type_matches,
+    )
+    if new_facts:
+        graph_service.save_derived_facts(neo4j, graph_id=graph_id, facts=new_facts)
+    return new_facts, trace
+
+
+def feed_back_step(neo4j: Neo4jClient, graph_id: str, *, feedback_gain: float) -> dict[str, float]:
+    """Boost activation on derived facts' targets that haven't been fed back
+    yet, then mark them fed back so a second call doesn't double-count."""
+    activation = _entity_activation_map(neo4j, graph_id)
+    pending = [f for f in graph_service.get_derived_facts_full(neo4j, graph_id) if not f.fed_back]
+    if not pending:
+        return activation
+
+    facts_for_engine = [
+        ReasoningDerivedFact(
+            id=f.id, rule_id=f.rule_id, rule_name=f.rule_name, source_id=f.source_id,
+            target_id=f.target_id, fact=f.fact, confidence=f.confidence, iteration=f.iteration,
+            proof_path=f.proof_path,
+        )
+        for f in pending
+    ]
+    boosted = feed_back_activation_engine(activation, facts_for_engine, feedback_gain=feedback_gain)
+    graph_service.apply_activation(neo4j, graph_id=graph_id, activation=boosted)
+    graph_service.mark_facts_fed_back(neo4j, graph_id=graph_id, fact_ids=[f.id for f in pending])
+    return boosted

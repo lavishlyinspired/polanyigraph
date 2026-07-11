@@ -15,6 +15,7 @@ from db.neo4j_client import Neo4jClient
 from reasoning.engine import DerivedFact as ReasoningDerivedFact
 from reasoning.engine import Edge as ReasoningEdge
 from reasoning.engine import Node as ReasoningNode
+from reasoning.engine import ProofStep as ReasoningProofStep
 
 
 @dataclass(frozen=True)
@@ -292,6 +293,18 @@ def save_derived_facts(neo4j: Neo4jClient, *, graph_id: str, facts: list[Reasoni
             # only fires on edges of its own edge_type — see reasoning/engine.py
             # run_inference), captured on the final proof step.
             "edgeType": f.proof_path[-1].edge_type if f.proof_path else None,
+            # Full proof chain, serialized -- needed to reconstruct real
+            # ProofStep objects across separate manual-step API calls (Reason
+            # tab prototype parity: Spread/Infer/Feed Back as distinct steps).
+            "proofPathJson": json.dumps([
+                {
+                    "ruleName": step.rule_name, "edgeType": step.edge_type,
+                    "sourceLabel": step.source_label, "targetLabel": step.target_label,
+                    "premiseActivation": step.premise_activation, "iteration": step.iteration,
+                    "typeResolution": step.type_resolution,
+                }
+                for step in f.proof_path
+            ]),
         }
         for f in facts
     ]
@@ -302,7 +315,8 @@ def save_derived_facts(neo4j: Neo4jClient, *, graph_id: str, facts: list[Reasoni
         SET f.ruleId = row.ruleId, f.ruleName = row.ruleName,
             f.sourceId = row.sourceId, f.targetId = row.targetId,
             f.fact = row.fact, f.confidence = row.confidence, f.iteration = row.iteration,
-            f.edgeType = row.edgeType
+            f.edgeType = row.edgeType, f.proofPathJson = row.proofPathJson,
+            f.fedBack = coalesce(f.fedBack, false)
         WITH f, row
         MATCH (t:Entity {id: row.targetId, graphId: $graph_id})
         SET t.derived = true
@@ -310,6 +324,93 @@ def save_derived_facts(neo4j: Neo4jClient, *, graph_id: str, facts: list[Reasoni
         """,
         graph_id=graph_id,
         rows=rows,
+    )
+
+
+@dataclass(frozen=True)
+class DerivedFactRecord:
+    id: str
+    rule_id: str
+    rule_name: str
+    source_id: str
+    target_id: str
+    fact: str
+    confidence: float
+    iteration: int
+    fed_back: bool
+    proof_path: tuple[ReasoningProofStep, ...] = field(default=())
+
+
+def get_derived_facts_full(neo4j: Neo4jClient, graph_id: str) -> list[DerivedFactRecord]:
+    """Full derived-fact records (real proof paths, fed-back status) for the
+    Reason tab's manual step-by-step mode and its richer UI display -- unlike
+    get_derived_facts(), which only returns {fact, confidence} for chat grounding."""
+    rows = neo4j.run(
+        """
+        MATCH (f:DerivedFact {graphId: $graph_id})
+        RETURN f.id AS id, f.ruleId AS ruleId, f.ruleName AS ruleName,
+               f.sourceId AS sourceId, f.targetId AS targetId, f.fact AS fact,
+               f.confidence AS confidence, f.iteration AS iteration,
+               coalesce(f.fedBack, false) AS fedBack,
+               coalesce(f.proofPathJson, '[]') AS proofPathJson
+        ORDER BY f.iteration, f.id
+        """,
+        graph_id=graph_id,
+    )
+    records = []
+    for row in rows:
+        proof_path = tuple(
+            ReasoningProofStep(
+                rule_name=step["ruleName"], edge_type=step["edgeType"],
+                source_label=step["sourceLabel"], target_label=step["targetLabel"],
+                premise_activation=step["premiseActivation"], iteration=step["iteration"],
+                type_resolution=step.get("typeResolution"),
+            )
+            for step in json.loads(row["proofPathJson"])
+        )
+        records.append(
+            DerivedFactRecord(
+                id=row["id"], rule_id=row["ruleId"], rule_name=row["ruleName"],
+                source_id=row["sourceId"], target_id=row["targetId"], fact=row["fact"],
+                confidence=row["confidence"], iteration=row["iteration"],
+                fed_back=row["fedBack"], proof_path=proof_path,
+            )
+        )
+    return records
+
+
+def mark_facts_fed_back(neo4j: Neo4jClient, *, graph_id: str, fact_ids: list[str]) -> None:
+    neo4j.run(
+        """
+        UNWIND $fact_ids AS fid
+        MATCH (f:DerivedFact {id: fid, graphId: $graph_id})
+        SET f.fedBack = true
+        """,
+        graph_id=graph_id,
+        fact_ids=fact_ids,
+    )
+
+
+def clear_activation(neo4j: Neo4jClient, graph_id: str) -> None:
+    """Reason tab's manual "Clear" for the Neural Activation step."""
+    neo4j.run(
+        "MATCH (e:Entity {graphId: $graph_id}) SET e.activation = 0.0",
+        graph_id=graph_id,
+    )
+
+
+def clear_derived_facts(neo4j: Neo4jClient, graph_id: str) -> None:
+    """Reason tab's manual "Clear" for the Symbolic Inference step -- removes
+    :DerivedFact nodes and unsets the :Entity.derived flag they set."""
+    neo4j.run(
+        """
+        MATCH (f:DerivedFact {graphId: $graph_id})
+        OPTIONAL MATCH (f)-[:DERIVED_FOR]->(t:Entity)
+        SET t.derived = false
+        WITH DISTINCT f
+        DETACH DELETE f
+        """,
+        graph_id=graph_id,
     )
 
 

@@ -68,6 +68,7 @@ class Settings(BaseSettings):
     reason_epsilon: float = Field(default=1e-3)
     reason_max_iterations: int = Field(default=10)
     reason_activation_floor: float = Field(default=0.01)
+    reason_feedback_gain: float = Field(default=0.5)
 
     # --- Neo4j resolved views -------------------------------------------------
     @property

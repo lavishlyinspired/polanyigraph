@@ -6,7 +6,7 @@ derivation, and honest convergence reporting.
 
 from __future__ import annotations
 
-from reasoning.engine import Edge, Node, Rule, reason, spread_activation
+from reasoning.engine import DerivedFact, Edge, Node, Rule, feed_back_activation, reason, run_inference, spread_activation
 
 
 def _chain():
@@ -82,3 +82,83 @@ def test_confidence_is_bounded():
     rules = [Rule(id="r1", name="hop", edge_type="R", source_type="T", target_type="T", threshold=0.1, weight=1.0)]
     result = reason(nodes, edges, rules, "A", decay=0.5, feedback_gain=1.0)
     assert all(0.0 <= f.confidence <= 1.0 for f in result.facts)
+
+
+# --- Manual step-by-step mode (reason tab prototype parity) -----------------
+# The prototype's Reason tab lets a user manually trigger Spread Activation /
+# Run Inference / Feed Back as three separate steps, with a full trace of
+# which rules fired and which were skipped (and why). This requires the
+# engine to expose that trace, not just the fired facts, and a standalone
+# feedback step -- both already separable from reason()'s loop.
+
+def test_run_inference_reports_a_trace_of_fired_and_skipped_evaluations():
+    nodes, edges = _chain()
+    rules = [Rule(id="r1", name="hop", edge_type="R", source_type="T", target_type="T", threshold=0.6)]
+    activation = spread_activation(nodes, edges, "A", decay=0.5)  # A=1.0, B=0.5, C=0.25
+
+    new_facts, trace = run_inference(
+        nodes, edges, rules, activation, iteration=1,
+        existing_fact_ids=frozenset(), facts_by_target={},
+    )
+
+    assert len(trace) == 2  # one evaluation per (rule, edge) pair: A->B, B->C
+    fired = [t for t in trace if t.fired]
+    skipped = [t for t in trace if not t.fired]
+    assert len(fired) == 1  # A (1.0) >= 0.6 threshold
+    assert len(skipped) == 1  # B (0.5) < 0.6 threshold
+    assert fired[0].source_label == "A" and fired[0].target_label == "B"
+    assert skipped[0].source_label == "B" and skipped[0].target_label == "C"
+    assert skipped[0].source_activation == 0.5
+    assert skipped[0].threshold == 0.6
+    assert {f.id for f in new_facts} == {t.fact_id for t in fired}
+
+
+def test_run_inference_trace_reports_skip_reason_for_type_mismatch():
+    nodes, edges = _chain()
+    rules = [Rule(id="r1", name="hop", edge_type="R", source_type="OtherType", target_type="T", threshold=0.1)]
+    activation = spread_activation(nodes, edges, "A", decay=0.5)
+
+    _new_facts, trace = run_inference(
+        nodes, edges, rules, activation, iteration=1,
+        existing_fact_ids=frozenset(), facts_by_target={},
+    )
+
+    assert len(trace) == 2
+    assert all(not t.fired for t in trace)
+    assert all("type" in t.skip_reason.lower() for t in trace)
+
+
+def test_feed_back_activation_boosts_target_by_confidence_times_gain():
+    fact = DerivedFact(
+        id="f1", rule_id="r1", rule_name="hop", source_id="A", target_id="B",
+        fact="A -> B", confidence=0.8, iteration=1,
+    )
+    activation = {"A": 1.0, "B": 0.2}
+
+    boosted = feed_back_activation(activation, [fact], feedback_gain=0.5)
+
+    assert boosted["B"] == 0.2 + 0.8 * 0.5
+    assert boosted["A"] == 1.0  # untouched, not a target of any fact
+    assert activation["B"] == 0.2  # pure function -- input untouched
+
+
+def test_feed_back_activation_caps_at_one():
+    fact = DerivedFact(
+        id="f1", rule_id="r1", rule_name="hop", source_id="A", target_id="B",
+        fact="A -> B", confidence=1.0, iteration=1,
+    )
+    boosted = feed_back_activation({"B": 0.9}, [fact], feedback_gain=1.0)
+    assert boosted["B"] == 1.0
+
+
+def test_reason_still_produces_identical_results_with_the_refactored_feedback():
+    """Regression guard: reason() now calls feed_back_activation() internally
+    instead of an inline loop -- behavior must be byte-for-byte identical."""
+    nodes, edges = _chain()
+    rules = [Rule(id="r1", name="hop", edge_type="R", source_type="T", target_type="T", threshold=0.6)]
+    result = reason(nodes, edges, rules, "A", decay=0.5, feedback_gain=1.0, max_iterations=10)
+
+    derived_edges = {(f.source_id, f.target_id) for f in result.facts}
+    assert ("A", "B") in derived_edges
+    assert ("B", "C") in derived_edges
+    assert result.converged_by == "fixpoint"

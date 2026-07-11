@@ -25,6 +25,7 @@ def neo4j():
     graph_id = f"test-{uuid.uuid4().hex[:8]}"
     yield client, graph_id
     client.run("MATCH (e:Entity {graphId: $gid}) DETACH DELETE e", gid=graph_id)
+    client.run("MATCH (f:DerivedFact {graphId: $gid}) DETACH DELETE f", gid=graph_id)
     client.close()
 
 
@@ -150,6 +151,69 @@ def test_entity_summary_defaults_empty_then_can_be_updated(neo4j):
     assert graph_service.get_entity_summary(client, graph_id=graph_id, entity_id="e1") == "Acme is a business entity mentioned in doc 1."
     node = graph_service.get_graph(client, graph_id).nodes[0]
     assert node.summary == "Acme is a business entity mentioned in doc 1."
+
+
+def test_save_derived_facts_persists_proof_path_and_defaults_fed_back_false(neo4j):
+    client, graph_id = neo4j
+    from reasoning.engine import DerivedFact as ReasoningDerivedFact
+    from reasoning.engine import ProofStep as ReasoningProofStep
+
+    graph_service.upsert_entity(client, graph_id=graph_id, entity_id="e1", label="A", type_="T", source_doc="d", extraction_confidence=1.0)
+    graph_service.upsert_entity(client, graph_id=graph_id, entity_id="e2", label="B", type_="T", source_doc="d", extraction_confidence=1.0)
+    step = ReasoningProofStep(rule_name="r", edge_type="R", source_label="A", target_label="B", premise_activation=0.9, iteration=1, type_resolution=None)
+    fact = ReasoningDerivedFact(id="f1", rule_id="r1", rule_name="r", source_id="e1", target_id="e2", fact="A -> B", confidence=0.9, iteration=1, proof_path=(step,))
+
+    graph_service.save_derived_facts(client, graph_id=graph_id, facts=[fact])
+
+    full = graph_service.get_derived_facts_full(client, graph_id)
+    assert len(full) == 1
+    assert full[0].id == "f1"
+    assert full[0].fed_back is False
+    assert len(full[0].proof_path) == 1
+    assert full[0].proof_path[0].rule_name == "r"
+    assert full[0].proof_path[0].premise_activation == 0.9
+
+
+def test_mark_facts_fed_back(neo4j):
+    client, graph_id = neo4j
+    from reasoning.engine import DerivedFact as ReasoningDerivedFact
+
+    graph_service.upsert_entity(client, graph_id=graph_id, entity_id="e1", label="A", type_="T", source_doc="d", extraction_confidence=1.0)
+    graph_service.upsert_entity(client, graph_id=graph_id, entity_id="e2", label="B", type_="T", source_doc="d", extraction_confidence=1.0)
+    fact = ReasoningDerivedFact(id="f1", rule_id="r1", rule_name="r", source_id="e1", target_id="e2", fact="A -> B", confidence=0.9, iteration=1)
+    graph_service.save_derived_facts(client, graph_id=graph_id, facts=[fact])
+
+    graph_service.mark_facts_fed_back(client, graph_id=graph_id, fact_ids=["f1"])
+
+    full = graph_service.get_derived_facts_full(client, graph_id)
+    assert full[0].fed_back is True
+
+
+def test_clear_activation_resets_all_entities_to_zero(neo4j):
+    client, graph_id = neo4j
+    graph_service.upsert_entity(client, graph_id=graph_id, entity_id="e1", label="A", type_="T", source_doc="d", extraction_confidence=1.0)
+    graph_service.apply_activation(client, graph_id=graph_id, activation={"e1": 0.8})
+
+    graph_service.clear_activation(client, graph_id)
+
+    record = graph_service.get_graph(client, graph_id)
+    assert record.nodes[0].activation == 0.0
+
+
+def test_clear_derived_facts_removes_facts_and_unsets_derived_flag(neo4j):
+    client, graph_id = neo4j
+    from reasoning.engine import DerivedFact as ReasoningDerivedFact
+
+    graph_service.upsert_entity(client, graph_id=graph_id, entity_id="e1", label="A", type_="T", source_doc="d", extraction_confidence=1.0)
+    graph_service.upsert_entity(client, graph_id=graph_id, entity_id="e2", label="B", type_="T", source_doc="d", extraction_confidence=1.0)
+    fact = ReasoningDerivedFact(id="f1", rule_id="r1", rule_name="r", source_id="e1", target_id="e2", fact="A -> B", confidence=0.9, iteration=1)
+    graph_service.save_derived_facts(client, graph_id=graph_id, facts=[fact])
+
+    graph_service.clear_derived_facts(client, graph_id)
+
+    assert graph_service.get_derived_facts_full(client, graph_id) == []
+    record = graph_service.get_graph(client, graph_id)
+    assert all(not n.derived for n in record.nodes)
 
 
 def test_get_entities_and_edges_for_reasoning_maps_types(neo4j):

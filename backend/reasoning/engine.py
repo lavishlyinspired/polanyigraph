@@ -88,11 +88,29 @@ class DerivedFact:
 
 
 @dataclass(frozen=True)
+class InferenceTraceEntry:
+    """One (rule, edge) evaluation -- whether it fired or was skipped, and why.
+    The prototype's Reason tab shows both, not just what fired (PLAN.md §16
+    Phase 9 UI parity)."""
+    rule_name: str
+    edge_type: str
+    source_label: str
+    target_label: str
+    source_activation: float
+    threshold: float
+    fired: bool
+    iteration: int
+    skip_reason: str | None = None
+    fact_id: str | None = None
+
+
+@dataclass(frozen=True)
 class ReasoningResult:
     activation: dict[str, float]
     facts: tuple[DerivedFact, ...]
     iterations: int
     converged_by: ConvergedBy
+    trace: tuple[InferenceTraceEntry, ...] = field(default=())
 
 
 def spread_activation(
@@ -156,9 +174,13 @@ def run_inference(
     existing_fact_ids: frozenset[str],
     facts_by_target: dict[str, DerivedFact],
     type_matches: TypeMatcher = _exact_match,
-) -> list[DerivedFact]:
+) -> tuple[list[DerivedFact], list[InferenceTraceEntry]]:
+    """Returns (new_facts, trace) -- trace covers every (rule, edge) pair whose
+    types match, fired or not, so the UI can show what was tried and why it
+    was skipped, not just what fired."""
     by_id = {n.id: n for n in nodes}
     new_facts: list[DerivedFact] = []
+    trace: list[InferenceTraceEntry] = []
 
     for rule in rules:
         for edge in edges:
@@ -169,14 +191,40 @@ def run_inference(
             if src is None or tgt is None:
                 continue
             if not type_matches(src.type, rule.source_type) or not type_matches(tgt.type, rule.target_type):
+                trace.append(
+                    InferenceTraceEntry(
+                        rule_name=rule.name, edge_type=edge.type,
+                        source_label=src.label, target_label=tgt.label,
+                        source_activation=activation.get(src.id, 0.0), threshold=rule.threshold,
+                        fired=False, iteration=iteration,
+                        skip_reason=f'type mismatch: "{src.type}"/"{tgt.type}" vs rule\'s "{rule.source_type}"/"{rule.target_type}"',
+                    )
+                )
                 continue
 
             premise = activation.get(src.id, 0.0)
             if premise < rule.threshold:
+                trace.append(
+                    InferenceTraceEntry(
+                        rule_name=rule.name, edge_type=edge.type,
+                        source_label=src.label, target_label=tgt.label,
+                        source_activation=premise, threshold=rule.threshold,
+                        fired=False, iteration=iteration,
+                        skip_reason=f"activation {premise:.2f} below threshold {rule.threshold:.2f}",
+                    )
+                )
                 continue
 
             fact_id = f"fact-{rule.id}-{edge.id}"
             if fact_id in existing_fact_ids:
+                trace.append(
+                    InferenceTraceEntry(
+                        rule_name=rule.name, edge_type=edge.type,
+                        source_label=src.label, target_label=tgt.label,
+                        source_activation=premise, threshold=rule.threshold,
+                        fired=False, iteration=iteration, skip_reason="already derived",
+                    )
+                )
                 continue
 
             step = ProofStep(
@@ -206,7 +254,28 @@ def run_inference(
                     proof_path=proof_path,
                 )
             )
-    return new_facts
+            trace.append(
+                InferenceTraceEntry(
+                    rule_name=rule.name, edge_type=edge.type,
+                    source_label=src.label, target_label=tgt.label,
+                    source_activation=premise, threshold=rule.threshold,
+                    fired=True, iteration=iteration, fact_id=fact_id,
+                )
+            )
+    return new_facts, trace
+
+
+def feed_back_activation(
+    activation: dict[str, float], facts: list[DerivedFact], *, feedback_gain: float,
+) -> dict[str, float]:
+    """Derived facts' targets gain persistent activation. Pure function --
+    returns a new dict, doesn't mutate the input (mirrors the feedback phase
+    previously inlined in reason()'s loop; also usable standalone for the
+    Reason tab's manual "Feed Back" step)."""
+    boosted = dict(activation)
+    for fact in facts:
+        boosted[fact.target_id] = min(1.0, boosted.get(fact.target_id, 0.0) + fact.confidence * feedback_gain)
+    return boosted
 
 
 def reason(
@@ -224,6 +293,7 @@ def reason(
     """Run the persistent-activation neurosymbolic loop until convergence."""
     activation: dict[str, float] = {}
     all_facts: list[DerivedFact] = []
+    all_trace: list[InferenceTraceEntry] = []
     existing_ids: set[str] = set()
     facts_by_target: dict[str, DerivedFact] = {}
     converged_by: ConvergedBy = "max_iterations"
@@ -235,18 +305,18 @@ def reason(
         activation = spread_activation(nodes, edges, source_id, decay=decay, seed=activation)
 
         # Symbolic: fire rules over the current activation.
-        new_facts = run_inference(
+        new_facts, trace = run_inference(
             nodes, edges, rules, activation,
             iteration=iteration,
             existing_fact_ids=frozenset(existing_ids),
             facts_by_target=facts_by_target,
             type_matches=type_matches,
         )
+        all_trace.extend(trace)
 
         # Feedback: derived targets gain persistent activation.
+        activation = feed_back_activation(activation, new_facts, feedback_gain=feedback_gain)
         for fact in new_facts:
-            boosted = min(1.0, activation.get(fact.target_id, 0.0) + fact.confidence * feedback_gain)
-            activation[fact.target_id] = boosted
             existing_ids.add(fact.id)
             facts_by_target[fact.target_id] = fact
         all_facts.extend(new_facts)
@@ -261,4 +331,5 @@ def reason(
         facts=tuple(all_facts),
         iterations=iteration,
         converged_by=converged_by,
+        trace=tuple(all_trace),
     )
