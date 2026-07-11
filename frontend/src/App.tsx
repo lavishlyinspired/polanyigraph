@@ -86,7 +86,7 @@ export function App() {
   const {
     nodes, edges, facts, rules, selectedNodeId, loading, iterations, autoRunning,
     loadGraph, loadHistory, loadRules, loadGraphs, loadOntology, selectNode, moveNode,
-    loadPendingFacts, loadApprovedFacts, pendingFacts,
+    loadPendingFacts, loadApprovedFacts, pendingFacts, loadReasonFacts,
   } = useGraphStore();
 
   useEffect(() => {
@@ -98,7 +98,8 @@ export function App() {
     void loadOntology();
     void loadPendingFacts();
     void loadApprovedFacts();
-  }, [loadGraph, loadHistory, loadRules, loadGraphs, loadOntology, loadPendingFacts, loadApprovedFacts]);
+    void loadReasonFacts();
+  }, [loadGraph, loadHistory, loadRules, loadGraphs, loadOntology, loadPendingFacts, loadApprovedFacts, loadReasonFacts]);
 
   useEffect(() => {
     if (!resizing) return;

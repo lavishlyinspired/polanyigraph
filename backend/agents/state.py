@@ -17,4 +17,6 @@ class AgentState(TypedDict):
     enrichment_fact_texts: list[str]
     query_results: list[str]
     query_error: str
+    # Set by the memory_agent node when intent == "recall".
+    memory_hits: list[str]
     reply: str

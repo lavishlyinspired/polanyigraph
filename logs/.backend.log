@@ -3646,3 +3646,545 @@ INFO:     127.0.0.1:56855 - "GET /health HTTP/1.1" 200 OK
 INFO:     127.0.0.1:56915 - "GET /ontology HTTP/1.1" 200 OK
 INFO:     127.0.0.1:56918 - "GET /health HTTP/1.1" 200 OK
 INFO:     127.0.0.1:56921 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57003 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57000 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57002 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56999 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57013 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57017 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57020 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57023 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57011 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57029 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57032 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57035 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57038 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57027 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57044 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57041 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57047 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57050 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57004 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57053 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57056 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56994 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57059 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57062 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57088 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57089 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57090 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57100 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57087 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57097 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57104 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57107 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57112 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57113 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57122 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57125 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57131 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57116 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57128 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57119 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57134 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57137 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57091 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57140 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57086 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57143 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57146 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57149 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57172 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57169 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57167 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57173 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57182 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57188 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57189 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57198 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57195 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57201 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57192 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57204 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57183 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57210 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57212 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57216 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57218 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57221 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57175 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57166 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57224 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57227 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57230 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57233 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57254 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57255 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57253 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57256 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57265 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57271 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57268 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57281 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57279 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57275 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57284 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57264 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57287 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57290 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57293 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57299 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57297 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57303 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57257 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57250 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57307 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57313 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57310 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57316 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57364 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57367 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57368 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57363 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57377 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57380 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57378 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57385 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57387 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57390 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57398 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57396 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57402 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57406 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57411 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57399 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57409 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57414 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57369 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57418 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57421 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57362 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57425 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57428 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57467 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57465 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57464 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57469 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57478 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57483 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57485 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57476 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57494 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57488 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57491 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57497 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57500 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57507 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57509 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57512 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57505 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57515 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57470 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57463 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57519 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57522 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57525 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57528 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57552 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57556 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57557 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57551 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57567 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57569 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57573 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57577 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57582 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57585 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57579 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57566 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57588 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57595 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57593 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57597 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57600 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57603 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57558 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57606 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57550 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57610 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57613 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57616 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57769 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57770 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57771 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57768 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57780 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57784 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57787 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57790 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57796 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57778 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57793 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57799 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57772 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57767 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57805 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57802 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57822 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57824 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57828 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57820 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57837 - "GET /reason/default/facts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57836 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57840 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57843 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57846 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57849 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57852 - "GET /reason/default/facts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57833 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57855 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57861 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57859 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57815 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57865 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57871 - "GET /reason/default/facts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57877 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57867 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57879 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57882 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57891 - "GET /reason/default/facts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57888 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57873 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57894 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57900 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57906 - "GET /reason/default/facts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57904 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57897 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57915 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57912 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57918 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57923 - "GET /reason/default/facts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57826 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57924 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57913 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57930 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57927 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57935 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57886 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57939 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57942 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57948 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57951 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57938 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57945 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57957 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57956 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57960 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57963 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57966 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57969 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57972 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58016 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58017 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58020 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58015 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58032 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58033 - "GET /reason/default/facts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58036 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58042 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58040 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58029 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58045 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58049 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58054 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58051 - "GET /reason/default/facts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58021 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58012 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58060 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58057 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58133 - "POST /reason/default/spread HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58136 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58167 - "POST /reason/default/infer HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58172 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58466 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58477 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58489 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58515 - "POST /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58554 - "POST /reason/default/clear-activation HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58557 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58597 - "POST /reason/default/spread HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58600 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58623 - "POST /reason/default/infer HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58627 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58658 - "POST /reason/default/feedback HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58664 - "GET /reason/default/facts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58663 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58696 - "POST /reason/default/clear-facts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58699 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58714 - "POST /reason/default/clear-activation HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58717 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58734 - "POST /reason/default/spread HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58737 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58740 - "POST /reason/default/infer HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58744 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58748 - "POST /reason/default/feedback HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58754 - "GET /reason/default/facts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58753 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58757 - "POST /reason/default/spread HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58760 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58764 - "POST /reason/default/infer HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58767 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58770 - "POST /reason/default/feedback HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58776 - "GET /reason/default/facts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58774 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58811 - "POST /reason/default/clear-facts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58813 - "POST /reason/default/clear-activation HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58815 - "DELETE /rules/custom-c8a31a373a91 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58817 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58819 - "GET /reason/default/facts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58852 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58853 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58851 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58854 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58863 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58867 - "GET /reason/default/facts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58869 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58872 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58878 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58882 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58862 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58876 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58885 - "GET /reason/default/facts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58888 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58855 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58891 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58850 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58894 - "GET /health HTTP/1.1" 200 OK
+WARNING:  WatchFiles detected changes in 'tests/test_memory_service.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [41179]
+INFO:     Started server process [43208]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'services/memory_service.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [43208]
+INFO:     Started server process [44382]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'services/memory_service.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [44382]
+INFO:     Started server process [44575]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'agents/state.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [44575]
+INFO:     Started server process [44633]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'tests/test_agent_graph.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [44633]
+INFO:     Started server process [44641]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'tests/test_agent_graph.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [44641]
+INFO:     Started server process [44663]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'tests/test_agent_graph.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [44663]
+INFO:     Started server process [44719]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'agents/graph.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [44719]
+INFO:     Started server process [44790]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'agents/graph.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [44790]
+INFO:     Started server process [44813]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'agents/graph.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [44813]
+INFO:     Started server process [44864]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'tests/test_agent_graph.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [44864]
+INFO:     Started server process [44949]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'agents/graph.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [44949]
+INFO:     Started server process [45005]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'agents/graph.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [45005]
+INFO:     Started server process [45078]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'agents/graph.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [45078]
+INFO:     Started server process [45102]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'agents/graph.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [45102]
+INFO:     Started server process [45135]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:61770 - "GET /health HTTP/1.1" 200 OK
+WARNING:  WatchFiles detected changes in 'tests/test_api_agent.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [45135]
+INFO:     Started server process [45982]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'tests/test_api_agent.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [45982]
+INFO:     Started server process [46011]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'api/agent.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [46011]
+INFO:     Started server process [46073]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:62437 - "POST /chat/verify-memagent-1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62455 - "POST /agent/verify-memagent-1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62480 - "POST /rules HTTP/1.1" 422 Unprocessable Content
+WARNING:  WatchFiles detected changes in 'tests/test_mcp_neo4j_server.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [46073]
+INFO:     Started server process [46552]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'mcp_neo4j_server.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [46552]
+INFO:     Started server process [46610]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'tests/test_preferences_store.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [46610]
+INFO:     Started server process [46754]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'services/preferences_store.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [46754]
+INFO:     Started server process [46781]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'tests/test_mcp_memory_server.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [46781]
+INFO:     Started server process [47063]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'mcp_memory_server.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [47063]
+INFO:     Started server process [47136]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'tests/test_skill_activation_store.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [47136]
+INFO:     Started server process [47321]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'services/skill_activation_store.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [47321]
+INFO:     Started server process [47407]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'tests/test_mcp_skills_server.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [47407]
+INFO:     Started server process [47448]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'mcp_skills_server.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [47448]
+INFO:     Started server process [47502]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.

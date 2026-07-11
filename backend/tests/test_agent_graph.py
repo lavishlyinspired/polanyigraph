@@ -64,6 +64,7 @@ def services():
     neo4j.run("MATCH (f:DerivedFact {graphId: $gid}) DETACH DELETE f", gid=graph_id)
     neo4j.run("MATCH (h:IngestEvent {graphId: $gid}) DETACH DELETE h", gid=graph_id)
     neo4j.run("MATCH (f:ImplicitFact {graphId: $gid}) DETACH DELETE f", gid=graph_id)
+    neo4j.run("MATCH (s:ChatSession {graphId: $gid}) DETACH DELETE s", gid=graph_id)
     neo4j.close()
     graphdb.close()
 
@@ -73,7 +74,7 @@ def _initial_state(graph_id: str, text: str) -> dict:
         "graph_id": graph_id, "text": text, "intent": "",
         "entities_extracted": 0, "relationships_extracted": 0, "facts_derived": 0,
         "fact_texts": [], "enrichment_fact_texts": [], "query_results": [], "query_error": "",
-        "reply": "",
+        "memory_hits": [], "reply": "",
     }
 
 
@@ -268,6 +269,49 @@ def test_visualize_intent_describes_the_real_graph(services):
     assert result["reply"] == "The graph has one organization: Acme Corp."
     responder_calls = [c for c in llm.calls if "knowledge-graph analyst assistant" in c["system"].lower()]
     assert "Acme Corp" in responder_calls[0]["user"]
+
+
+def test_recall_intent_runs_the_real_memory_agent_node(services):
+    """PLAN.md §2: memory_agent, the 7th of the originally-sketched 7 agent
+    nodes. Searches real, already-persisted chat history
+    (services/chat_history_service.py) via services/memory_service.py --
+    not a new mock store."""
+    neo4j, graphdb, settings, graph_id = services
+    from services import chat_history_service
+
+    chat_history_service.append_message(
+        neo4j, graph_id=graph_id, session_id=f"{graph_id}:default",
+        message_id="m1", role="user", content="Who regulates Credit Suisse?",
+    )
+
+    llm = FakeLLM(_PAYLOAD, route="recall", reply="You previously asked about Credit Suisse's regulator.")
+    agent = build_graph(neo4j, graphdb, llm, settings)
+
+    result = agent.invoke(
+        _initial_state(graph_id, "What did I previously ask about Credit Suisse?"),
+        config={"configurable": {"thread_id": f"{graph_id}:default"}},
+    )
+
+    assert result["reply"] == "You previously asked about Credit Suisse's regulator."
+    assert len(result["memory_hits"]) == 1
+    assert "Credit Suisse" in result["memory_hits"][0]
+
+    responder_calls = [c for c in llm.calls if "knowledge-graph analyst assistant" in c["system"].lower()]
+    assert "bi-temporal" in responder_calls[0]["system"].lower()  # memory-recall skill loaded
+
+
+def test_recall_intent_with_no_matches_still_responds(services):
+    neo4j, graphdb, settings, graph_id = services
+    llm = FakeLLM(_PAYLOAD, route="recall", reply="I don't have any memory of that.")
+    agent = build_graph(neo4j, graphdb, llm, settings)
+
+    result = agent.invoke(
+        _initial_state(graph_id, "What did I ask about before?"),
+        config={"configurable": {"thread_id": f"{graph_id}:default"}},
+    )
+
+    assert result["memory_hits"] == []
+    assert result["reply"] == "I don't have any memory of that."
 
 
 def test_temporal_question_loads_memory_recall_skill_in_addition(services):

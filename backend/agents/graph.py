@@ -39,11 +39,11 @@ from app.config import Settings
 from db.graphdb_client import GraphDBClient
 from db.neo4j_client import Neo4jClient
 from llm.client import LLMClient
-from services import enrichment_service, graph_service, ingest_service, reasoning_service
+from services import enrichment_service, graph_service, ingest_service, memory_service, reasoning_service
 from services.query_engine import execute_query
 
 _ROUTER_SYSTEM = """You are a routing classifier for a knowledge graph agent. Classify the \
-user's message as exactly one of: extract, enrich, query, reason, visualize.
+user's message as exactly one of: extract, enrich, query, reason, visualize, recall.
 
 - extract: the message IS a document or passage of real-world text (a sentence, paragraph, \
 filing excerpt) to add to the knowledge graph. This is the default for any plain declarative \
@@ -53,6 +53,9 @@ graph's EXISTING content (e.g. "what's implied by...", "enrich the graph").
 - query: the message is a structured query in the form predicate(subject, object), e.g. regulates("FINMA", X)
 - reason: the user explicitly asks to run reasoning/inference over the existing graph, without adding new text.
 - visualize: the user explicitly asks to see, visualize, or get an overview/export of the graph.
+- recall: the user asks what THEY (or the assistant) said/asked before, in a prior turn or \
+session -- about the conversation itself, not about graph content (e.g. "what did I ask about \
+before?", "what did we discuss earlier?").
 
 Examples:
 "Deutsche Bank AG issued a bond." -> extract
@@ -62,10 +65,12 @@ Examples:
 regulates("FINMA", X) -> query
 "Run reasoning over the graph." -> reason
 "Show me an overview of the graph." -> visualize
+"What did I ask about before?" -> recall
+"What did we discuss earlier in this conversation?" -> recall
 
-Respond with ONLY one word: extract, enrich, query, reason, or visualize."""
+Respond with ONLY one word: extract, enrich, query, reason, visualize, or recall."""
 
-_VALID_INTENTS = {"extract", "enrich", "query", "reason", "visualize"}
+_VALID_INTENTS = {"extract", "enrich", "query", "reason", "visualize", "recall"}
 
 _RESPONDER_SYSTEM = """You are a knowledge-graph analyst assistant. Summarize, in 1-3 \
 sentences, what just happened during ingestion and reasoning over a real document -- \
@@ -77,11 +82,22 @@ _SKILL_BY_INTENT = {
     "query": "kg-query",
     "reason": "neurosymbolic-reasoning",
     "visualize": "kg-visualization",
+    "recall": "memory-recall",
 }
 
 # Lightweight heuristic, not an LLM call -- matches PLAN.md §20's memory-recall
 # skill's own trigger condition: "activates on temporal/historical requests."
 _TEMPORAL_KEYWORDS = ("historical", "as of", "previously", "used to", "before", "changed", "supersede")
+
+# Words to drop when turning a recall question ("What did I previously ask
+# about Credit Suisse?") into search terms for memory_service.search_memory --
+# a real, deterministic keyword extraction (not an LLM call), not the
+# full-question-as-substring search that CONTAINS-matching can't satisfy.
+_RECALL_STOPWORDS = {
+    "what", "did", "i", "you", "we", "ask", "asked", "about", "before", "earlier",
+    "previously", "discuss", "discussed", "when", "where", "was", "were", "have",
+    "has", "the", "this", "that", "said", "conversation",
+}
 
 
 def build_graph(neo4j: Neo4jClient, graphdb: GraphDBClient, llm: LLMClient, settings: Settings):
@@ -140,6 +156,18 @@ def build_graph(neo4j: Neo4jClient, graphdb: GraphDBClient, llm: LLMClient, sett
             "query_error": "",
         }
 
+    def memory_agent_node(state: AgentState) -> dict:
+        words = [w.strip("?.,!\"'") for w in state["text"].split()]
+        terms = [w for w in words if len(w) > 3 and w.lower() not in _RECALL_STOPWORDS] or [state["text"]]
+        seen_ids: set[str] = set()
+        hits = []
+        for term in terms:
+            for hit in memory_service.search_memory(neo4j, graph_id=state["graph_id"], query=term):
+                if hit.id not in seen_ids:
+                    seen_ids.add(hit.id)
+                    hits.append(hit)
+        return {"memory_hits": [f"[{h.kind}] {h.text}" for h in hits[:10]]}
+
     def responder_node(state: AgentState) -> dict:
         intent = state["intent"]
         guidance_parts = []
@@ -159,6 +187,9 @@ def build_graph(neo4j: Neo4jClient, graphdb: GraphDBClient, llm: LLMClient, sett
         elif intent == "enrich":
             facts_text = "\n".join(f"- {f}" for f in state["enrichment_fact_texts"]) or "(none found)"
             user = f"Implicit facts found by the 11 Polanyi heuristics:\n{facts_text}"
+        elif intent == "recall":
+            hits_text = "\n".join(f"- {h}" for h in state["memory_hits"]) or "(no matching memory found)"
+            user = f"Memory search for: {state['text']}\nMatches:\n{hits_text}"
         elif intent == "visualize":
             record = graph_service.get_graph(neo4j, state["graph_id"])
             entities_text = "\n".join(f"- {n.label} ({n.type})" for n in record.nodes) or "(empty graph)"
@@ -185,6 +216,7 @@ def build_graph(neo4j: Neo4jClient, graphdb: GraphDBClient, llm: LLMClient, sett
     workflow.add_node("reasoner", reasoner_node)
     workflow.add_node("enricher", enricher_node)
     workflow.add_node("querier", querier_node)
+    workflow.add_node("memory_agent", memory_agent_node)
     workflow.add_node("responder", responder_node)
 
     workflow.add_edge(START, "router")
@@ -194,11 +226,13 @@ def build_graph(neo4j: Neo4jClient, graphdb: GraphDBClient, llm: LLMClient, sett
         "query": "querier",
         "reason": "reasoner",
         "visualize": "responder",
+        "recall": "memory_agent",
     })
     workflow.add_edge("extractor", "reasoner")
     workflow.add_edge("reasoner", "responder")
     workflow.add_edge("enricher", "responder")
     workflow.add_edge("querier", "responder")
+    workflow.add_edge("memory_agent", "responder")
     workflow.add_edge("responder", END)
 
     return workflow.compile(checkpointer=InMemorySaver())

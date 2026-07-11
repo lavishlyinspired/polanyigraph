@@ -13,6 +13,7 @@ import {
   type IngestEvent,
   type QueryResultRow,
   type Rule,
+  type TraceEntry,
 } from '../lib/api';
 
 export interface LayoutNode extends ApiNode {
@@ -56,6 +57,9 @@ interface GraphState {
   nodes: LayoutNode[];
   edges: ApiEdge[];
   facts: DerivedFact[];
+  trace: TraceEntry[];
+  loopStep: 'idle' | 'neural' | 'symbolic' | 'feedback';
+  loopIteration: number;
   selectedNodeId: string | null;
   convergedBy: 'fixpoint' | 'max_iterations' | null;
   iterations: number;
@@ -89,6 +93,12 @@ interface GraphState {
   loadGraph: () => Promise<void>;
   ingest: (text: string) => Promise<void>;
   reason: () => Promise<void>;
+  spreadActivationStep: () => Promise<void>;
+  runInferenceStep: () => Promise<void>;
+  feedBackStep: () => Promise<void>;
+  clearActivationStep: () => Promise<void>;
+  clearFactsStep: () => Promise<void>;
+  loadReasonFacts: () => Promise<void>;
   runQuery: (query: string) => Promise<void>;
   loadHistory: () => Promise<void>;
   loadRules: () => Promise<void>;
@@ -138,13 +148,15 @@ function layoutNodes(nodes: ApiNode[], previous: LayoutNode[]): LayoutNode[] {
   });
 }
 
-let autoRunTimer: ReturnType<typeof setInterval> | null = null;
 
 export const useGraphStore = create<GraphState>((set, get) => ({
   graphId: readStoredGraphId(),
   nodes: [],
   edges: [],
   facts: [],
+  trace: [],
+  loopStep: 'idle',
+  loopIteration: 0,
   selectedNodeId: null,
   convergedBy: null,
   iterations: 0,
@@ -238,11 +250,11 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     get().stopAutoRun();
     storeGraphId(graphId);
     set({
-      graphId, nodes: [], edges: [], facts: [], selectedNodeId: null,
-      convergedBy: null, iterations: 0, history: [], chatMessages: [],
+      graphId, nodes: [], edges: [], facts: [], trace: [], loopStep: 'idle', loopIteration: 0,
+      selectedNodeId: null, convergedBy: null, iterations: 0, history: [], chatMessages: [],
       pendingFacts: [], approvedFacts: [], showCommunities: false, agentMessages: [],
     });
-    await Promise.all([get().loadGraph(), get().loadHistory(), get().loadPendingFacts(), get().loadApprovedFacts()]);
+    await Promise.all([get().loadGraph(), get().loadHistory(), get().loadPendingFacts(), get().loadApprovedFacts(), get().loadReasonFacts()]);
   },
 
   reason: async () => {
@@ -264,19 +276,122 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     }
   },
 
-  startAutoRun: () => {
-    if (autoRunTimer) return;
-    set({ autoRunning: true });
-    autoRunTimer = setInterval(() => void get().reason(), 3000);
+  // --- Manual step-by-step mode (Reason tab prototype parity) -- each step
+  // is a real call against real persisted Neo4j state, not client-side mock
+  // computation like the prototype's engine.ts.
+  spreadActivationStep: async () => {
+    const { graphId, selectedNodeId } = get();
+    if (!selectedNodeId) return;
+    set({ loading: true, error: null });
+    try {
+      await api.spreadActivation(graphId, selectedNodeId);
+      set({ loopStep: 'neural', loading: false });
+      await get().loadGraph();
+      toast.success('Activation spread from selected node');
+    } catch (e) {
+      set({ error: String(e), loading: false });
+      toast.error(String(e));
+    }
   },
 
-  stopAutoRun: () => {
-    if (autoRunTimer) {
-      clearInterval(autoRunTimer);
-      autoRunTimer = null;
+  runInferenceStep: async () => {
+    const { graphId } = get();
+    set({ loading: true, error: null });
+    try {
+      const result = await api.runInferenceStep(graphId);
+      set((s) => ({
+        facts: [...s.facts, ...result.facts],
+        trace: [...s.trace, ...result.trace],
+        loopStep: 'symbolic',
+        loopIteration: s.loopIteration + 1,
+        loading: false,
+      }));
+      await get().loadGraph(); // refresh derived flags
+      if (result.facts.length > 0) toast.success(`${result.facts.length} fact(s) derived`);
+      else toast.info('No new facts derived. Try lowering rule thresholds or spreading more activation.');
+    } catch (e) {
+      set({ error: String(e), loading: false });
+      toast.error(String(e));
     }
-    set({ autoRunning: false });
   },
+
+  feedBackStep: async () => {
+    const { graphId } = get();
+    set({ loading: true, error: null });
+    try {
+      await api.feedBack(graphId);
+      set({ loopStep: 'feedback', loading: false });
+      await Promise.all([get().loadGraph(), get().loadReasonFacts()]);
+      toast.success('Facts fed back to neural layer');
+    } catch (e) {
+      set({ error: String(e), loading: false });
+      toast.error(String(e));
+    }
+  },
+
+  clearActivationStep: async () => {
+    const { graphId } = get();
+    try {
+      await api.clearActivation(graphId);
+      set({ loopStep: 'idle' });
+      await get().loadGraph();
+    } catch (e) {
+      toast.error(String(e));
+    }
+  },
+
+  clearFactsStep: async () => {
+    const { graphId } = get();
+    try {
+      await api.clearFacts(graphId);
+      set({ facts: [], trace: [] });
+      await get().loadGraph();
+    } catch (e) {
+      toast.error(String(e));
+    }
+  },
+
+  loadReasonFacts: async () => {
+    const { graphId } = get();
+    try {
+      const result = await api.getReasonFacts(graphId);
+      set({ facts: result.facts });
+    } catch (e) {
+      toast.error(String(e));
+    }
+  },
+
+  startAutoRun: () => {
+    if (get().autoRunning) return;
+    set({ autoRunning: true, loopIteration: 0 });
+    void (async () => {
+      // Real staged loop -- spread -> infer -> feed back, each a real call
+      // against real persisted state (prototype parity), stopping when a
+      // round derives no new facts (converged) or stopAutoRun() flips the
+      // flag this loop polls between every step.
+      const MAX_AUTO_ITERATIONS = 5;
+      for (let i = 0; i < MAX_AUTO_ITERATIONS; i++) {
+        if (!get().autoRunning) break;
+        await get().spreadActivationStep();
+        await new Promise((r) => setTimeout(r, 300));
+        if (!get().autoRunning) break;
+
+        const factsBefore = get().facts.length;
+        await get().runInferenceStep();
+        await new Promise((r) => setTimeout(r, 400));
+        if (!get().autoRunning) break;
+        const newFactsCount = get().facts.length - factsBefore;
+
+        await get().feedBackStep();
+        await new Promise((r) => setTimeout(r, 400));
+
+        if (newFactsCount === 0) break; // converged: nothing new to spread further
+      }
+      set({ autoRunning: false });
+    })();
+  },
+
+  stopAutoRun: () => set({ autoRunning: false }),
 
   sendChatMessage: async (text: string) => {
     const userMsg: ChatMessage = { id: `u-${Date.now()}`, role: 'user', content: text };
