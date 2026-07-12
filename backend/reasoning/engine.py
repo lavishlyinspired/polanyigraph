@@ -85,6 +85,14 @@ class DerivedFact:
     confidence: float
     iteration: int
     proof_path: tuple[ProofStep, ...] = field(default=())
+    # Populated when >1 rule fires on the SAME edge in the same iteration
+    # (e.g. a hand-authored rule and a mined rule both watching the same
+    # edge_type/source_type/target_type combo -- a real scenario once rule
+    # mining exists). Confidence is then a noisy-OR combination across all
+    # contributing rules rather than either rule's confidence alone, and
+    # this field records which rules contributed so the proof trail stays
+    # honest about it. Empty/single-element for the common single-rule case.
+    supporting_rule_ids: tuple[str, ...] = field(default=())
 
 
 @dataclass(frozen=True)
