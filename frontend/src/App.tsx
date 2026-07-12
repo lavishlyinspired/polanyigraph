@@ -29,6 +29,8 @@ import {
   BookOpen,
   Sparkles,
   Bot,
+  Wrench,
+  BrainCircuit,
 } from 'lucide-react';
 import { AgentPanel } from './components/AgentPanel';
 import { ConstructionPanel } from './components/ConstructionPanel';
@@ -38,9 +40,11 @@ import { GraphsPopover } from './components/GraphsPopover';
 import { HistoryPopover } from './components/HistoryPopover';
 import { IngestPanel } from './components/IngestPanel';
 import { LlmPanel } from './components/LlmPanel';
+import { MemoryInspector } from './components/MemoryInspector';
 import { OntologyPanel } from './components/OntologyPanel';
 import { QueryPanel } from './components/QueryPanel';
 import { ReasoningPanel } from './components/ReasoningPanel';
+import { SkillManager } from './components/SkillManager';
 import { TripleStorePanel } from './components/TripleStorePanel';
 import { api, type HealthResponse } from './lib/api';
 import { useGraphStore } from './stores/graphStore';
@@ -80,7 +84,7 @@ export function App() {
   const [rightWidth, setRightWidth] = useState(DEFAULT_SIDEBAR);
   const [resizing, setResizing] = useState<'left' | 'right' | null>(null);
   const [leftTab, setLeftTab] = useState<'ingest' | 'construct' | 'reason' | 'enrich'>('ingest');
-  const [rightTab, setRightTab] = useState<'query' | 'triples' | 'ontology' | 'llm' | 'agent'>('query');
+  const [rightTab, setRightTab] = useState<'query' | 'triples' | 'ontology' | 'llm' | 'agent' | 'skills' | 'memory'>('query');
   const [showHistory, setShowHistory] = useState(false);
   const [showGraphs, setShowGraphs] = useState(false);
   const {
@@ -333,6 +337,22 @@ export function App() {
                 >
                   <Bot className="w-2.5 h-2.5" /> Agent
                 </button>
+                <button
+                  onClick={() => setRightTab('skills')}
+                  className={`flex-1 h-full text-[9px] font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-1 ${
+                    rightTab === 'skills' ? 'bg-white text-black' : 'text-zinc-500 hover:text-zinc-300'
+                  }`}
+                >
+                  <Wrench className="w-2.5 h-2.5" /> Skills
+                </button>
+                <button
+                  onClick={() => setRightTab('memory')}
+                  className={`flex-1 h-full text-[9px] font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-1 ${
+                    rightTab === 'memory' ? 'bg-white text-black' : 'text-zinc-500 hover:text-zinc-300'
+                  }`}
+                >
+                  <BrainCircuit className="w-2.5 h-2.5" /> Memory
+                </button>
                 <button onClick={() => setRightCollapsed(true)} className="w-9 h-full flex items-center justify-center text-zinc-600 hover:text-zinc-300 transition-colors shrink-0">
                   <PanelRightClose className="w-4 h-4" />
                 </button>
@@ -346,8 +366,12 @@ export function App() {
                   <OntologyPanel />
                 ) : rightTab === 'llm' ? (
                   <LlmPanel />
-                ) : (
+                ) : rightTab === 'agent' ? (
                   <AgentPanel />
+                ) : rightTab === 'skills' ? (
+                  <SkillManager />
+                ) : (
+                  <MemoryInspector />
                 )}
               </div>
             </>

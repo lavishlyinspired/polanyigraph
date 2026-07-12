@@ -97,10 +97,12 @@ from api import graph as graph_routes  # noqa: E402
 from api import graphs as graphs_routes  # noqa: E402
 from api import history as history_routes  # noqa: E402
 from api import ingest as ingest_routes  # noqa: E402
+from api import memory as memory_routes  # noqa: E402
 from api import ontology as ontology_routes  # noqa: E402
 from api import query as query_routes  # noqa: E402
 from api import reason as reason_routes  # noqa: E402
 from api import rules as rules_routes  # noqa: E402
+from api import skills as skills_routes  # noqa: E402
 
 app.include_router(ingest_routes.router)
 app.include_router(graph_routes.router)
@@ -113,3 +115,5 @@ app.include_router(chat_routes.router)
 app.include_router(ontology_routes.router)
 app.include_router(enrich_routes.router)
 app.include_router(agent_routes.router)
+app.include_router(skills_routes.router)
+app.include_router(memory_routes.router)

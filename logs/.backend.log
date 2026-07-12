@@ -4188,3 +4188,77 @@ INFO:     Finished server process [47448]
 INFO:     Started server process [47502]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'tests/test_api_skills.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [47502]
+INFO:     Started server process [55320]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'tests/test_api_memory.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [55320]
+INFO:     Started server process [55340]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'api/skills.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [55340]
+INFO:     Started server process [55373]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'api/memory.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [55373]
+INFO:     Started server process [55388]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'app/main.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [55388]
+INFO:     Started server process [55403]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:51736 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51741 - "GET /skills HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51743 - "POST /memory/no-such-graph/search HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51745 - "GET /memory/preferences HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51810 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51809 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51807 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51825 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51804 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51822 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51835 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51833 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51829 - "GET /reason/default/facts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51845 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51841 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51850 - "GET /reason/default/facts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51844 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51847 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51811 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51803 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51853 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51856 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51863 - "GET /skills HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51866 - "GET /skills HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51871 - "GET /skills/kg-extraction/content HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51875 - "POST /skills/kg-extraction/activate HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51878 - "GET /skills HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51883 - "GET /memory/preferences HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51886 - "GET /memory/preferences HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51892 - "POST /memory/default/search HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51906 - "PUT /memory/preferences/ui-verify-test HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51910 - "GET /memory/preferences HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51915 - "DELETE /memory/preferences/ui-verify-test HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51918 - "GET /memory/preferences HTTP/1.1" 200 OK

@@ -1,0 +1,15 @@
+{
+  "id": "case-002-no-match",
+  "skill": "memory-recall",
+  "input": {
+    "context": {
+      "seed_messages": [
+        "We discussed Credit Suisse bond covenants earlier today."
+      ]
+    },
+    "query": "nonexistent-term-xyz"
+  },
+  "assertions": [
+    { "type": "item_count", "value": 0 }
+  ]
+}

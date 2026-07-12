@@ -1,0 +1,17 @@
+{
+  "id": "case-001-chat-history-recall",
+  "skill": "memory-recall",
+  "input": {
+    "context": {
+      "seed_messages": [
+        "We discussed Credit Suisse bond covenants earlier today.",
+        "Deutsche Bank AG's regulatory filing was also mentioned."
+      ]
+    },
+    "query": "Credit Suisse"
+  },
+  "assertions": [
+    { "type": "min_item_count", "value": 1 },
+    { "type": "contains_text", "text": "Credit Suisse" }
+  ]
+}

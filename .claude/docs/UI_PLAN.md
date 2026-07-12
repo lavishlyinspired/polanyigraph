@@ -248,7 +248,7 @@ Superseding the phased plan above: the user asked for the UI to match `.claude/d
 
 **Left sidebar — Construct / Reason tabs** (`ConstructionPanel.tsx`, `ReasoningPanel.tsx`), replacing the single "Ingest" panel:
 - **Construct**: Node Inspector (selected node + provenance) → Graphs (switcher: list existing graphs with counts, create/switch via a text input — backed by `GET /graphs`) → Ingest Document (paste text, unchanged) → Rules (read-only list from `GET /rules`, since rules are hand-authored against the real ontology; freehand rule authoring from the UI was cut — a made-up relation could reference something that doesn't exist in the ontology and would silently never fire).
-- **Reason**: ported the prototype's info banner, 3-step Neural→Symbolic→Feedback loop visual, Auto-Run/Stop, heatmap/proof-path toggles, activated-nodes ranking, and derived-facts list with proof paths. **[UPDATED — deviation closed]** The prototype's three separately-clickable manual steps (Spread Activation / Run Inference / Feed Back) are now real, independently-callable, Neo4j-persisted backend operations (`POST /reason/{graph_id}/spread`, `/infer`, `/feedback` — PLAN.md §8 row 8), not client-side mock computation and not collapsed into the atomic call. Each button drives its own real endpoint; activation persists on `:Entity.activation` across calls, derived facts persist their proof-path JSON and a `fedBack` flag so state survives across separate HTTP round-trips. The inference step also surfaces a real evaluation trace (fired/skipped rules with skip reasons) that the prototype's mock engine produced but this project previously didn't expose. Two new Clear controls (activation, facts) and a real Auto-Run Loop (sequences the 3 real actions with a cancellable async loop, self-stopping on convergence) round out parity. The pre-existing atomic "Run reasoning from selected node" (`/reason/{graph_id}`) is kept as an additional convenience shortcut alongside the manual steps, not a replacement for them.
+- **Reason**: ported the prototype's info banner, 3-step Neural→Symbolic→Feedback loop visual, Auto-Run/Stop, heatmap/proof-path toggles, activated-nodes ranking, and derived-facts list with proof paths. **One deliberate deviation**: the prototype had three separately-clickable manual steps (Spread Activation / Run Inference / Feed Back); the real backend's `/reason` (PLAN.md §8.4) runs the whole persistent-activation loop to convergence as one atomic, already-verified call, so these collapse into a single "Run reasoning" action while the 3-step visual still reflects real progress.
 
 **Right sidebar — Query / LLM tabs** (`QueryPanel.tsx`, `LlmPanel.tsx`): Query is the existing triple-query console, effectively unchanged. LLM is new — see item 2 above.
 
@@ -259,12 +259,12 @@ Superseding the phased plan above: the user asked for the UI to match `.claude/d
 **History**: unchanged from the prior turn — left-sidebar icon + popover (`HistoryPopover.tsx`), not a tab (per explicit direction).
 
 
+**[UPDATED — deviation closed]** `SkillManager.tsx` and `MemoryInspector.tsx` now exist as real right-sidebar tabs ("Skills" / "Memory"), both functional against real backend data, not demo/placeholder. `SkillManager`: lists the 6 real runtime skills with live active/inactive status, expands to show real `SKILL.md` body content, activates a skill for real (persists a real `:ActiveSkill` Neo4j node via the new `GET/POST /skills*` REST endpoints — same effect as `mcp_skills_server.py`'s tool, not a separate/parallel implementation). `MemoryInspector`: searches real chat history + entity summaries (new `POST /memory/{graph_id}/search`, wraps the same `services/memory_service.py` the agent's `memory_agent` node and `mcp_memory_server.py` use) and manages real key/value preferences (new `GET/PUT/DELETE /memory/preferences`). No agent state went into a separate `agentStore.ts` — reused the existing `graphStore.ts` (Zustand), consistent with every other panel in this app. Live-verified in the browser: activated `kg-extraction` (status flipped to Active), searched "Credit Suisse" and got real chat-history + entity-summary hits, added and deleted a real preference — all test state cleaned up afterward.
+
 UI Improvements Needed — Gap Analysis
 What's in the plans but NOT in the actual frontend code:
 A. From PLAN.md §6 Frontend Architecture (v2 plan)
 Planned Component
-SkillManager.tsx — skill browsing/activation
-MemoryInspector.tsx — memory visualization
 agentStore.ts — agent state management
 websocket.ts — SSE/WS connection
 hooks/useGraph.ts
@@ -329,7 +329,7 @@ Multi-graph management
 Priority Summary
 Priority	Items
 High (core UX gaps)	Inference trace, path highlighting on canvas, depth display
-Medium (v2 plan components)	SkillManager, MemoryInspector, agentStore, websocket/SSE, streaming LLM
+Medium (v2 plan components)	~~SkillManager, MemoryInspector~~ [DONE], agentStore, websocket/SSE, streaming LLM
 Low (polish)	Auto-scroll, derived-edge distinction, edge toggles, CPU load
 Deferred (UI_PLAN.md §7)	d3-force layout, mobile support
 The most impactful missing feature is the inference trace — the prototype showed which rules fired and which were skipped at each iteration, which is critical for understanding the neurosymbolic reasoning process. The production UI only shows the final derived facts, losing the step-by-step reasoning visibility.
@@ -337,74 +337,3 @@ The most impactful missing feature is the inference trace — the prototype show
 what is a better way to place the triples and ontology instead of placing them in the sidebars.also provide . Neural Activation and 2. Symbolic Inference -> nference trace:
 1 and nference trace:  Derived facts (12): and 3. Feedback to Neural. see how '/Users/akash/KG_Projects/neurosymbolic/.claude/docs/src' it provides for the reason tab. the write to '/Users/akash/KG_Projects/neurosymbolic/.claude/docs/UI_PLAN.md'
 
----
-
-## 9. Sync with PLAN.md §19 (Polanyi Enrichment) and §20 (Temporal Memory)
-
-**[NEW]** Neither the gap analysis above (A–D) nor any earlier phase in this document plans UI for `PLAN.md` §19 or §20 — both were speced after this document's phases were written. Backend implementation of §20 items 1–2 (provenance linking + bi-temporal facts) is starting now (`services/graph_service.py`, `services/history_service.py`); this section is the corresponding UI plan so the two docs don't drift apart again. None of this is built yet.
-
-### 9.1 Provenance (§20 item 1: `IngestEvent-[:PRODUCED]->Entity`)
-
-| Task | Files | Description |
-|---|---|---|
-| 9.1.1 Node provenance list | `InspectorPanel.tsx` (or `ConstructionPanel.tsx`'s node inspector) | **Backend done, UI not started.** Replace the current single `sourceDoc` string with the real list of ingest events that produced/touched this entity (an entity mentioned across 3 documents should show 3, not overwrite to the last one) |
-| 9.1.2 Provenance API | `backend/api/graph.py` | **[DONE]** `GET /graph/{graphId}/nodes/{nodeId}/provenance` → `{events: [{id, text, createdAt}]}`, backing 9.1.1 |
-| 9.1.3 Jump to source | `InspectorPanel.tsx` | Clicking a provenance entry opens/scrolls the existing `HistoryPopover.tsx` to that event's full text |
-| 9.1.4 Entity summary display | `InspectorPanel.tsx` | **Backend done (`node.summary`, §20 item 3), UI not started.** Show the accumulated, LLM-synthesized summary in the node inspector — richer than a single provenance snippet, since it synthesizes across every ingest that touched the entity |
-
-### 9.2 Bi-temporal facts (§20 item 2: `validAt`/`invalidAt` on `:RELATES`)
-
-| Task | Files | Description |
-|---|---|---|
-| 9.2.1 "Superseded" badge | `GraphCanvas.tsx`, `QueryPanel.tsx` | **Backend done, UI not started.** An edge with `invalidAt` set is historical, not current — needs visual distinction (dim/dashed) wherever edges render, so invalidated facts aren't confused with live ones |
-| 9.2.2 Fact history view | `QueryPanel.tsx` or a new tab | **Backend + API done (see 9.2.3), UI not started.** Toggle "show historical facts" — when a query/predicate has more than one value over time (e.g. `hasDomicile("Acme", X)` returning both Zurich (invalidated) and Geneva (current)), show both with their validity window instead of only the current one |
-| 9.2.3 History API | `backend/api/graph.py` | **[DONE]** `EdgeResponse` carries `validAt`/`invalidAt`/`producedByEventId`; `get_graph`/`load_triples` stay current-state-only by default. New `GET /graph/{graphId}/relationships/history?sourceId=&type=` returns full history (current + invalidated) — backs 9.2.2. Verified live: two real ingests asserting Zurich then Geneva for the same (Acme, "is domiciled in") correctly show Zurich invalidated, Geneva current. |
-
-### 9.3 Polanyi enrichment (§19: 11 heuristics, `:ImplicitFact`, human-in-the-loop)
-
-**[DONE]** Backend and frontend both complete. `enrichment/heuristics/` has all 11 modules + a registry (`ALL_HEURISTIC_MODULES`) so a single `/enrich` call produces facts across every category. `EnrichmentPanel.tsx` (new, wired as a 4th left-sidebar tab "Enrich" alongside Ingest/Construct/Reason) implements 9.3.1/9.3.2/9.3.5. **Live-verified in the browser** against the real running app + real graph: pasted text, ran enrichment (real LLM, ~13s for 11 heuristic calls), got 33 real pending facts across 10 heuristic types with distinct color-coded badges, confidence-sorted (95% down to 60%); approved one (moved to a collapsible Approved section, header "N pending" badge decremented); rejected another (removed from pending entirely, count decremented). Header gained a clickable "N pending" badge (violet, Sparkles icon) that jumps to the Enrich tab.
-
-| Task | Files | Description |
-|---|---|---|
-| 9.3.1 Enrichment tab or section | `EnrichmentPanel.tsx`, wired into `App.tsx` as left-sidebar tab 4 (Ingest/Construct/Reason/**Enrich**) | **[DONE]** Lists pending `:ImplicitFact` assertions, each with a heuristic-type badge (same hash-hue coloring approach as `GraphCanvas.tsx`'s node types) |
-| 9.3.2 Approve/reject UI | `EnrichmentPanel.tsx` | **[DONE]** Approve/Reject buttons per card, wired to `graphStore.ts`'s `approveFact`/`rejectFact`. Confirmed live: `symbolic_coercion`'s speculative low-confidence facts (the known limitation from §19.6) are exactly what a reviewer sees and can reject here |
-| 9.3.3 Enrichment API | `backend/api/enrich.py` | **[DONE]** `POST /enrich/{graphId}`, `GET /enrich/{graphId}/pending`, `GET /enrich/{graphId}/approved`, `POST /enrich/{graphId}/{factId}/approve\|reject` |
-| 9.3.4 Canvas indicator | `GraphCanvas.tsx` | **[DONE]** Nodes anchored by a pending or approved `:ImplicitFact` get a small fuchsia dot badge (distinct from amber `derived` ring and violet proof-path dashing), plus a bottom-left "N nodes with implicit facts" legend. Live-verified: ran enrichment, 4 nodes correctly marked. |
-| 9.3.5 Confidence-sorted review queue | `EnrichmentPanel.tsx` | **[DONE]** Pending list sorts by confidence descending client-side; live-verified the weakest facts (e.g. a 60% `symbolic_coercion`) surface for easy rejection instead of being buried in generation order |
-
-**Remaining**: none — §19.6 step 5 / UI_PLAN.md §9.3 fully complete, backend and frontend.
-
-### 9.4 Chat session memory (§20 item 4: `:ChatSession`/`:ChatMessage`) — **[NEW] backend done, UI not started**
-
-`POST /chat/{graphId}` now accepts an optional `sessionId` and defaults to one continuous session per graph server-side if the client sends none — so `LlmPanel.tsx` needs **no changes to keep working**, but currently gets no UI control over sessions (can't start a fresh conversation without a fresh graph). Verified live: two calls with no `sessionId`, second one correctly recalled the first's content.
-
-| Task | Files | Description |
-|---|---|---|
-| 9.4.1 "New conversation" button | `LlmPanel.tsx` | Generates a new `sessionId` (e.g. `${graphId}:${uuid}`), stored in Zustand/localStorage similar to `activeGraphId` (`UI_PLAN.md` §8's "Graph persistence" pattern), sent on every `/chat` call from then on |
-| 9.4.2 Session-aware chat client | `lib/api.ts` | `chat(graphId, message, sessionId?)` passes `sessionId` through; omit for the existing default-session behavior |
-
-### 9.5 Community detection (§20 item 5: Neo4j GDS Louvain) — **[DONE]**
-
-`services/community_service.py` + `POST`/`GET /graph/{graphId}/communities` are real and live-verified. Frontend complete: `GraphCanvas.tsx` toolbar gained a "Detect Communities" button (`Boxes` icon, spinner while running) and a "color by community" toggle (only shown once at least one node has a `communityId`), which swaps the top-left legend from Types to Communities (color swatch + member count per community) and recolors node fill/stroke by `communityId` hash instead of type hash, reusing the same hash-hue function.
-
-| Task | Files | Description |
-|---|---|---|
-| 9.5.1 "Detect Communities" action | `GraphCanvas.tsx` toolbar | **[DONE]** Button calling `POST /graph/{graphId}/communities` via `graphStore.ts`'s `detectCommunities()`, reloads the graph afterward so `communityId` populates, turns on community-coloring automatically. Live-verified: toast "Found 2 communities across 7 entities" on the real `default` graph. |
-| 9.5.2 Community coloring/grouping on canvas | `GraphCanvas.tsx` | **[DONE]** Toggleable "color by community" mode (node fill/stroke keyed on `communityId` instead of `type`) plus a Communities legend. Not built: a background halo/region grouping (considered, deprehensioned as unnecessary complexity — color-by-community was sufficient and matches the existing type-legend visual language). |
-| 9.5.3 Community API client | `lib/api.ts` | **[DONE]** `detectCommunities(graphId)`, `getCommunities(graphId)`, `CommunityMember`/`CommunitiesResponse` types, `ApiNode.communityId` field |
-
-**Remaining**: none for the MVP slice of this feature.
-
----
-
-## 10. Agent tab (MVP_PLAN.md Phase 6, PLAN.md §8 Agent Layer) — **[DONE]**
-
-New right-sidebar tab "Agent" (`AgentPanel.tsx`, 5th tab alongside Query/Triples/Ontology/LLM), distinct from the existing "LLM" tab: LLM (`LlmPanel.tsx`) hits `POST /chat`, read-only Q&A grounded in graph state; Agent hits `POST /agent`, a real LangGraph agent (`backend/agents/graph.py`) that classifies intent and can mutate the graph for real — extract new entities, run reasoning, run Polanyi enrichment, answer a structured query, or describe a visualization.
-
-| Task | Files | Description |
-|---|---|---|
-| Chat-style UI | `AgentPanel.tsx` | Same message-bubble visual language as `LlmPanel.tsx`, plus a color-coded intent badge per assistant reply (emerald=extract, violet=enrich, sky=query, amber=reason, fuchsia=visualize) so the user sees what the router decided, not just the reply |
-| Agent API client | `lib/api.ts` | `AgentResponse` type (reply, intent, entitiesExtracted, relationshipsExtracted, factsDerived, enrichmentFactTexts, queryResults, queryError), `runAgent(graphId, text, sessionId?)` |
-| Store wiring | `graphStore.ts` | `agentMessages`, `agentLoading`, `sendAgentMessage()` — since extract/enrich/reason intents mutate real Neo4j state, a successful call also reloads the graph, pending facts, history, and graphs list (unlike `sendChatMessage`, which is read-only and doesn't refresh anything) |
-
-**Live-verified in the browser** against the real running app + real graph (25 entities, 14 edges, from a real HDFC/SEC/Credit Suisse ingest): "Show me an overview of the graph." correctly routed to `visualize`, replied grounded in the real entity types and names present ("thing in role", "Credit Suisse", "UBS Group"). `is regulated by("Credit Suisse", X)` correctly routed to `query`, replied "Credit Suisse is regulated by 'FINMA'" — matching the real stored fact. Neither call mutated node/edge counts, confirming read-only intents stay read-only.

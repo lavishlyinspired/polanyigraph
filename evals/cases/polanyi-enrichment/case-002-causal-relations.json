@@ -1,0 +1,13 @@
+{
+  "id": "case-002-causal-relations",
+  "skill": "polanyi-enrichment",
+  "input": {
+    "context": {
+      "seed_text": "Credit Suisse is regulated by FINMA and has its domicile in Zurich."
+    },
+    "text": "Because Credit Suisse breached FINMA's capital requirements, UBS Group agreed to acquire it."
+  },
+  "assertions": [
+    { "type": "min_item_count", "value": 1 }
+  ]
+}

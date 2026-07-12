@@ -267,6 +267,51 @@ export interface AgentResponse {
   queryError: string;
 }
 
+// Runtime skills (PLAN.md §13.2): the real Discovery/Activation skill store
+// backend/agents/skill_store.py loads at inference time, plus real persisted
+// "active" state (services/skill_activation_store.py) -- same data mcp_skills_server.py
+// exposes to MCP clients, surfaced here for the SkillManager UI tab.
+export interface SkillItem {
+  name: string;
+  description: string;
+  active: boolean;
+}
+
+export interface SkillsResponse {
+  skills: SkillItem[];
+}
+
+export interface SkillContentResponse {
+  name: string;
+  content: string;
+}
+
+// Cross-source memory search + preferences (PLAN.md §9): real chat history
+// and entity-summary search (services/memory_service.py) plus a real
+// key/value preferences store (services/preferences_store.py) -- same data
+// mcp_memory_server.py exposes to MCP clients, surfaced here for MemoryInspector.
+export type MemoryHitKind = 'chat_message' | 'entity_summary';
+
+export interface MemoryHit {
+  kind: MemoryHitKind;
+  id: string;
+  text: string;
+  createdAt: string | null;
+}
+
+export interface MemorySearchResponse {
+  hits: MemoryHit[];
+}
+
+export interface Preference {
+  key: string;
+  value: string;
+}
+
+export interface PreferencesResponse {
+  preferences: Preference[];
+}
+
 export interface HealthResponse {
   status: string;
   profile: string;
@@ -414,4 +459,30 @@ export const api = {
   clearActivation: (graphId: string) => fetch(`${BASE}/reason/${graphId}/clear-activation`, { method: 'POST' }).then(json<{ cleared: boolean }>),
 
   clearFacts: (graphId: string) => fetch(`${BASE}/reason/${graphId}/clear-facts`, { method: 'POST' }).then(json<{ cleared: boolean }>),
+
+  getSkills: () => fetch(`${BASE}/skills`).then(json<SkillsResponse>),
+
+  getSkillContent: (name: string) => fetch(`${BASE}/skills/${name}/content`).then(json<SkillContentResponse>),
+
+  activateSkill: (name: string) =>
+    fetch(`${BASE}/skills/${name}/activate`, { method: 'POST' }).then(json<SkillItem>),
+
+  searchMemory: (graphId: string, query: string) =>
+    fetch(`${BASE}/memory/${graphId}/search`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ query }),
+    }).then(json<MemorySearchResponse>),
+
+  getPreferences: () => fetch(`${BASE}/memory/preferences`).then(json<PreferencesResponse>),
+
+  savePreference: (key: string, value: string) =>
+    fetch(`${BASE}/memory/preferences/${key}`, {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ value }),
+    }).then(json<Preference>),
+
+  deletePreference: (key: string) =>
+    fetch(`${BASE}/memory/preferences/${key}`, { method: 'DELETE' }).then(json<{ deleted: boolean }>),
 };

@@ -11,8 +11,11 @@ import {
   type GraphSummary,
   type ImplicitFact,
   type IngestEvent,
+  type MemoryHit,
+  type Preference,
   type QueryResultRow,
   type Rule,
+  type SkillItem,
   type TraceEntry,
 } from '../lib/api';
 
@@ -89,6 +92,14 @@ interface GraphState {
   enriching: boolean;
   showCommunities: boolean;
   detectingCommunities: boolean;
+  skills: SkillItem[];
+  skillsLoading: boolean;
+  selectedSkillContent: string | null;
+  activatingSkillName: string | null;
+  memoryHits: MemoryHit[];
+  memorySearching: boolean;
+  memoryQuery: string;
+  preferences: Preference[];
 
   loadGraph: () => Promise<void>;
   ingest: (text: string) => Promise<void>;
@@ -129,6 +140,14 @@ interface GraphState {
   rejectFact: (factId: string) => Promise<void>;
   detectCommunities: () => Promise<void>;
   toggleCommunities: () => void;
+  loadSkills: () => Promise<void>;
+  loadSkillContent: (name: string) => Promise<void>;
+  activateSkill: (name: string) => Promise<void>;
+  setMemoryQuery: (query: string) => void;
+  searchMemory: () => Promise<void>;
+  loadPreferences: () => Promise<void>;
+  savePreference: (key: string, value: string) => Promise<void>;
+  deletePreference: (key: string) => Promise<void>;
 }
 
 // Deterministic circular layout: the backend has no notion of position (it's
@@ -186,6 +205,14 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   enriching: false,
   showCommunities: false,
   detectingCommunities: false,
+  skills: [],
+  skillsLoading: false,
+  selectedSkillContent: null,
+  activatingSkillName: null,
+  memoryHits: [],
+  memorySearching: false,
+  memoryQuery: '',
+  preferences: [],
 
   loadGraph: async () => {
     set({ loading: true, error: null });
@@ -577,4 +604,80 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   },
 
   toggleCommunities: () => set({ showCommunities: !get().showCommunities }),
+
+  loadSkills: async () => {
+    set({ skillsLoading: true });
+    try {
+      const res = await api.getSkills();
+      set({ skills: res.skills, skillsLoading: false });
+    } catch (e) {
+      set({ skillsLoading: false });
+      toast.error(String(e));
+    }
+  },
+
+  loadSkillContent: async (name: string) => {
+    try {
+      const res = await api.getSkillContent(name);
+      set({ selectedSkillContent: res.content });
+    } catch (e) {
+      toast.error(String(e));
+    }
+  },
+
+  activateSkill: async (name: string) => {
+    set({ activatingSkillName: name });
+    try {
+      await api.activateSkill(name);
+      await get().loadSkills();
+      toast.success(`Activated skill '${name}'`);
+    } catch (e) {
+      toast.error(String(e));
+    } finally {
+      set({ activatingSkillName: null });
+    }
+  },
+
+  setMemoryQuery: (query: string) => set({ memoryQuery: query }),
+
+  searchMemory: async () => {
+    const query = get().memoryQuery.trim();
+    if (!query) return;
+    set({ memorySearching: true });
+    try {
+      const res = await api.searchMemory(get().graphId, query);
+      set({ memoryHits: res.hits, memorySearching: false });
+      if (res.hits.length === 0) toast.info('No matching memory found');
+    } catch (e) {
+      set({ memorySearching: false });
+      toast.error(String(e));
+    }
+  },
+
+  loadPreferences: async () => {
+    try {
+      const res = await api.getPreferences();
+      set({ preferences: res.preferences });
+    } catch (e) {
+      toast.error(String(e));
+    }
+  },
+
+  savePreference: async (key: string, value: string) => {
+    try {
+      await api.savePreference(key, value);
+      await get().loadPreferences();
+    } catch (e) {
+      toast.error(String(e));
+    }
+  },
+
+  deletePreference: async (key: string) => {
+    try {
+      await api.deletePreference(key);
+      await get().loadPreferences();
+    } catch (e) {
+      toast.error(String(e));
+    }
+  },
 }));

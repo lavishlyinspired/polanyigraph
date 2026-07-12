@@ -1,0 +1,13 @@
+{
+  "id": "case-002-proof-path",
+  "skill": "neurosymbolic-reasoning",
+  "input": {
+    "context": {
+      "seed_text": "Credit Suisse is regulated by FINMA. FINMA is governed by Switzerland. Credit Suisse issues a bond."
+    }
+  },
+  "assertions": [
+    { "type": "converged" },
+    { "type": "min_iterations", "value": 1 }
+  ]
+}

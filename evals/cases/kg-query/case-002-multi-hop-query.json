@@ -1,0 +1,13 @@
+{
+  "id": "case-002-multi-hop-query",
+  "skill": "kg-query",
+  "input": {
+    "context": {
+      "seed_text": "Credit Suisse is regulated by FINMA and has its domicile in Zurich. The Swiss Financial Market Supervisory Authority FINMA oversees UBS Group as well."
+    },
+    "path": { "source": "Credit Suisse", "target": "Zurich" }
+  },
+  "assertions": [
+    { "type": "path_found" }
+  ]
+}

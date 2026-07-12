@@ -1,0 +1,12 @@
+{
+  "id": "case-001-basic-spread",
+  "skill": "neurosymbolic-reasoning",
+  "input": {
+    "context": {
+      "seed_text": "Deutsche Bank AG issued a bond and is regulated by the European Central Bank."
+    }
+  },
+  "assertions": [
+    { "type": "converged" }
+  ]
+}
