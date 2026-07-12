@@ -1,295 +1,181 @@
 # Neurosymbolic KG UI/UX Refactor Plan
 
-This document outlines a comprehensive analysis of the current **Neurosymbolic Knowledge Graph** interface and proposes a design overhaul inspired by the professional, minimal, and highly focused aesthetics of **Google AI Studio**.
+This document specifies a UI overhaul for the **Neurosymbolic Knowledge Graph** app, now grounded in a real, detailed reference mockup at `.claude/docs/mocks/polanyigraph/frontend/mockup.html` (2709 lines, fully interactive HTML/Tailwind/vanilla-JS — not a rough sketch). This revision treats that mockup as the source of visual/structural truth and works out exactly how to build it against this project's real backend without losing anything.
 
-**Hard constraint for every phase below: zero functionality loss.** Every button, form, badge, and data view catalogued in §1.1 must have an explicit new home in §5's mapping table before any code is written. This is a *reorganization and visual pass*, not a rewrite of business logic — nearly every existing panel component (`IngestPanel`, `ConstructionPanel`, `ReasoningPanel`, `EnrichmentPanel`, `QueryPanel`, `TripleStorePanel`, `OntologyPanel`, `LlmPanel`, `AgentPanel`, `SkillManager`, `MemoryInspector`, `GraphCanvas`) keeps its internals untouched and is simply re-mounted inside new, thinner composition wrappers.
+**Hard constraint: zero functionality loss.** Every control catalogued in §1.1 must have an explicit new home in §5's mapping table. This is a reorganization and visual pass — every existing panel component (`IngestPanel`, `ConstructionPanel`, `ReasoningPanel`, `EnrichmentPanel`, `QueryPanel`, `TripleStorePanel`, `OntologyPanel`, `LlmPanel`, `AgentPanel`, `SkillManager`, `MemoryInspector`, `GraphCanvas`) keeps its internals and real API calls untouched, reused inside new composition wrappers (and, per §3, duplicated into a second, richer wrapper for the dedicated Lab pages).
 
-**Revision note**: an earlier draft of this document moved the entire navigation to a left-edge rail, replacing the right sidebar outright. That was a misread of the brief — the right sidebar and its consolidated tabs stay exactly where they are (§2–§5 below), and the left side gets something genuinely *new*: a project-level navigation bar for pages that don't fit inside the single-graph workspace at all (§6). The two are complementary, not a replacement of one by the other.
+**Revision history**: three earlier drafts iterated on where navigation should live (left rail replacing the sidebar → left rail beside the sidebar → left rail switching which panel sits beside a persistent canvas). All three turned out to be solving a false dilemma. **The mockup's actual answer, now adopted**: keep the existing right sidebar exactly as a quick-access companion to the canvas (§2), *and separately* add dedicated, richer, canvas-free "Lab" pages reachable from a left nav (§3) — the same underlying data and actions are deliberately available in both places, not migrated from one to the other. This resolves the "does Solver Lab need to see the canvas" question the earlier drafts kept getting stuck on: it doesn't, because the sidebar's Reason tab remains available whenever canvas-coupled quick actions are wanted, and the Solver Lab page visualizes activation via a live numeric leaderboard + console log instead, which needs no canvas at all.
 
 ---
 
-## 1. Problem Statement: Why the Current UI Feels Cluttered
+## 1. Problem Statement
 
-The current layout packs an enormous amount of functionality into a single viewport. While powerful, it suffers from several core design anti-patterns:
-
-1. **Dual-Sidebar Squeeze**: Having both left and right sidebars active simultaneously (up to 640px each, 400px by default) restricts the central `GraphCanvas` to a narrow, vertical strip on anything under a 27" monitor. A graph visualization requires horizontal breathing room to prevent nodes from overlapping and lines from bunching.
-2. **Metadata Overload ("Technical Larping")**: The header is crowded with raw telemetry: connection pings (`neo4j up`, `graphdb up`), node/edge counts, rule counts, fact counts, pending statuses, and iteration badges — all visible simultaneously, all fighting for the same 56px-tall strip. It resembles a server terminal rather than a polished product.
-3. **Tab Fatigue**: Splitting workflows across **11 different tabs** (Left: *Ingest, Construct, Reason, Enrich*; Right: *Query, Triples, Ontology, LLM, Agent, Skills, Memory*) confuses the user. Several tab boundaries are semantically thin — "Query" vs. "Triples" are both "look at facts in the graph," and "LLM" vs. "Agent" are both "chat about the graph," differing only in whether the reply can mutate state.
-4. **Visual Hierarchy Noise**: badges across amber/violet/emerald/rose/sky/fuchsia compete for attention across at least 5 different semantic meanings.
-5. **No home for project-level capabilities**: two real backend surfaces built into this project — the ontology (`GET /ontology`) and rules (`GET/POST/DELETE /rules`) — are **not graph-scoped at all** (confirmed: neither endpoint takes a `graph_id`), yet today they're buried inside a single graph's workspace tabs as if they were per-graph data. And a brand-new real capability, the `evals/` skill-testing harness (11 real cases across all 6 runtime skills, real pass/fail results), has **no UI at all** — it's CLI-only. These don't fit the "tab inside one graph's workspace" model no matter how the tabs are reorganized, because they aren't about one graph. §6 addresses this directly.
+1. **Dual-Sidebar Squeeze** (today): both sidebars open at once (up to 640px each) restrict `GraphCanvas` to a narrow strip.
+2. **Metadata Overload**: header crams connection pings, counts, badges into one 56px strip.
+3. **Tab Fatigue**: 11 tabs (4 left, 7 right), several semantically thin (Query vs. Triples; LLM vs. Agent).
+4. **Visual Hierarchy Noise**: 7 badge colors covering ~5 overlapping meanings.
+5. **No room for depth**: every one of today's 11 tabs is squeezed into a fraction of one drawer's width — fine for quick actions, not enough room for the kind of dense, tabular, multi-column work the mockup's Lab pages show is actually wanted (a real triples table with filters, a 2-column rule studio, a 3-column document review hub).
+6. **No home for project-level or graph-wide-but-not-canvas capabilities**: `GET /ontology` and `GET/POST/DELETE /rules` aren't graph-scoped (no `graph_id` param on either). The `evals/` skill-testing harness (11 real cases, 6 skills, built this session) has zero UI.
 
 ### 1.1 Full Functional Inventory (baseline — nothing below may be dropped)
 
-**Header** (`App.tsx` lines ~130–187): logo/title, ontology repo name (from `/health`), node count, edge count, rule count, fact count (conditional), pending-implicit-facts count (conditional, clickable → jumps to Enrich), iteration count (conditional), `AUTO-RUN` pulsing badge (conditional), neo4j up/down, graphdb up/down.
+**Header**: logo/title, ontology name, node/edge/rule/fact counts (conditional), pending-facts count (conditional, clickable), iteration count (conditional), `AUTO-RUN` badge (conditional), neo4j/graphdb status, atomic "Run to Convergence" shortcut.
 
-**Left sidebar — 4 tabs + 2 popover triggers:**
-| Tab | Component | Contains |
-|---|---|---|
-| Ingest | `IngestPanel.tsx` | doc-type hint chips, textarea w/ char+word count, Extract→Graph button, Clear-text button, error banner w/ retry, last-4 recent-ingest cards |
-| Construct | `ConstructionPanel.tsx` | Node Inspector (label/type/derived badge/activation %/source-doc/salience slider/properties k-v editor/proof-path steps/note textarea), Add Node (label input + ontology-backed type select + button), Add Edge (ontology-backed relation select + start/cancel linking), Rules Manager (list + create-custom-rule form: name/source type/target type/edge type/threshold slider/description, delete for custom rules only) |
-| Reason | `ReasoningPanel.tsx` | intro blurb, 3-step status strip (neural/symbolic/feedback, live checkmarks), Auto-Run Loop button, heatmap toggle, proof-path toggle, Step 1 Spread Activation (button, clear, top-8 activated-node bars), Step 2 Run Inference (button, clear, fired/skipped inference trace list, derived-facts list w/ full proof path + ontology-resolution notes), Step 3 Feed Back (button w/ pending count), atomic "Run to Convergence" shortcut w/ convergedBy badge |
-| Enrich | `EnrichmentPanel.tsx` | intro blurb, textarea + Run Enrichment button, confidence-sorted Pending Review cards (approve/reject), collapsible Approved list |
-| *(popover)* | `GraphsPopover.tsx` | switch graph, create new graph |
-| *(popover)* | `HistoryPopover.tsx` | full ingest-event history (per current graph), expandable full text |
+**Left sidebar — 4 tabs + 2 popovers** (today): Ingest (`IngestPanel.tsx`), Construct (`ConstructionPanel.tsx`: Node Inspector, Add Node, Add Edge, Rules Manager), Reason (`ReasoningPanel.tsx`), Enrich (`EnrichmentPanel.tsx`), plus `GraphsPopover.tsx` and `HistoryPopover.tsx`.
 
-**Right sidebar — 7 tabs:**
-| Tab | Component | Contains |
-|---|---|---|
-| Query | `QueryPanel.tsx` | Datalog-style query console (input, run, last-5 history chips, 6 example-query buttons), Find Path (source/target inputs, BFS path result w/ chain + proof string), query results list (derived/base badges, confidence) |
-| Triples | `TripleStorePanel.tsx` | full triple store, search/filter, derived/base badges, confidence |
-| Ontology | `OntologyPanel.tsx` | collapsible Subclass Relations / Classes / Properties sections — **note: this data is NOT graph-scoped** (`GET /ontology` takes no `graph_id`), it reflects whatever ontology is loaded project-wide |
-| LLM | `LlmPanel.tsx` | read-only Q&A chat grounded in graph state (`POST /chat`), suggestion chips |
-| Agent | `AgentPanel.tsx` | LangGraph agent chat that can mutate the graph (`POST /agent`, 6 intents: extract/enrich/query/reason/recall/visualize), intent badges, suggestion chips |
-| Skills | `SkillManager.tsx` | 6 runtime skills, active/inactive badges, expand-to-view SKILL.md body, activate button — **also not graph-scoped**, skill activation state is global |
-| Memory | `MemoryInspector.tsx` | cross-source memory search (chat history + entity summaries, graph-scoped), key/value preferences CRUD — **the preferences half is not graph-scoped**, it's a global settings store |
+**Right sidebar — 7 tabs** (today): Query (`QueryPanel.tsx`), Triples (`TripleStorePanel.tsx`), Ontology (`OntologyPanel.tsx`, not graph-scoped), LLM (`LlmPanel.tsx`), Agent (`AgentPanel.tsx`), Skills (`SkillManager.tsx`, not graph-scoped), Memory (`MemoryInspector.tsx`: search is graph-scoped, preferences CRUD is not).
 
-**Canvas** (`GraphCanvas.tsx`): SVG pan/zoom/drag node placement, node select, link-mode click-to-connect w/ banner, floating top-right control stack (zoom in/out/reset, heatmap toggle, proof-path toggle, detect-communities, toggle community-coloring), bottom-right zoom% indicator, top-left type/community legend, bottom-left implicit-fact-count legend, hash-hue type/community coloring, activation glow rendering, derived-node pulse animation. Node layout is a deterministic circular layout (`layoutNodes` in `graphStore.ts`), not a physics simulation — a force-directed ("live physics") layout is a pre-existing, already-tracked deferred item (`UI_PLAN.md` §7: "d3-force layout"), not something this document invents; §7.4 revisits whether to pull it forward.
+**Canvas** (`GraphCanvas.tsx`): SVG pan/zoom/drag, select, link-mode, floating controls (zoom/heatmap/proof-path/communities), legends. Deterministic layout (`layoutNodes` in `graphStore.ts`), not physics — the mockup also uses static hardcoded node positions (confirmed: no `d3`/`force`/`simulation` anywhere in its source), so force-directed layout stays an explicitly-deferred item (`UI_PLAN.md` §7), not something this revision needs to add.
 
-Every one of the ~45 individual controls/views above gets an explicit destination in §5.
+Every control above gets an explicit destination in §5.
 
 ---
 
-## 2. Design Inspiration: Google AI Studio UI Principles
+## 2. The Workspace Page: Sidebar Stays, Consolidates to 5 Tabs with an Embedded Rail
 
-* **Canvas-First Layout**: the primary workspace (the Knowledge Graph Canvas) dominates the screen — it fully occupies the main viewport, flanked by the sidebar on the right, exactly as today, just with less of it lost to sidebar bloat.
-* **Contextual Sidebar**: control panels are secondary and single-sided (right), collapsible, with grouped rather than flat-listed tabs, navigated via a compact **vertical icon rail embedded at the sidebar's own left margin** (not a horizontal tab strip on top of the panel, and not a separate full-height rail spanning the whole viewport) — this is the detail the first draft got wrong by moving the rail to the outer edge of the screen; it belongs *inside* the sidebar, right where the tab strip is today, just rendered as a narrow vertical icon column instead of a cramped horizontal row.
-* **Subtle & Uniform Palette**: a monochrome foundation with a disciplined, small set of semantic accent colors instead of a rainbow of one-off badge colors (§4).
-* **Low-Density Margins**: stats and connection status move into a thin, low-contrast footer instead of competing for header sightlines.
-* **Typography**: standardize on **Inter** for UI text (body/headers) and **JetBrains Mono** for monospace contexts (queries, triples, rule/edge-type labels, footer telemetry) — both are the fonts Google AI Studio itself uses, and neither the current app nor `package.json` has any font dependency today, so this is a clean, deliberate adoption rather than a default to avoid disturbing.
+This is unchanged in substance from earlier drafts and **directly matches the mockup's `#sidebar`/`switchTab()` implementation** (mockup lines 400–460, 2115–2150):
 
----
-
-## 3. The Right Sidebar: 11 Tabs → 6, One Consolidated Drawer
-
-### 3.1 Tab Consolidation
-
-The guiding rule: **group by user intent, not by backend endpoint.** A user thinks "I want to build the graph," "I want to reason over it," "I want to ask about it," or "I want to look something up" — not "which of 11 tabs holds the button I need."
-
-| New tab | Icon | Replaces | Why grouped |
+| Tab | Icon | Absorbs | Mockup panel title |
 |---|---|---|---|
-| **Build** | `Layers` | Ingest + Construct + Enrich (3 left tabs) | All three are "add or curate graph content" — ingest text, add nodes/edges/rules by hand, review AI-proposed implicit facts. Sequential in a typical session (ingest → inspect/construct → enrich), so an accordion (not sub-tabs) fits: one section expanded at a time, others collapsed but always one click away. |
-| **Reason** | `Activity` | Reason (unchanged) | Kept as its own dedicated top-level tab — it's the single most complex, most frequently-iterated workflow (3 manual steps + trace + auto-run) and doesn't share enough surface with anything else to justify merging. |
-| **Query** | `Search` | Query + Triples + Ontology (3 right tabs) | All three are "inspect what's already true in the graph," differing only in query style (pattern query / raw triple list / schema browse). A light segmented control (pill switcher, not full tabs) inside one panel keeps them one click apart without three more top-level tabs. *(The Ontology pill's content is project-wide, not graph-scoped — see §6.3 for the argument to eventually promote it to its own left-nav page; for now it stays here since moving it is a larger, separate decision from this consolidation.)* |
-| **Assistant** | `Bot` | LLM + Agent (2 right tabs) | Both are chat interfaces over the same graph; the only difference is whether the reply can mutate state. Collapse into one chat surface with an **Ask / Act** mode toggle at the top — Ask hits `POST /chat` (current LLM tab behavior, read-only), Act hits `POST /agent` (current Agent tab behavior, can extract/enrich/query/reason/recall/visualize). One input box, one message thread, half the chrome. |
-| **Tools** | `Wrench` | Skills + Memory (2 right tabs) | Both are meta/introspection surfaces used less frequently than Build/Reason/Query/Assistant during normal work. A sub-tab pill switcher (Skills / Memory) inside one panel. |
+| **Build** | `Layers` | Ingest + Construct + Enrich, as a 3-section accordion | "Build & Curate Workspace" |
+| **Reason** | `Activity` | Reason (unchanged) | "Deductive & Neural Loops" |
+| **Query** | `Search` | Query + Triples + Ontology, as 3 pills ("3 browse modes") | "Inspect and Query Records" |
+| **Assistant** | `Bot` | LLM + Agent, Ask/Act toggle | "Consult [LLM] Assistant" *(mockup copy says "Gemini" — cosmetic flavor text only; the real backend's active model is whatever `/health`'s `llm.model` reports, e.g. today's `meta/llama-3.1-8b-instruct` — nothing here should hardcode a vendor name)* |
+| **Tools** | `Wrench` | Skills + Memory, pill-switched | "System Introspection & Memory" |
 
-Net: **6 tabs, one sidebar, one resize handle, one collapse button** — down from 4+7 tabs across two independently-resizable sidebars, canvas regains up to ~400–480px of width whenever the (now-removed) left sidebar would previously also have been open.
+**Structural confirmation from the mockup, superseding an earlier draft's guess**: the icon rail is embedded at the sidebar's own left margin (48px column inside the sidebar's own width, `railBtn-*`/`railActive-*` in the mockup), a 2px right-edge indigo accent line marks the active tab, and the **Build tab is a 3-section accordion** (`toggleAccordion('build-ingest'|'build-construct'|'build-enrich')`) — exactly matching the "Build" consolidation proposed in earlier drafts of this document, now verified against a real implementation. The Construct accordion section holds the **full** Node Inspector (label/type/badges, activation %, salience slider, properties k-v editor, proof-path, notes), **plus** Add Manual Entity, Add Relationship/linking mode, **and** a full Deductive Inference Rules sub-section (list + create-custom-rule form) — i.e. Rules Manager stays here in full, not extracted out. This settles an open item from an earlier draft (whether node editing needs a new floating toolbar): it doesn't — the sidebar already does this well, unchanged.
 
-### 3.2 Sidebar Internal Layout — Embedded Icon Rail
-
-```
-+-----------------------------------------------------------------------------------+
-|  ⬡ Neurosymbolic KG   ontology: fibo    [⌂ default ▾]  [🕐]     ✦2 pending  ⚙     |  <- 48px header
-+---------------------------------------------------------------+----+--------------+
-|                                                                 |    |             |
-|                                                                 | ▤  | Build       |
-|                                                                 | Bld|  ▸ Ingest    |
-|              Main Graph Canvas                                 |    |  ▾ Construct |
-|              (dominates viewport, up to full width             | ◐  |    ...       |
-|               when the sidebar is collapsed)                   | Rsn|  ▸ Enrich    |
-|                                                                 |    |             |
-|   [floating node inspector card, top-right,                    | 🔍 |             |
-|    below the zoom/heatmap control stack, only when              | Qry|             |
-|    a node is selected]                                         |    |             |
-|                                                                 | 🤖 |             |
-|                                                                 | Ast|             |
-|                                                                 |    |             |
-|                                                                 | 🔧 |             |
-|                                                                 | Tls|             |
-+-----------------------------------------------------------------------------------+
-|  12 nodes · 14 edges · 4 rules · 3 facts   ·   ● neo4j   ● graphdb   iter 2        |  <- 22px footer
-+-----------------------------------------------------------------------------------+
-```
-
-* The icon rail (`▤ ◐ 🔍 🤖 🔧` — Build/Reason/Query/Assistant/Tools) sits at the sidebar's own left edge, a fixed ~48px-wide column *inside* the sidebar's existing 400px (300–640px resizable) width — it is not a second sidebar and does not consume additional screen real estate beyond what the sidebar already occupies today. This directly answers "keep the vertical rail besides the sidebar, like before": the rail and the sidebar are one structure, not two.
-* The sidebar's single collapse button (top-right of the rail, replacing today's `PanelRightClose`) hides the whole thing, same as today's right-sidebar collapse — no behavior change there.
-* Each rail icon shows a compact 2-3 letter label beneath it (`Bld`, `Rsn`, `Qry`, `Ast`, `Tls`) at `text-[8px]`, since a vertical column has room for a label a horizontal 7-tab strip didn't.
-* Clicking a rail icon swaps the panel body to its right, exactly like today's tab click — same interaction, just relabeled and vertically laid out.
-
-### 3.3 Header Decluttering & Footer Status Bar
-
-Unchanged from the original analysis: header keeps only logo, ontology name, graph switcher (`GraphsPopover`, relocated from the left sidebar's old `FolderOpen` icon into the header), ingest-history trigger (`HistoryPopover`, same relocation), the pending-implicit-facts badge (clicking it opens the Build tab with the Enrich section expanded), and the Auto-Run pulsing indicator. Node/edge/rule/fact/iteration counts and neo4j/graphdb status move to a new thin footer strip (`StatusFooter.tsx`, `font-mono text-[10px] text-zinc-500`, matching `IngestPanel`'s existing recent-ingest metadata style).
-
-### 3.4 Contextual Node Inspector (floating, canvas-anchored)
-
-A **compact, read-only summary card** floats over the canvas's top-right corner, below the existing zoom/heatmap control stack, whenever `selectedNodeId` is non-null: label, type, derived/activation badges, source-doc snippet, proof-path hop count — a strict subset of what `ConstructionPanel`'s Node Inspector already renders, extracted into `NodeInspectorCard.tsx`. A single **"Edit in Build →"** button opens the sidebar's Build tab with the Construct accordion section expanded; the full editable form (salience slider, properties editor, proof-path detail, note) stays exactly where it is today inside `ConstructionPanel.tsx`, completely unchanged — this card is a discoverable shortcut, not a replacement.
+Header/footer per the mockup (§4) stay a light trim of what exists today, not a redesign.
 
 ---
 
-## 4. Color & Typography System
+## 3. NEW: Left Navigation — 5 Dedicated Lab Pages
 
-Auditing actual usage (`grep -rn "sky-\|fuchsia-\|violet-\|amber-\|emerald-\|rose-" frontend/src/components`) shows two genuinely different things are currently sharing the same "colored text" technique, and only one of them is the clutter problem:
+A left nav bar (72px, mockup lines 165–235) with **5 items**, each with its own accent color via a colored left-edge indicator bar (not one flat tint for the whole group): **Canvas** (indigo), **Documents** (emerald), **Logic** (violet), **Solver** (amber), **Query Lab** (sky). Selecting one calls `switchPage()`, swapping which of 5 full-viewport `<div id="page-*">` sections is shown — **Canvas is the only one of the five that shows the graph canvas + sidebar from §2; the other four are genuinely canvas-free, full-width, multi-column pages.**
 
-1. **Data syntax-highlighting** — `QueryPanel`, `TripleStorePanel`, `OntologyPanel` consistently use `emerald` for subject/child and `sky` for object/target/parent across triple and query-result rendering (e.g. `QueryPanel.tsx:177-179`, `TripleStorePanel.tsx:82-84`, `OntologyPanel.tsx:64-66`). This is coherent and low-noise — closer to syntax highlighting than badge soup — and **should be kept as-is**.
-2. **Status/state badges** — the actual source of visual noise: `amber` (derived), `violet` (proof-path), `sky` (custom-rule tag in `ConstructionPanel.tsx:396`, community-toggle in `GraphCanvas.tsx:360,377`), `fuchsia` (implicit-fact marker in `GraphCanvas.tsx:408`, and separately the "visualize" intent color in `AgentPanel.tsx:24`), `rose` (errors/destructive).
+Critically, per the mockup, **these are not migrations of sidebar content — they're richer duplicates that call the same real data/actions**, deliberately available from two places (quick, in-context, while working the canvas; or deep, full-width, when that's what the moment calls for):
 
-**Consolidated semantic palette for state/status badges only** (data syntax-highlighting above is unchanged):
+### 3.1 Documents Lab (mockup lines 1236–1355)
+Three columns, no canvas:
+* **Source Registry** (left, `w-80`): a real list of every ingested document for the current graph (richer than today's last-4-only `IngestPanel` history — this should be the *full* `GET /history/{graph_id}` result, not truncated), with entity/relationship counts per document, clickable/searchable.
+* **Ingestion & Extraction Lab** (center, flexible): the same paste-text-and-extract flow as `IngestPanel.tsx`, given a full-height textarea and clearer hint buttons.
+* **Polanyi Review Hub** (right, `w-96`): the same pending-facts approve/reject queue as `EnrichmentPanel.tsx`, full height instead of squeezed into an accordion section.
 
-| Role | Color | Used for |
-|---|---|---|
-| Neutral / selected | `white` / `zinc-100` on `zinc-800` | primary buttons, active tab, active toggle, selected node |
-| Derived / pending / needs-attention | `amber-400` | derived nodes/facts/triples, pending feedback, pending implicit facts |
-| Approved / structural-truth | `emerald-400` | approved facts, "up" status dots |
-| Structural / explain | `violet-400` | proof-path, ontology-resolution notes, implicit-fact marker (folded in) |
-| Destructive / error | `rose-400` | errors, delete, reject, stop |
+### 3.2 Logic Lab (mockup lines 1358–1498)
+Two columns, no canvas:
+* **Ontology Schema Registry** (left, `w-[420px]`): `OntologyPanel.tsx`'s data (class hierarchy, object properties with domain/range), laid out with more room than the sidebar's collapsible-section version.
+* **Deductive Rule Studio** (right, flexible, 2-col grid): the same Rules Manager data as `ConstructionPanel.tsx`'s rules section — **new here**: each rule additionally renders as a plain-language Horn-clause implication sentence (e.g. *"If Bond is issuedBy a Bank, and Bank hasDomicile at BusinessCenter, then Bond issuerDomicile at BusinessCenter."*) built from the rule's existing `source_type`/`edge_type`/`target_type`/`description` fields — a real, derivable presentation improvement, not new data.
+* Since Ontology and Rules are genuinely global config (§1.1 item 6), Logic Lab is the more architecturally honest home for them than the per-graph sidebar tab they've always lived in — though per §3's duplication principle, they stay in the sidebar too for quick access.
 
-Two narrow retirements: the custom-rule tag (`ConstructionPanel.tsx:396`) and community-toggle/legend (`GraphCanvas.tsx:360,377`) move from `sky` to a neutral `zinc-300` outline + existing icon; `AgentPanel.tsx`'s "visualize" intent badge moves from `fuchsia` to `sky` (freeing fuchsia entirely).
+### 3.3 Solver Lab (mockup lines 1501–1629)
+Three columns, no canvas — **and it doesn't need one**:
+* **NS-Loop Control Deck** (left, `w-[360px]`): the same 3-step status strip + Auto-Run + manual step buttons as `ReasoningPanel.tsx`.
+* **Live Activation Metrics** (center, flexible): a real-time **"Top Activated Entities" leaderboard table** (entity name + activation value, sorted) plus a **console run-trace log** (`>_ ` prefixed lines narrating each step as it happens) — this is the piece that resolves the canvas-coupling question from earlier drafts. Real-time reasoning feedback doesn't require watching canvas node glow; a live table + append-only log conveys the same information and is arguably clearer for a diagnostics-focused page. Both are driven by the same real `spread_activation`/`run_inference` responses `ReasoningPanel.tsx` already consumes — no new backend needed, just a different rendering of the same `activation: Record<string, number>` and trace data.
+* **Introspective Fact Trace** (right, `w-96`): the same derived-facts + proof-path data as `ReasoningPanel.tsx`'s Step 2 section, full height.
 
-**Typography**: adopt **Inter** (UI text) and **JetBrains Mono** (queries, triples, rule/edge labels, footer) via `next/font`-equivalent self-hosted `@fontsource` packages (avoids a runtime Google Fonts network dependency) — replacing the current unstyled system-font stack. Also normalize the ad-hoc `text-[8px]`/`[9px]`/`[10px]`/`[11px]` mix down to 3 fixed steps: `text-[9px]` (micro-labels/badges/footer), `text-[11px]` (body/list content), `text-sm` (section headers, primary actions).
+### 3.4 Query Lab (mockup lines 1632–1791)
+Two columns, no canvas:
+* **Datalog Pattern Console + Shortest Path Finder** (left, `w-[420px]`): same as `QueryPanel.tsx`, unchanged logic.
+* **Tabular Triples Store** (right, flexible): **new presentation** — a real HTML `<table>` (Subject/Predicate/Object/Origin columns, 4-field filter row) instead of `TripleStorePanel.tsx`'s stacked cards. Same `GET /query/{graph_id}/triples` data, genuinely better for scanning many rows at once — worth adopting for both the Lab page and (optionally, smaller effort) the sidebar's Triples pill.
+
+---
+
+## 4. Header, Footer, Color & Typography — Verified Against the Mockup
+
+**Header** (mockup lines 68–163, 48px not 56px): logo/title/ontology name (unchanged), graph-switcher dropdown (`GraphsPopover`, unchanged popover pattern), history dropdown (`HistoryPopover`, unchanged), pulsing `AUTO-RUN ACTIVE` badge, pending-facts badge (`✦ N Pending`, indigo not amber — a color correction from earlier drafts), and **a promoted primary action**: `mainLoopBtn` "Run Neurosymbolic Loop" — this is today's atomic Run-to-Convergence shortcut (currently buried at the bottom of the Reason tab), elevated to a header-level, always-visible primary CTA. A settings gear icon sits at the far right (mockup doesn't specify a destination for it — treat as a placeholder for wherever global settings end up, §6.1).
+
+**Footer** (mockup lines 1791–1816, 24px): node/edge/rule/fact counts, neo4j/graphdb status dots, iteration count — all as earlier drafts proposed — **plus one addition**: `powered by {model}`, sourced from the real `/health` endpoint's already-existing `llm.model` field (the mockup's "gemini-3.5-flash" is placeholder copy; the real value is whatever `HealthResponse.llm.model` reports). Zero new backend work.
+
+**Color**: data syntax-highlighting (`emerald`=subject, `sky`=object in Query/Triples/Ontology panels) stays as real signal. Status badges consolidate per earlier drafts' audit (5 roles: neutral/derived/approved/structural/destructive), **plus** the mockup's per-Lab left-nav accent colors are a new, additional use of color (indigo/emerald/violet/amber/sky, one per Lab) — these are navigation landmarks, not status badges, and don't need to fit the 5-role status palette; they're a separate, deliberate 5-color coding scheme for "which Lab am I in," consistent with how each Lab's node-halo color in the canvas mockup (`node-n*-halo`) already uses a distinct hue per entity type.
+
+**Typography**: Inter (`font-sans`, weights 300–700) + JetBrains Mono (`.font-mono`, weights 400–600) — confirmed directly from the mockup's own `<head>` (Google Fonts `<link>`, lines 9–11), not a proposal anymore. Implementation should self-host via `@fontsource` packages rather than a runtime Google Fonts fetch (avoids a network dependency the mockup's static-HTML-prototype nature didn't need to worry about, but a real app should).
 
 ---
 
 ## 5. Functionality Preservation Matrix
 
-Every control from §1.1's inventory, mapped to its new location. This table is the acceptance criteria for "ensure all existing functionalities still work."
-
-| Feature | Old location | New location | Component change |
+| Feature | Old location | New location(s) | Notes |
 |---|---|---|---|
-| Paste text, doc-type hint chips, char/word count | Left › Ingest | Sidebar rail `Build` › drawer § "Ingest" | `IngestPanel.tsx` unchanged, re-mounted |
-| Extract → Graph button, loading state, Clear-text, error+retry | Left › Ingest | Sidebar rail `Build` › drawer § "Ingest" | unchanged |
-| Recent-ingests list (last 4) | Left › Ingest | Sidebar rail `Build` › drawer § "Ingest" | unchanged |
-| Node label/type/badges/source-doc | Left › Construct | Floating `NodeInspectorCard` (read view) + Sidebar rail `Build` › drawer § "Construct" (full view) | new `NodeInspectorCard.tsx`; `ConstructionPanel.tsx` unchanged |
-| Salience slider, properties k-v editor, proof-path detail, note | Left › Construct | Sidebar rail `Build` › drawer § "Construct" | `ConstructionPanel.tsx` unchanged |
-| Add Node form, Add Edge / link mode, Rules Manager (list/create/delete) | Left › Construct | Sidebar rail `Build` › drawer § "Construct" | unchanged; canvas link-mode banner unchanged |
-| Enrichment run + pending review (approve/reject) + approved list | Left › Enrich | Sidebar rail `Build` › drawer § "Enrich" | `EnrichmentPanel.tsx` unchanged |
-| 3-step loop status strip, Auto-Run, own heatmap/proof-path toggles, Step 1/2/3 buttons + Clear, trace list, derived-facts list, convergence shortcut | Left › Reason | Sidebar rail `Reason` › drawer (unchanged) | `ReasoningPanel.tsx` unchanged |
-| Datalog query console, 6 example buttons, last-5 history, Find Path (BFS + proof) | Right › Query | Sidebar rail `Query` › drawer, pill "Pattern Query" | `QueryPanel.tsx` unchanged |
-| Full triple list + search/filter | Right › Triples | Sidebar rail `Query` › drawer, pill "Triples" | `TripleStorePanel.tsx` unchanged |
-| Ontology classes/properties/subclass browser | Right › Ontology | Sidebar rail `Query` › drawer, pill "Ontology" | `OntologyPanel.tsx` unchanged (candidate for promotion to a left-nav page later, §6.3) |
-| Read-only chat (`POST /chat`) + suggestion chips | Right › LLM | Sidebar rail `Assistant` › drawer, mode "Ask" | `LlmPanel.tsx` unchanged, rendered under toggle |
-| Mutating agent chat (`POST /agent`, 6 intents) + intent badges + suggestion chips | Right › Agent | Sidebar rail `Assistant` › drawer, mode "Act" | `AgentPanel.tsx` unchanged, rendered under toggle |
-| Skills list w/ active badges, expand-to-view SKILL.md, activate button | Right › Skills | Sidebar rail `Tools` › drawer, pill "Skills" | `SkillManager.tsx` unchanged |
-| Memory search (chat history + entity summaries) | Right › Memory | Sidebar rail `Tools` › drawer, pill "Memory" | `MemoryInspector.tsx` search half unchanged |
-| Preferences CRUD | Right › Memory | Sidebar rail `Tools` › drawer, pill "Memory" (kept here for now; candidate for a left-nav Settings page, §6.5) | `MemoryInspector.tsx` preferences half unchanged |
-| Switch/create graph | Left tab-strip icon → `GraphsPopover` | Header icon → `GraphsPopover` (same component) | anchor relocates, component unchanged |
-| Ingest history, expandable full text | Left tab-strip icon → `HistoryPopover` | Header icon → `HistoryPopover` (same component) | anchor relocates, component unchanged |
-| Node/edge/rule/fact counts, neo4j/graphdb up/down, iteration count | Header | Footer | new `StatusFooter.tsx`, same `useGraphStore()` fields |
-| Pending-facts badge (click → Enrich) | Header | Header (kept) → opens Build drawer with Enrich section expanded | logic updated, still one click |
-| AUTO-RUN pulsing badge | Header | Header (kept, unchanged) | unchanged |
-| Canvas zoom/pan/drag/select/link-click, drag-and-drop node placement | Canvas | Canvas (unchanged) | `GraphCanvas.tsx` unchanged |
-| Canvas floating controls, zoom % indicator, type/community/implicit-fact legends | Canvas | Canvas (unchanged) | unchanged |
+| Paste text, hints, extract, history | Left › Ingest | Sidebar › Build (accordion) **and** Documents Lab | duplicated per §3's principle; Documents Lab's Source Registry shows full history, not last-4 |
+| Node Inspector (full edit), Add Node, Add Edge, Rules Manager | Left › Construct | Sidebar › Build (accordion, unchanged, full-featured per mockup) | **not** extracted to a floating toolbar — mockup confirms the accordion already handles this well |
+| Rules Manager (deep view) | *(new)* | Logic Lab, Deductive Rule Studio | same data as sidebar's rules list, richer 2-col layout + Horn-clause phrasing |
+| Enrichment run + review | Left › Enrich | Sidebar › Build (accordion) **and** Documents Lab's Polanyi Review Hub | duplicated |
+| 3-step loop, Auto-Run, trace, derived facts | Left › Reason | Sidebar › Reason **and** Solver Lab | Solver Lab additionally gets a live leaderboard + console log rendering, same underlying data |
+| Ontology browser | Right › Ontology | Sidebar › Query (pill) **and** Logic Lab | duplicated |
+| Query console + Find Path | Right › Query | Sidebar › Query (pill) **and** Query Lab | duplicated |
+| Triples store | Right › Triples | Sidebar › Query (pill, cards) **and** Query Lab (real table) | Lab version gets the new tabular presentation |
+| Read-only chat | Right › LLM | Sidebar › Assistant, mode "Ask" | unchanged, no Lab-page duplicate (not in mockup) |
+| Mutating agent chat | Right › Agent | Sidebar › Assistant, mode "Act" | unchanged, no Lab-page duplicate |
+| Skills | Right › Skills | Sidebar › Tools (pill) | unchanged, no Lab-page duplicate |
+| Memory search + preferences | Right › Memory | Sidebar › Tools (pill) | unchanged, no Lab-page duplicate (see §6.1 for optional Settings-page extraction) |
+| Switch/create graph | Left tab-strip → `GraphsPopover` | Header dropdown | unchanged component, relocated trigger only |
+| Ingest history (quick) | Left tab-strip → `HistoryPopover` | Header dropdown | unchanged |
+| Node/edge/rule/fact/iteration counts, neo4j/graphdb status | Header | Footer | new `StatusFooter.tsx` |
+| Atomic "Run to Convergence" | Bottom of Reason tab | **Header**, primary `mainLoopBtn` | promoted per mockup, still calls the same `reason()` action |
+| Pending-facts badge | Header | Header (kept, color corrected to indigo) | opens Build accordion's Enrich section |
+| AUTO-RUN badge | Header | Header (kept) | unchanged |
+| Canvas pan/zoom/drag/select/link-click, floating controls, legends | Canvas | Canvas — present only on the **Canvas** left-nav page | unchanged; the 4 Lab pages are canvas-free by design |
 
-No row results in a feature being deleted — every one is either "unchanged, different mount point" or "unchanged, behind one extra rail-click that replaces an old tab click 1-for-1." This table has 22 grouped rows covering every control named in §1.1 — grouping (e.g. one row for "6 example buttons + history") is for table readability, not omission.
+Every §1.1 control appears above, either once (unique home) or twice (deliberate sidebar+Lab duplication per §3).
 
 ---
 
-## 6. NEW: Left Navigation Bar — Project-Level Pages
+## 6. File-by-File Implementation Plan
 
-This is the genuinely new piece: a slim (~56px), always-visible, icon-only vertical bar on the **far left edge of the whole viewport** (outside and to the left of the canvas+sidebar workspace described above), for switching between distinct top-level **pages** of the project — not sub-panels of one graph's workspace, but separate surfaces the way AI Studio's own left rail switches between Chat / Stream / History / Library / Settings.
+### Phase 0 — State model
+* `App.tsx`: `activeTab: 'build'|'reason'|'query'|'assistant'|'tools'` (sidebar, was `rightTab`) + `buildSection: 'ingest'|'construct'|'enrich'` (accordion) + `activePage: 'canvas'|'documents'|'logic'|'solver'|'query-lab'` (left nav, new). Drop `leftTab` entirely (its 4 tabs are absorbed into `buildSection` and `activePage`). No `graphStore.ts` changes.
 
-The single-graph canvas + right-sidebar workspace from §2–§5 becomes **one page** on this bar (`Workspace`, the default/home page, unchanged). Everything below is a **candidate** for the remaining slots — grounded in a real, already-built backend capability (per this project's "real data only" rule, nothing here is a placeholder or mock), tagged with how much new backend work each would need.
+### Phase 1 — Sidebar: embedded rail + Build accordion
+* `components/Sidebar.tsx`: rail (5 icons, 2px active indicator) + active tab's panel.
+* `components/panels/BuildPanel.tsx`: 3-section accordion wrapping unchanged `IngestPanel`, `ConstructionPanel`, `EnrichmentPanel`.
+* `components/panels/QueryExplorePanel.tsx` (3 pills: Pattern/Triples/Ontology), `AssistantPanel.tsx` (Ask/Act), `ToolsPanel.tsx` (Skills/Memory pills) — thin wrappers, unchanged inner components.
+* Remove old dual-sidebar markup from `App.tsx`.
 
-| Page | Icon | Backed by (real, already exists) | New backend work needed | Why it deserves to be a page, not a tab |
-|---|---|---|---|---|
-| **Workspace** | `Network` | everything in §2–§5 | none | the default landing page — today's whole app |
-| **Graphs** | `FolderOpen` | `GET /graphs` (`graph_service.list_graphs`) | none for a read-only dashboard; a `DELETE /graphs/{id}` would be new if delete-from-UI is wanted | today's `GraphsPopover` is a cramped dropdown for what is, across a real project, actually a first-class "which knowledge base am I working in" decision — a full page (grid of graphs, node/edge counts, last-ingest date, click to open in Workspace) gives it the room that decision deserves |
-| **Ontology & Rules** | `BookOpen` | `GET /ontology`, `GET/POST/DELETE /rules` (both confirmed **not graph-scoped**) | none | these two are project-wide configuration masquerading as per-graph tabs today (Ontology sits inside Query's pill switcher, Rules sits inside Build's Construct accordion) — moving them here isn't just decluttering, it's fixing a real information-architecture mismatch: editing a "global" rule from inside "graph X's workspace" implies a scoping that doesn't actually exist in the data model |
-| **Evals** | `FlaskConical` | `evals/lib.py`, `evals/cases/*.json`, `evals/results/*.json` (11 real cases, 6 skills, built this session) | yes — needs a thin new REST layer: `GET /evals/cases` (list case files + metadata), `GET /evals/results` (read latest timestamped JSON from `evals/results/`); a `POST /evals/run` to trigger `run_evals.py` from the UI is a further, separate decision (running a backend subprocess from an HTTP request needs its own auth/rate-limit thinking, not just a route) | this infrastructure exists and works (11/11 cases pass against the real backend, verified live) but is **completely invisible** in the product today — a page showing case definitions and last-run pass/fail per skill turns real, already-built verification work into something the team can actually see without opening a terminal |
-| **MCP Servers** | `Plug` | `mcp_server.py`, `mcp_neo4j_server.py`, `mcp_memory_server.py`, `mcp_skills_server.py` (4 real servers, real tools) | yes — needs new REST wrappers wherever we want the UI to call a tool directly (some already effectively exist as normal REST endpoints — e.g. Skills/Memory MCP tools are already duplicated as `/skills`/`/memory` REST routes for the sidebar; a dedicated page would mostly be surfacing `mcp.list_tools()` per server as a reference/catalog, which needs no new backend beyond a static description of the 4 servers) | there's no way today to see, from inside the app, that this project even *has* 4 working MCP servers — a low-effort read-only catalog page (server name, tool list, tool descriptions) makes real, already-shipped capability discoverable |
-| **Settings** | `Settings` | `services/preferences_store.py`, `GET/PUT/DELETE /memory/preferences` | none | the preferences CRUD currently buried in the sidebar's Tools→Memory pill is global app config, not something tied to whichever graph happens to be open — giving it a dedicated page (and pulling it out of `MemoryInspector.tsx`, leaving that component's *search* half where it is per §5) matches how every other real settings surface in a serious tool is organized |
+### Phase 2 — Header + footer
+* Trim header to: logo/ontology, `GraphsPopover`/`HistoryPopover` triggers, pending-facts badge (color→indigo), `mainLoopBtn` (wraps existing `reason()` store action), AUTO-RUN badge.
+* New `components/StatusFooter.tsx`: counts + status + `powered by {health.llm.model}`.
 
-### 6.1 What this deliberately does NOT include
+### Phase 3 — Left nav shell + Canvas page
+* `components/NavRail.tsx` (5 items, per-item accent color).
+* `App.tsx` restructured: `NavRail` + (`activePage === 'canvas'` ? Canvas+Sidebar from Phases 1–2 : one of the 4 Lab pages).
+* This phase ships pure navigation — Documents/Logic/Solver/Query-Lab pages can be simple "under construction" placeholders here, filled in Phases 4–7.
 
-No fabricated pages. Two tempting additions were considered and rejected for now because they'd need either fake data or a materially bigger backend lift than "wrap an existing service":
-* A cross-graph **Activity/History feed** (all ingests across all graphs, not just the current one) — `GET /history/{graph_id}` is graph-scoped today; a global version would need a new aggregation query. Worth doing later, not included as a page yet.
-* A **Chat/Agent Sessions browser** (list past `:ChatSession`s the way `HistoryPopover` lists ingests) — the data exists (`:ChatSession`/`:ChatMessage` nodes, already read by `memory_service.search_memory`), but there's no "list sessions" query today, only "search within a session's messages." A small, real addition (`GET /memory/{graph_id}/sessions`) — flagged here so it's not forgotten, but not scheduled as a Phase below since it's genuinely new backend surface, not just relocation.
+### Phase 4 — Documents Lab
+* `pages/DocumentsLab.tsx`: 3-column layout. Source Registry needs the **full** (not last-4) ingest history — check whether `GET /history/{graph_id}` already returns everything or needs a `limit` param removed/increased (currently `HistoryPopover`/`IngestPanel` both consume `graphStore.history`, populated by `loadHistory()`; confirm no truncation happens server-side before assuming this is frontend-only). Extraction column and Review Hub reuse `IngestPanel`/`EnrichmentPanel` logic (either by importing their internals directly, or extracting shared hooks if the accordion-sized and Lab-sized versions diverge enough to need it — decide during implementation, not before).
 
-### 6.2 Left Nav Layout
+### Phase 5 — Logic Lab
+* `pages/LogicLab.tsx`: 2-column layout reusing `OntologyPanel`/`ConstructionPanel`'s rules-section data. New: a small pure function `ruleToHornClauseSentence(rule: Rule): string` deriving the plain-language sentence from existing `Rule` fields — no new backend, no new stored data.
 
-```
-+----+------------------------------------------------------------------------------+
-|    |  ⬡ Neurosymbolic KG   ontology: fibo   [⌂ default ▾]  [🕐]   ✦2 pending  ⚙   |
-| ⬡  +------------------------------------------------------+----+------------------+
-|    |                                                        |    |                 |
-| ⊙  |                                                        | ▤  |  (right sidebar |
-| Wrk|              Main Graph Canvas                         | Bld|   as in §2–§5,  |
-|    |              (Workspace page only)                     |    |   unchanged)    |
-| 📁 |                                                        | ◐  |                 |
-| Grf|                                                        | Rsn|                 |
-|    |                                                        |    |                 |
-| 📖 |                                                        | 🔍 |                 |
-| Ont|                                                        | Qry|                 |
-|    |                                                        |    |                 |
-| ⚗  |                                                        | 🤖 |                 |
-| Evl|                                                        | Ast|                 |
-|    |                                                        |    |                 |
-| 🔌 |                                                        | 🔧 |                 |
-| Mcp|                                                        | Tls|                 |
-|    |                                                        |    |                 |
-| ⚙  |                                                        |    |                 |
-| Set|                                                        |    |                 |
-+----+------------------------------------------------------------------------------+
-|    |  12 nodes · 14 edges · 4 rules · 3 facts   ·   ● neo4j   ● graphdb   iter 2   |
-+----+------------------------------------------------------------------------------+
-```
+### Phase 6 — Solver Lab
+* `pages/SolverLab.tsx`: 3-column layout reusing `ReasoningPanel`'s store actions/data. New: an activation leaderboard component (sort `activation: Record<string, number>` by value, render as a table) and a console-log component (append a line per step transition — spread/infer/feedback — using data already present in `TraceEntry`/`DerivedFact` responses, no new backend).
 
-* This left bar is ~56px, fixed, outside the header row (spans full viewport height, header sits to its right) — a genuinely separate landmark from the right sidebar's embedded rail (§3.2), matching the "keep the vertical rail beside the [right] sidebar, and add left navigation separately" instruction directly.
-* Only `Workspace` renders the canvas + right sidebar described in §2–§5. Every other page (`Graphs`, `Ontology & Rules`, `Evals`, `MCP Servers`, `Settings`) is a simple full-width content page with no canvas and no right sidebar — a lighter-weight `MainLayout` variant, not a squeezed-in third column.
-* The header and footer persist across all pages (ontology name, graph switcher, connection status stay meaningful and visible everywhere), except the per-graph counts in the footer, which only make sense on the `Workspace` page and should read as blank/hidden on the others.
+### Phase 7 — Query Lab
+* `pages/QueryLab.tsx`: 2-column layout reusing `QueryPanel`'s data. New: `TriplesTable.tsx`, a real `<table>` rendering of `Triple[]` with 4 filter inputs — could also backport into the sidebar's Triples pill afterward as a small follow-up, not required for this phase.
+
+### Phase 8 — Color/typography polish
+* Install `@fontsource/inter` + `@fontsource/jetbrains-mono`, apply site-wide. Apply the 5-role status-badge palette from §4 (unchanged from earlier drafts' audit) and the 5-color Lab-accent scheme (already itemized in §3's intro) to `NavRail.tsx`.
 
 ---
 
-## 7. File-by-File Implementation Plan
+## 6.1 Explicitly Out of Scope / Optional Extensions (not in the mockup)
 
-Ordered as PR-sized, independently-shippable increments. Each phase leaves the app in a fully working state.
+The mockup doesn't cover two things earlier drafts of this plan proposed on their own initiative. Neither is contradicted by the mockup — they're just additional, not validated by it, so they're kept separate rather than silently merged in:
 
-### Phase 0 — State model consolidation (no visual change, foundational)
-* In `App.tsx`, replace `leftTab`/`rightTab`/`leftCollapsed`/`rightCollapsed`/`leftWidth`/`rightWidth` with `activeTool: 'build' | 'reason' | 'query' | 'assistant' | 'tools'` (the right sidebar's active tab) and `sidebarCollapsed: boolean` / `sidebarWidth: number` (unchanged behavior, renamed for clarity now that "sidebar" unambiguously means the one on the right).
-* Separately, add `activePage: 'workspace' | 'graphs' | 'ontology-rules' | 'evals' | 'mcp' | 'settings'` for the new left nav (§6), defaulting to `'workspace'`.
-* No `graphStore.ts` changes needed for either — both are local UI state, as today.
-
-### Phase 1 — Right sidebar: consolidate 11→6 tabs with embedded icon rail
-* New `components/Sidebar.tsx`: renders the embedded vertical icon rail (5 icons: Build/Reason/Query/Assistant/Tools) at the sidebar's own left margin, the collapse toggle, the resize handle, and the active tab's body. Replaces the near-duplicate left/right sidebar JSX blocks currently inline in `App.tsx`.
-* New `components/panels/BuildPanel.tsx` (accordion: Ingest/Construct/Enrich), `QueryExplorePanel.tsx` (pill: Pattern Query/Triples/Ontology), `AssistantPanel.tsx` (Ask/Act toggle), `ToolsPanel.tsx` (pill: Skills/Memory) — each a thin composition wrapper rendering the existing, unmodified panel components from §1.1.
-* `ReasoningPanel.tsx` mounts directly under the Reason rail item, no wrapper needed.
-
-### Phase 2 — Header decluttering + footer status bar
-* New `components/StatusFooter.tsx` (§3.3). Trim the header to the items listed in §3.3.
-
-### Phase 3 — Contextual Node Inspector
-* New `components/NodeInspectorCard.tsx` (§3.4), rendered inside `GraphCanvas.tsx`'s existing overlay div.
-
-### Phase 4 — Color & typography normalization
-* Narrow recolor of the 4 call sites in §4 (`ConstructionPanel.tsx:396`, `GraphCanvas.tsx:360,377,408`, `AgentPanel.tsx:24`). Data syntax-highlighting colors (`QueryPanel`/`TripleStorePanel`/`OntologyPanel`) are explicitly out of scope.
-* Install `@fontsource/inter` and `@fontsource/jetbrains-mono`, wire into `index.css`/Tailwind config, apply the 3-step text-size scale.
-
-### Phase 5 — Left navigation bar shell
-* New `components/PageNav.tsx`: the ~56px far-left icon bar (§6.2), 6 icons, `activePage` state from Phase 0.
-* New `components/layouts/PageLayout.tsx`: the lighter-weight full-width layout (header + footer persist, no canvas/sidebar) used by every page except `Workspace`.
-* Wire `Workspace` to render exactly what `App.tsx` renders today (post Phases 1–4); other pages render a simple "coming soon" placeholder — this phase ships the navigation shell without yet building the 5 new pages' content.
-
-### Phase 6 — Graphs page (zero new backend work)
-* New `pages/GraphsPage.tsx`: grid of `GET /graphs` results (already fetched today for `GraphsPopover`), click-to-switch-and-open-Workspace. `GraphsPopover` itself can stay for quick-switch convenience, or be retired in favor of this page — a call to make once the page exists, not before.
-
-### Phase 7 — Ontology & Rules page (zero new backend work)
-* New `pages/OntologyRulesPage.tsx`: reuses `OntologyPanel.tsx`'s data-fetching (`GET /ontology`) and `ConstructionPanel.tsx`'s Rules Manager section (`GET/POST/DELETE /rules`), given more breathing room in a full-width layout instead of a squeezed sidebar pill/accordion section.
-* Once this ships and is verified, revisit whether to remove the Ontology pill from the sidebar's Query tab and the Rules section from Build's Construct accordion (§5's matrix rows for these would need updating at that point) — not required to keep both a sidebar shortcut and a full page simultaneously, but worth deciding deliberately rather than by default.
-
-### Phase 8 — Evals page (needs new thin backend endpoints)
-* New backend: `GET /evals/cases` (walk `evals/cases/*/*.json`, return id/skill/summary), `GET /evals/results` (read the most recent `evals/results/run-*.json`).
-* New `pages/EvalsPage.tsx`: list of cases grouped by skill, latest pass/fail per case from the results endpoint. Read-only; no "run evals from the browser" button in this phase (see §6's note on why that's a separate decision).
-
-### Phase 9 — MCP Servers page (needs new thin backend/static content)
-* New `pages/McpServersPage.tsx`: static catalog of the 4 servers and their tools/descriptions (sourced from each server's `@mcp.tool()` docstrings — could be hand-maintained or generated once via a small script calling `mcp.list_tools()` on each server and freezing the output, since MCP servers run over stdio and aren't naturally reachable from a browser session without a bridge).
-
-### Phase 10 — Settings page (zero new backend work)
-* New `pages/SettingsPage.tsx`: the preferences CRUD, moved out of `MemoryInspector.tsx` into its own page. `MemoryInspector.tsx` keeps only the memory-search half (still graph-scoped, still belongs in the sidebar's Tools tab).
+* **Project-level pages** (Graphs dashboard, Evals results viewer, MCP Servers catalog, Settings/preferences) — real backend capabilities (`GET /graphs`, the `evals/` harness built this session, 4 real MCP servers, `services/preferences_store.py`) that have no UI today and aren't graph-scoped. If wanted, these would extend the left nav with a second, visually-separated group below the 5 Lab items (divider, dimmer accent) — worth doing, but a separate decision from "build what the mockup shows," not bundled into Phases 0–8 above.
+* **D3-force physics layout** — neither today's app nor the mockup implements this; stays a deferred item (`UI_PLAN.md` §7) unless separately prioritized, since it's real new engineering (dependency, simulation tuning, drag/pin interaction) unrelated to this navigation reorg.
 
 ---
 
-## 8. Verification Plan
+## 7. Verification Plan
 
-This project has no frontend automated test suite (confirmed: no `*.test.*`/`*.spec.*` files, no test runner in `package.json`), so verification is **live browser click-through**, per this project's established convention. For each phase:
+No frontend test suite exists, so verification is live browser click-through:
+1. `npm run typecheck` per phase.
+2. Walk §5's matrix — every item reachable, every action hits the same real backend endpoint with the same real effect, in **both** its sidebar and Lab-page location where duplicated.
+3. Specifically: `mainLoopBtn` in the header triggers the same real `POST /reason/{graph_id}` the old Reason-tab button did; Documents Lab's Source Registry shows genuinely all ingested documents for the graph, not a hardcoded slice; Solver Lab's leaderboard and console log update from the same real `spread_activation`/`run_inference` responses as the sidebar's Reason tab, with no divergence between the two views of the same run; Logic Lab's Horn-clause sentences render correctly for every existing rule shape (custom and seed).
+4. Before/after screenshots at 1440×900, and a side-by-side comparison against the mockup's own screenshots/rendering for each of the 5 pages.
 
-1. `npm run typecheck` must pass.
-2. Start the dev server, open the app, and walk §5's Functionality Preservation Matrix top to bottom for Phases 0–4; walk §6's page list for Phases 5–10 — every item must be reachable and every action must hit the same real backend endpoint with the same real effect.
-3. Specifically re-verify: pending-facts badge still opens Build/Enrich; node selection still shows the floating card and "Edit in Build →" still lands on the right section with the same node selected; Auto-Run still pulses in the header regardless of active tab/page; sidebar collapse/resize still works; graph switching still resets/reloads dependent panels; the new left nav's `Workspace` page is pixel-for-pixel the same app as before Phase 5 (i.e. Phase 5 is purely additive navigation, not a Workspace redesign).
-4. Before/after screenshots at a common resolution (1440×900) confirming the canvas visibly gains width and the header/footer are visibly lighter.
+## 8. Architectural Notes
 
----
-
-## 9. Architectural Notes
-
-* No backend/API changes are required for Phases 0–7 (Phase 7's Ontology & Rules page reuses existing `GET /ontology` and `/rules` endpoints as-is). Phases 8–9 need small, additive new endpoints/scripts, called out explicitly above — nothing in this plan requires changing an existing endpoint's contract.
-* No `graphStore.ts` (Zustand) changes are required anywhere in this plan — all new state (`activeTool`, `activePage`, accordion-expanded-section, drawer width) is local UI state, exactly matching how `leftTab`/`rightTab`/`leftCollapsed`/`rightCollapsed` are local today.
-* Regression risk stays low and every phase is independently revertible: Phase 0 touches only state variable names, Phase 1 touches only mounting/composition, Phase 2 is additive, Phase 3 is purely additive, Phase 4 is a mechanical find-and-replace pass, Phase 5 is a new, currently-inert navigation shell, and Phases 6–10 each ship exactly one new, self-contained page.
+* No backend changes needed for Phases 0–8 — every Lab page reuses existing endpoints. §6.1's optional Evals extension is the only piece that would need new (thin, read-only) endpoints, and it's explicitly deferred.
+* No `graphStore.ts` changes — all new state (`activeTab`, `buildSection`, `activePage`) is local UI state in `App.tsx`/`Sidebar.tsx`/`NavRail.tsx`, same convention as today's `leftTab`/`rightTab`.
+* Regression risk: Phases 0–2 touch the most shared surface (state model, sidebar, header/footer) and should get the most scrutiny; Phases 4–7 are additive, independent, and can ship in any order or in parallel once Phase 3's shell exists.
