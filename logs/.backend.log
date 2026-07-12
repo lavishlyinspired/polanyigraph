@@ -4262,3 +4262,15 @@ INFO:     127.0.0.1:51906 - "PUT /memory/preferences/ui-verify-test HTTP/1.1" 20
 INFO:     127.0.0.1:51910 - "GET /memory/preferences HTTP/1.1" 200 OK
 INFO:     127.0.0.1:51915 - "DELETE /memory/preferences/ui-verify-test HTTP/1.1" 200 OK
 INFO:     127.0.0.1:51918 - "GET /memory/preferences HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59571 - "GET /skills HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59576 - "GET /skills HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59579 - "GET /skills HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59582 - "GET /skills HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59591 - "GET /memory/preferences HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59594 - "GET /memory/preferences HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61108 - "GET /skills HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61111 - "GET /skills HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61115 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61119 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61122 - "GET /query/default/triples HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61125 - "GET /query/default/triples HTTP/1.1" 200 OK
