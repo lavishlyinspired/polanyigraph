@@ -19,4 +19,9 @@ class AgentState(TypedDict):
     query_error: str
     # Set by the memory_agent node when intent == "recall".
     memory_hits: list[str]
+    # Set by the router node (PLAN.md §18/§2.9.14): real find_relevant_skills
+    # results for this turn's text, most-relevant first -- observability into
+    # what the skill graph actually recommended, independent of which skill
+    # _SKILL_BY_INTENT deterministically loads.
+    discovered_skills: list[str]
     reply: str

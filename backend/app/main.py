@@ -22,7 +22,7 @@ from app.schemas import ApiModel
 async def lifespan(app: FastAPI):
     from app.dependencies import get_embedder, get_neo4j
     from ontology.sync import ensure_constraints
-    from services import vector_search_service
+    from services import skill_graph_service, vector_search_service
 
     try:
         ensure_constraints(get_neo4j())
@@ -35,6 +35,16 @@ async def lifespan(app: FastAPI):
         # Same as above -- Neo4j may be down, or the vector index feature may
         # be unavailable on an older Neo4j; /settings/connections surfaces
         # embedding status separately. Don't crash startup either way.
+        pass
+    try:
+        # PLAN.md §18.4 item 1: seed the real runtime skills as :Skill nodes
+        # on every boot -- idempotent (MERGE), so re-running is safe and
+        # picks up any skill added/edited under backend/skills/ since last
+        # startup. ResilientSkillDiscovery degrades gracefully if this
+        # didn't run (Neo4j was down at boot) -- not a hard dependency.
+        skill_graph_service.ensure_schema(get_neo4j())
+        skill_graph_service.seed_skills(get_neo4j())
+    except Exception:
         pass
     yield
 

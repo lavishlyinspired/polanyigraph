@@ -33,11 +33,14 @@ def _cleanup_activation():
 
 
 @pytest.mark.asyncio
-async def test_list_tools_exposes_the_3_real_skills_operations():
+async def test_list_tools_exposes_the_5_real_skills_operations():
     tools = await mcp.list_tools()
 
     names = {t.name for t in tools}
-    assert names == {"load_skill", "list_skills", "activate_skill"}
+    assert names == {
+        "load_skill", "list_skills", "activate_skill",
+        "find_relevant_skills", "record_skill_usage",
+    }
     for t in tools:
         assert t.description
 

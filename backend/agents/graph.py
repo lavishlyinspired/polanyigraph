@@ -26,6 +26,16 @@ engine are deterministic, LLM-free by design -- so they're loaded by the
 responder based on intent, where the LLM call that actually needs the
 guidance lives. memory-recall loads in addition whenever the message itself
 looks temporal, regardless of primary intent.
+
+Skill graph (PLAN.md §18/§2.9.14): every skill load above goes through
+ResilientSkillDiscovery instead of agents/skill_store.py directly -- same
+filesystem content, but the router additionally calls find_relevant_skills()
+for observability (state["discovered_skills"]), and every node that loads a
+skill calls record_usage() after acting on it, so the graph's Skill.confidence
+is a real rolling average of outcomes, not a static number. _SKILL_BY_INTENT
+stays the actual (deterministic, tested) selector -- discovery augments it,
+doesn't replace it, per the "quick match first, deep search as a fallback"
+design in §2.9.14's own system-prompt sketch.
 """
 
 from __future__ import annotations
@@ -33,7 +43,7 @@ from __future__ import annotations
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import END, START, StateGraph
 
-from agents import skill_store
+from agents.skill_discovery import ResilientSkillDiscovery
 from agents.state import AgentState
 from app.config import Settings
 from db.graphdb_client import GraphDBClient
@@ -102,12 +112,19 @@ _RECALL_STOPWORDS = {
 
 
 def build_graph(neo4j: Neo4jClient, graphdb: GraphDBClient, llm: LLMClient, settings: Settings, embedder: EmbeddingClient | None = None):
+    discovery = ResilientSkillDiscovery(neo4j)
+
     def router_node(state: AgentState) -> dict:
         raw = llm.complete_json(system=_ROUTER_SYSTEM, user=state["text"])
         intent = raw.strip().lower()
         if intent not in _VALID_INTENTS:
             intent = "extract"  # safe, most-tested default
-        return {"intent": intent}
+        # PLAN.md §18.4 item 3: real find_relevant_skills call every turn,
+        # independent of (and never gating) the deterministic intent->skill
+        # lookup below -- degrades to filesystem keyword matching if Neo4j
+        # is down (ResilientSkillDiscovery), never blocks routing.
+        discovered = discovery.find_skills(state["text"], limit=3)
+        return {"intent": intent, "discovered_skills": [d.name for d in discovered]}
 
     def route_by_intent(state: AgentState) -> str:
         return state["intent"]
@@ -115,14 +132,19 @@ def build_graph(neo4j: Neo4jClient, graphdb: GraphDBClient, llm: LLMClient, sett
     def extractor_node(state: AgentState) -> dict:
         # PLAN.md §13.2: Discovery -> Activation -> Execution, for real --
         # the runtime skill's content becomes part of the actual LLM prompt.
-        guidance = skill_store.load("kg-extraction")
+        guidance = discovery.load_skill("kg-extraction")
         active_embedder = embedder if embedder is not None and memory_config_service.get_backend(neo4j) == "native" else None
-        _record, result = ingest_service.ingest_text(
-            neo4j=neo4j, graphdb=graphdb, llm=llm, graph_id=state["graph_id"],
-            text=state["text"], source_doc=f"agent:{state['graph_id']}",
-            repository=settings.graphdb_repository, extra_guidance=guidance,
-            embedder=active_embedder,
-        )
+        try:
+            _record, result = ingest_service.ingest_text(
+                neo4j=neo4j, graphdb=graphdb, llm=llm, graph_id=state["graph_id"],
+                text=state["text"], source_doc=f"agent:{state['graph_id']}",
+                repository=settings.graphdb_repository, extra_guidance=guidance,
+                embedder=active_embedder,
+            )
+        except Exception:
+            discovery.record_usage("kg-extraction", session_id=state["graph_id"], success=False)
+            raise
+        discovery.record_usage("kg-extraction", session_id=state["graph_id"], success=True)
         return {
             "entities_extracted": len(result.entities),
             "relationships_extracted": len(result.relationships),
@@ -174,11 +196,14 @@ def build_graph(neo4j: Neo4jClient, graphdb: GraphDBClient, llm: LLMClient, sett
     def responder_node(state: AgentState) -> dict:
         intent = state["intent"]
         guidance_parts = []
+        loaded_skills = []
         skill_name = _SKILL_BY_INTENT.get(intent)
         if skill_name:
-            guidance_parts.append(skill_store.load(skill_name))
-        if any(kw in state["text"].lower() for kw in _TEMPORAL_KEYWORDS):
-            guidance_parts.append(skill_store.load("memory-recall"))
+            guidance_parts.append(discovery.load_skill(skill_name))
+            loaded_skills.append(skill_name)
+        if any(kw in state["text"].lower() for kw in _TEMPORAL_KEYWORDS) and "memory-recall" not in loaded_skills:
+            guidance_parts.append(discovery.load_skill("memory-recall"))
+            loaded_skills.append("memory-recall")
         system = _RESPONDER_SYSTEM
         if guidance_parts:
             system = f"{system}\n\n" + "\n\n".join(guidance_parts)
@@ -210,7 +235,14 @@ def build_graph(neo4j: Neo4jClient, graphdb: GraphDBClient, llm: LLMClient, sett
                 f"Facts derived by reasoning:\n{facts_text}"
             )
 
-        reply = llm.complete_json(system=system, user=user)
+        try:
+            reply = llm.complete_json(system=system, user=user)
+        except Exception:
+            for name in loaded_skills:
+                discovery.record_usage(name, session_id=state["graph_id"], success=False)
+            raise
+        for name in loaded_skills:
+            discovery.record_usage(name, session_id=state["graph_id"], success=True)
         return {"reply": reply}
 
     workflow = StateGraph(AgentState)

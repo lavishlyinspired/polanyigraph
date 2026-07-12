@@ -16,6 +16,7 @@ from agents.graph import build_graph
 from app.config import get_settings
 from db.graphdb_client import GraphDBClient
 from db.neo4j_client import Neo4jClient
+from services import skill_graph_service
 
 
 class FakeLLM:
@@ -74,7 +75,7 @@ def _initial_state(graph_id: str, text: str) -> dict:
         "graph_id": graph_id, "text": text, "intent": "",
         "entities_extracted": 0, "relationships_extracted": 0, "facts_derived": 0,
         "fact_texts": [], "enrichment_fact_texts": [], "query_results": [], "query_error": "",
-        "memory_hits": [], "reply": "",
+        "memory_hits": [], "discovered_skills": [], "reply": "",
     }
 
 
@@ -130,6 +131,35 @@ def test_graph_extractor_uses_the_kg_extraction_runtime_skill(services):
     extraction_calls = [c for c in llm.calls if "information extraction engine" in c["system"].lower()]
     assert len(extraction_calls) == 1
     assert "Prefer precision over recall" in extraction_calls[0]["system"]
+
+
+def test_router_calls_find_relevant_skills_before_any_node_loads_a_skill(services):
+    """PLAN.md §18: 'Router node is updated to call find_relevant_skills
+    before load_skill.' The router runs first in the graph (before
+    extractor/responder, the only nodes that call load_skill), and populates
+    discovered_skills from the real Neo4j skill graph -- not a placeholder.
+
+    Uses task-phrased text ("extract entities...") rather than bare document
+    content deliberately: find_relevant_skills is a Lucene full-text match
+    against skill *descriptions* ("Use when extracting entities..."), which
+    only hits when the routed text shares vocabulary with that description.
+    Raw document text being ingested (e.g. "Acme Corp issued preferred
+    stock.") shares no such vocabulary and legitimately returns zero matches
+    -- a real, separate discovery-quality limitation, not something this test
+    should paper over."""
+    neo4j, graphdb, settings, graph_id = services
+    skill_graph_service.ensure_schema(neo4j)
+    skill_graph_service.seed_skills(neo4j)
+    llm = FakeLLM(_PAYLOAD)
+    agent = build_graph(neo4j, graphdb, llm, settings)
+
+    result = agent.invoke(
+        _initial_state(graph_id, "Extract entities and relationships from this text: Acme Corp issued preferred stock."),
+        config={"configurable": {"thread_id": f"{graph_id}:default"}},
+    )
+
+    assert result["discovered_skills"]
+    assert "kg-extraction" in result["discovered_skills"]
 
 
 def test_graph_handles_extraction_that_yields_no_reasonable_facts(services):

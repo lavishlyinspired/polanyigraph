@@ -11,6 +11,7 @@ proposed and what a human rejected stays real and inspectable.
 from __future__ import annotations
 
 import uuid
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 
 from db.neo4j_client import Neo4jClient
@@ -25,11 +26,24 @@ def run_all_heuristics(
     llm: HeuristicLLM, *, nodes: list[GraphNodeRecord], edges: list[GraphEdgeRecord], source_text: str
 ) -> list[ImplicitFactCandidate]:
     """PLAN.md §19.2: all 11 heuristics run together, not filtered by domain --
-    one LLM call per heuristic against the same Base Graph + source text."""
+    one independent LLM call per heuristic against the same Base Graph +
+    source text, with no data dependency between them, so they run
+    concurrently rather than paying 11x sequential latency. A single
+    heuristic's failure doesn't sink the whole enrichment pass -- it's
+    dropped, same spirit as the "no valid anchors" drop rule inside
+    run_heuristic."""
     candidates: list[ImplicitFactCandidate] = []
-    for module in ALL_HEURISTIC_MODULES:
-        result = module.run(llm, nodes=nodes, edges=edges, source_text=source_text)
-        candidates.extend(result.candidates)
+    with ThreadPoolExecutor(max_workers=len(ALL_HEURISTIC_MODULES)) as pool:
+        futures = [
+            pool.submit(module.run, llm, nodes=nodes, edges=edges, source_text=source_text)
+            for module in ALL_HEURISTIC_MODULES
+        ]
+        for future in futures:
+            try:
+                result = future.result()
+            except Exception:
+                continue
+            candidates.extend(result.candidates)
     return candidates
 
 

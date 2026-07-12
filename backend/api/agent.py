@@ -33,6 +33,7 @@ class AgentResponse(ApiModel):
     query_results: list[str] = []
     query_error: str = ""
     memory_hits: list[str] = []
+    discovered_skills: list[str] = []
 
 
 @router.post("/agent/{graph_id}", response_model=AgentResponse, response_model_by_alias=True)
@@ -51,6 +52,7 @@ def run_agent(graph_id: str, request: AgentRequest, agent: Any = Depends(get_age
             "query_results": [],
             "query_error": "",
             "memory_hits": [],
+            "discovered_skills": [],
             "reply": "",
         },
         config={"configurable": {"thread_id": thread_id}},
@@ -65,4 +67,5 @@ def run_agent(graph_id: str, request: AgentRequest, agent: Any = Depends(get_age
         query_results=result["query_results"],
         query_error=result["query_error"],
         memory_hits=result["memory_hits"],
+        discovered_skills=result["discovered_skills"],
     )

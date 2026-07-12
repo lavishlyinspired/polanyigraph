@@ -16,12 +16,16 @@ interface ConnectionCenterProps {
   health: HealthResponse | null;
 }
 
-const TABS: { id: TabType; label: string; icon: typeof Database; accent: string }[] = [
-  { id: 'database', label: 'Database Connectors', icon: Database, accent: 'border-emerald-500 text-emerald-400' },
-  { id: 'cognitive', label: 'Cognitive Engine', icon: Cpu, accent: 'border-blue-500 text-blue-400' },
-  { id: 'memory', label: 'Memory Backend', icon: BrainCircuit, accent: 'border-purple-500 text-purple-400' },
-  { id: 'ingestion', label: 'Ingestion Path', icon: Puzzle, accent: 'border-sky-500 text-sky-400' },
-  { id: 'system', label: 'System Status', icon: ShieldAlert, accent: 'border-amber-500 text-amber-400' },
+// One accent (blue, this project's primary accent everywhere else) for every
+// tab -- color here previously carried no real meaning (5 tabs, 5 different
+// hues), unlike emerald/rose (real connected/error status) or amber (real
+// warnings), which stay reserved for those actual states below.
+const TABS: { id: TabType; label: string; icon: typeof Database }[] = [
+  { id: 'database', label: 'Database Connectors', icon: Database },
+  { id: 'cognitive', label: 'Cognitive Engine', icon: Cpu },
+  { id: 'memory', label: 'Memory Backend', icon: BrainCircuit },
+  { id: 'ingestion', label: 'Ingestion Path', icon: Puzzle },
+  { id: 'system', label: 'System Status', icon: ShieldAlert },
 ];
 
 function StatusBadge({ ok }: { ok: boolean | undefined }) {
@@ -71,7 +75,7 @@ function TextField({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full bg-zinc-950/80 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-200 font-mono placeholder:text-zinc-700 focus:outline-none focus:border-purple-500 transition-colors"
+        className="w-full bg-zinc-950/80 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-200 font-mono placeholder:text-zinc-700 focus:outline-none focus:border-blue-500 transition-colors"
       />
     </div>
   );
@@ -190,7 +194,7 @@ export function ConnectionCenter({ onClose, health }: ConnectionCenterProps) {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`pb-3 px-1 text-[10px] font-bold uppercase tracking-wider transition-all border-b-2 flex items-center gap-2 whitespace-nowrap ${
-                  isActive ? tab.accent : 'text-zinc-500 border-transparent hover:text-zinc-300'
+                  isActive ? 'border-blue-500 text-blue-400' : 'text-zinc-500 border-transparent hover:text-zinc-300'
                 }`}
               >
                 <Icon className="w-3.5 h-3.5" />
@@ -210,8 +214,8 @@ export function ConnectionCenter({ onClose, health }: ConnectionCenterProps) {
                   <div className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-5 space-y-4">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
-                          <Database className="w-5 h-5 text-emerald-400" />
+                        <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
+                          <Database className="w-5 h-5 text-blue-400" />
                         </div>
                         <div>
                           <h3 className="text-sm font-bold text-white uppercase tracking-wider">Neo4j Graph Database</h3>
@@ -232,8 +236,8 @@ export function ConnectionCenter({ onClose, health }: ConnectionCenterProps) {
                   <div className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-5 space-y-4">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-sky-500/10 flex items-center justify-center border border-sky-500/20">
-                          <Database className="w-5 h-5 text-sky-400" />
+                        <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
+                          <Database className="w-5 h-5 text-blue-400" />
                         </div>
                         <div>
                           <h3 className="text-sm font-bold text-white uppercase tracking-wider">Ontotext GraphDB</h3>
@@ -303,8 +307,8 @@ export function ConnectionCenter({ onClose, health }: ConnectionCenterProps) {
                 <div className="space-y-5">
                   <div className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-5 space-y-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center border border-purple-500/20">
-                        <BrainCircuit className="w-5 h-5 text-purple-400" />
+                      <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
+                        <BrainCircuit className="w-5 h-5 text-blue-400" />
                       </div>
                       <div>
                         <h3 className="text-sm font-bold text-white uppercase tracking-wider">Active Memory Backend</h3>
@@ -323,7 +327,7 @@ export function ConnectionCenter({ onClose, health }: ConnectionCenterProps) {
                             disabled={switchingBackend}
                             className={`p-3 rounded-lg border text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50 ${
                               isActive
-                                ? 'bg-purple-500/10 border-purple-500/40 text-purple-400'
+                                ? 'bg-blue-500/10 border-blue-500/40 text-blue-400'
                                 : 'bg-zinc-950/40 border-zinc-800 text-zinc-500 hover:border-zinc-700 hover:text-zinc-300'
                             }`}
                           >
@@ -357,7 +361,7 @@ export function ConnectionCenter({ onClose, health }: ConnectionCenterProps) {
                     <button
                       onClick={() => void handleTestGraphiti()}
                       disabled={graphitiTesting || !graphitiUri || !graphitiDatabase}
-                      className="w-full h-9 bg-purple-600 hover:bg-purple-500 text-onaccent text-xs font-bold rounded-lg flex items-center justify-center gap-2 disabled:opacity-40 transition-colors"
+                      className="w-full h-9 bg-blue-600 hover:bg-blue-500 text-onaccent text-xs font-bold rounded-lg flex items-center justify-center gap-2 disabled:opacity-40 transition-colors"
                     >
                       {graphitiTesting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plug className="w-3.5 h-3.5" />}
                       Test &amp; Save Connection
@@ -382,7 +386,7 @@ export function ConnectionCenter({ onClose, health }: ConnectionCenterProps) {
                     <button
                       onClick={() => void handleTestEmbedding()}
                       disabled={embeddingTesting || !embeddingModel}
-                      className="w-full h-9 bg-purple-600 hover:bg-purple-500 text-onaccent text-xs font-bold rounded-lg flex items-center justify-center gap-2 disabled:opacity-40 transition-colors"
+                      className="w-full h-9 bg-blue-600 hover:bg-blue-500 text-onaccent text-xs font-bold rounded-lg flex items-center justify-center gap-2 disabled:opacity-40 transition-colors"
                     >
                       {embeddingTesting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plug className="w-3.5 h-3.5" />}
                       Test &amp; Save Embedding Model
@@ -396,8 +400,8 @@ export function ConnectionCenter({ onClose, health }: ConnectionCenterProps) {
                 <div className="space-y-5">
                   <div className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-5 space-y-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-sky-500/10 flex items-center justify-center border border-sky-500/20">
-                        <Puzzle className="w-5 h-5 text-sky-400" />
+                      <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
+                        <Puzzle className="w-5 h-5 text-blue-400" />
                       </div>
                       <div>
                         <h3 className="text-sm font-bold text-white uppercase tracking-wider">Document Ingest</h3>
