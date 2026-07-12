@@ -13,7 +13,8 @@ from collections.abc import Iterator
 
 from db.neo4j_client import Neo4jClient
 from llm.client import LLMClient
-from services import chat_history_service, graph_service
+from llm.embedder import EmbeddingClient
+from services import chat_history_service, graph_service, vector_search_service
 
 _SYSTEM_TEMPLATE = """You are a knowledge-graph analyst assistant. Answer the user's question \
 using ONLY the graph data below -- do not invent entities, relationships, or facts that \
@@ -56,25 +57,36 @@ def _build_system_prompt(graph_id: str, session_id: str, neo4j: Neo4jClient) -> 
     )
 
 
-def answer(*, neo4j: Neo4jClient, llm: LLMClient, graph_id: str, message: str, session_id: str) -> str:
+def _append_and_index(
+    neo4j: Neo4jClient, *, graph_id: str, session_id: str, role: str, content: str, embedder: EmbeddingClient | None,
+) -> None:
+    message_id = f"{session_id}:{uuid.uuid4().hex[:12]}"
+    chat_history_service.append_message(
+        neo4j, graph_id=graph_id, session_id=session_id, message_id=message_id, role=role, content=content,
+    )
+    if embedder is not None:
+        vector_search_service.index_chat_message(neo4j, embedder, message_id=message_id, content=content)
+
+
+def answer(
+    *, neo4j: Neo4jClient, llm: LLMClient, graph_id: str, message: str, session_id: str,
+    embedder: EmbeddingClient | None = None,
+) -> str:
     """PLAN.md §20 item 4: each call reads recent history for this session into
     the prompt, then appends the new turn -- real conversational continuity,
     not a stateless single-shot call."""
     system = _build_system_prompt(graph_id, session_id, neo4j)
     reply = llm.complete_json(system=system, user=message)
 
-    chat_history_service.append_message(
-        neo4j, graph_id=graph_id, session_id=session_id,
-        message_id=f"{session_id}:{uuid.uuid4().hex[:12]}", role="user", content=message,
-    )
-    chat_history_service.append_message(
-        neo4j, graph_id=graph_id, session_id=session_id,
-        message_id=f"{session_id}:{uuid.uuid4().hex[:12]}", role="assistant", content=reply,
-    )
+    _append_and_index(neo4j, graph_id=graph_id, session_id=session_id, role="user", content=message, embedder=embedder)
+    _append_and_index(neo4j, graph_id=graph_id, session_id=session_id, role="assistant", content=reply, embedder=embedder)
     return reply
 
 
-def stream_answer(*, neo4j: Neo4jClient, llm: LLMClient, graph_id: str, message: str, session_id: str) -> Iterator[str]:
+def stream_answer(
+    *, neo4j: Neo4jClient, llm: LLMClient, graph_id: str, message: str, session_id: str,
+    embedder: EmbeddingClient | None = None,
+) -> Iterator[str]:
     """Same grounding/history semantics as answer(), but yields the reply
     incrementally as the LLM generates it instead of returning it all at once.
     History is persisted once the stream is fully consumed, since the full
@@ -86,11 +98,5 @@ def stream_answer(*, neo4j: Neo4jClient, llm: LLMClient, graph_id: str, message:
         yield chunk
     reply = "".join(chunks)
 
-    chat_history_service.append_message(
-        neo4j, graph_id=graph_id, session_id=session_id,
-        message_id=f"{session_id}:{uuid.uuid4().hex[:12]}", role="user", content=message,
-    )
-    chat_history_service.append_message(
-        neo4j, graph_id=graph_id, session_id=session_id,
-        message_id=f"{session_id}:{uuid.uuid4().hex[:12]}", role="assistant", content=reply,
-    )
+    _append_and_index(neo4j, graph_id=graph_id, session_id=session_id, role="user", content=message, embedder=embedder)
+    _append_and_index(neo4j, graph_id=graph_id, session_id=session_id, role="assistant", content=reply, embedder=embedder)

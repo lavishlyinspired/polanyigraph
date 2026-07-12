@@ -6081,3 +6081,765 @@ INFO:     127.0.0.1:51159 - "GET /ontology HTTP/1.1" 200 OK
 INFO:     127.0.0.1:51163 - "GET /ontology HTTP/1.1" 200 OK
 INFO:     127.0.0.1:51170 - "GET /query/default/triples HTTP/1.1" 200 OK
 INFO:     127.0.0.1:51173 - "GET /query/default/triples HTTP/1.1" 200 OK
+WARNING:  WatchFiles detected changes in 'app/config.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [94355]
+INFO:     Started server process [5994]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'app/config.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [5994]
+INFO:     Started server process [6013]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'llm/embedder.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [6013]
+INFO:     Started server process [6029]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'app/dependencies.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [6029]
+INFO:     Started server process [6041]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'tests/test_memory_config_service.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [6041]
+INFO:     Started server process [6141]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'services/memory_config_service.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [6141]
+INFO:     Started server process [6166]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'tests/test_vector_search_service.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [6166]
+INFO:     Started server process [6327]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'services/vector_search_service.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [6327]
+INFO:     Started server process [6360]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'tests/test_ingest_service.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [6360]
+INFO:     Started server process [6428]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'tests/test_ingest_service.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [6428]
+INFO:     Started server process [6436]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'services/ingest_service.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [6436]
+INFO:     Started server process [6462]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'services/ingest_service.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [6462]
+INFO:     Started server process [6467]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'tests/test_ingest_service.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [6467]
+INFO:     Started server process [6528]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'tests/test_ingest_service.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [6528]
+INFO:     Started server process [6535]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'api/ingest.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [6535]
+INFO:     Started server process [6567]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'api/ingest.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [6567]
+INFO:     Started server process [6574]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'api/ingest.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [6574]
+INFO:     Started server process [6582]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'tests/test_chat_service.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [6582]
+INFO:     Started server process [6599]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'tests/test_chat_service.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [6599]
+INFO:     Started server process [6629]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'services/chat_service.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [6629]
+INFO:     Started server process [6660]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'services/chat_service.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [6660]
+INFO:     Started server process [6673]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'api/chat.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [6673]
+INFO:     Started server process [6711]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'api/chat.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [6711]
+INFO:     Started server process [6718]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'api/chat.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [6718]
+INFO:     Started server process [6724]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'app/main.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [6724]
+INFO:     Started server process [6736]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'tests/test_memory_service.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [6736]
+INFO:     Started server process [6777]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'tests/test_memory_service.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [6777]
+INFO:     Started server process [6783]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'services/memory_service.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [6783]
+INFO:     Started server process [6816]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'agents/graph.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [6816]
+INFO:     Started server process [6875]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'agents/graph.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [6875]
+INFO:     Started server process [6880]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'agents/graph.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [6880]
+INFO:     Started server process [6892]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'app/dependencies.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [6892]
+INFO:     Started server process [6898]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'api/memory.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [6898]
+INFO:     Started server process [6928]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'api/memory.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [6928]
+INFO:     Started server process [6931]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in '.venv/lib/python3.14/site-packages/graphiti_core/prompts/dedupe_nodes.py', '.venv/lib/python3.14/site-packages/graphiti_core/__init__.py', '.venv/lib/python3.14/site-packages/posthog/test/test_size_limited_dict.py', '.venv/lib/python3.14/site-packages/graphiti_core/llm_client/groq_client.py', '.venv/lib/python3.14/site-packages/posthog/ai/types.py', '.venv/lib/python3.14/site-packages/posthog/mcp/_ids.py', '.venv/lib/python3.14/site-packages/graphiti_core/utils/maintenance/combined_extraction.py', '.venv/lib/python3.14/site-packages/posthog/test/test_feature_flag.py', '.venv/lib/python3.14/site-packages/posthog/test/mcp/_helpers.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/neo4j/operations/episodic_edge_ops.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/kuzu/operations/entity_edge_ops.py', '.venv/lib/python3.14/site-packages/posthog/utils.py', '.venv/lib/python3.14/site-packages/graphiti_core/models/edges/__init__.py', '.venv/lib/python3.14/site-packages/posthog/test/ai/test_gateway.py', '.venv/lib/python3.14/site-packages/posthog/mcp/_truncation.py', '.venv/lib/python3.14/site-packages/backoff/_wait_gen.py', '.venv/lib/python3.14/site-packages/posthog/ai/openai_agents/processor.py', '.venv/lib/python3.14/site-packages/graphiti_core/utils/maintenance/dedup_helpers.py', '.venv/lib/python3.14/site-packages/posthog/ai/claude_agent_sdk/__init__.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/operations/entity_node_ops.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/kuzu/operations/next_episode_edge_ops.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/kuzu/operations/saga_node_ops.py', '.venv/lib/python3.14/site-packages/graphiti_core/search/search_config_recipes.py', '.venv/lib/python3.14/site-packages/posthog/mcp/tools.py', '.venv/lib/python3.14/site-packages/posthog/test/mcp/test_posthog_mcp.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/kuzu/operations/community_node_ops.py', '.venv/lib/python3.14/site-packages/graphiti_core/prompts/summarize_nodes.py', '.venv/lib/python3.14/site-packages/posthog/mcp/_intent.py', '.venv/lib/python3.14/site-packages/posthog/test/ai/otel/test_processor.py', '.venv/lib/python3.14/site-packages/graphiti_core/edges.py', '.venv/lib/python3.14/site-packages/graphiti_core/llm_client/gemini_client.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/falkordb/operations/community_node_ops.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/neo4j/operations/search_ops.py', '.venv/lib/python3.14/site-packages/posthog/args.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/neo4j/__init__.py', '.venv/lib/python3.14/site-packages/posthog/test/conftest.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/neptune/operations/entity_node_ops.py', '.venv/lib/python3.14/site-packages/graphiti_core/llm_client/azure_openai_client.py', '.venv/lib/python3.14/site-packages/posthog/integrations/__init__.py', '.venv/lib/python3.14/site-packages/posthog/test/test_feature_flags.py', '.venv/lib/python3.14/site-packages/posthog/mcp/_sink.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/graph_operations/graph_operations.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/neptune/operations/episode_node_ops.py', '.venv/lib/python3.14/site-packages/graphiti_core/utils/maintenance/node_operations.py', '.venv/lib/python3.14/site-packages/posthog/mcp/constants.py', '.venv/lib/python3.14/site-packages/posthog/mcp/_instrument_fastmcp.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/falkordb/operations/episode_node_ops.py', '.venv/lib/python3.14/site-packages/graphiti_core/llm_client/openai_generic_client.py', '.venv/lib/python3.14/site-packages/posthog/capture_mode.py', '.venv/lib/python3.14/site-packages/graphiti_core/search/search_utils.py', '.venv/lib/python3.14/site-packages/posthog/test/test_bucketed_rate_limiter.py', '.venv/lib/python3.14/site-packages/graphiti_core/prompts/extract_edges.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/neo4j/operations/saga_node_ops.py', '.venv/lib/python3.14/site-packages/posthog/test/mcp/test_review_fixes.py', '.venv/lib/python3.14/site-packages/graphiti_core/graph_queries.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/neptune/operations/entity_edge_ops.py', '.venv/lib/python3.14/site-packages/posthog/mcp/_internal.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/neptune/operations/saga_node_ops.py', '.venv/lib/python3.14/site-packages/graphiti_core/llm_client/__init__.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/operations/episodic_edge_ops.py', '.venv/lib/python3.14/site-packages/posthog/test/test_capture_compression.py', '.venv/lib/python3.14/site-packages/posthog/ai/anthropic/__init__.py', '.venv/lib/python3.14/site-packages/graphiti_core/utils/bulk_utils.py', '.venv/lib/python3.14/site-packages/graphiti_core/utils/maintenance/graph_data_operations.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/falkordb/operations/__init__.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/neo4j/operations/community_node_ops.py', '.venv/lib/python3.14/site-packages/posthog/test/test_types.py', '.venv/lib/python3.14/site-packages/graphiti_core/prompts/extract_nodes_and_edges.py', '.venv/lib/python3.14/site-packages/graphiti_core/models/__init__.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/kuzu/operations/search_ops.py', '.venv/lib/python3.14/site-packages/posthog/ai/langchain/callbacks.py', '.venv/lib/python3.14/site-packages/graphiti_core/llm_client/config.py', '.venv/lib/python3.14/site-packages/graphiti_core/cross_encoder/__init__.py', '.venv/lib/python3.14/site-packages/posthog/ai/otel/processor.py', '.venv/lib/python3.14/site-packages/posthog/mcp/__init__.py', '.venv/lib/python3.14/site-packages/posthog/test/test_flag_definition_cache.py', '.venv/lib/python3.14/site-packages/posthog/ai/claude_agent_sdk/processor.py', '.venv/lib/python3.14/site-packages/posthog/feature_flags.py', '.venv/lib/python3.14/site-packages/posthog/ai/sanitization.py', '.venv/lib/python3.14/site-packages/graphiti_core/embedder/__init__.py', '.venv/lib/python3.14/site-packages/posthog/test/test_code_variables.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/neo4j/operations/entity_edge_ops.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/falkordb/operations/episodic_edge_ops.py', '.venv/lib/python3.14/site-packages/posthog/test/mcp/test_units.py', '.venv/lib/python3.14/site-packages/posthog/test/test_module.py', '.venv/lib/python3.14/site-packages/posthog/test/mcp/test_fastmcp.py', '.venv/lib/python3.14/site-packages/posthog/ai/gemini/gemini_converter.py', '.venv/lib/python3.14/site-packages/posthog/ai/gemini/gemini_async.py', '.venv/lib/python3.14/site-packages/graphiti_core/prompts/models.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/neptune/operations/next_episode_edge_ops.py', '.venv/lib/python3.14/site-packages/posthog/ai/openai/__init__.py', '.venv/lib/python3.14/site-packages/posthog/ai/openai/openai_providers.py', '.venv/lib/python3.14/site-packages/graphiti_core/embedder/azure_openai.py', '.venv/lib/python3.14/site-packages/posthog/test/mcp/test_features_m4.py', '.venv/lib/python3.14/site-packages/backoff/types.py', '.venv/lib/python3.14/site-packages/posthog/test/__init__.py', '.venv/lib/python3.14/site-packages/posthog/mcp/_conversation_id.py', '.venv/lib/python3.14/site-packages/posthog/bucketed_rate_limiter.py', '.venv/lib/python3.14/site-packages/posthog/test/ai/otel/__init__.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/query_executor.py', '.venv/lib/python3.14/site-packages/posthog/ai/prompts.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/neo4j/operations/community_edge_ops.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/neo4j/operations/next_episode_edge_ops.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/__init__.py', '.venv/lib/python3.14/site-packages/posthog/ai/langchain/__init__.py', '.venv/lib/python3.14/site-packages/posthog/test/test_contexts.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/kuzu/operations/has_episode_edge_ops.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/operations/search_ops.py', '.venv/lib/python3.14/site-packages/posthog/test/test_utils_acceptance.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/record_parsers.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/operations/episode_node_ops.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/falkordb/operations/search_ops.py', '.venv/lib/python3.14/site-packages/posthog/version.py', '.venv/lib/python3.14/site-packages/posthog/mcp/_sanitization.py', '.venv/lib/python3.14/site-packages/posthog/test/ai/test_system_prompts.py', '.venv/lib/python3.14/site-packages/graphiti_core/helpers.py', '.venv/lib/python3.14/site-packages/posthog/test/ai/otel/test_exporter.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/kuzu/operations/record_parsers.py', '.venv/lib/python3.14/site-packages/posthog/test/test_before_send.py', '.venv/lib/python3.14/site-packages/backoff/_common.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/neptune_driver.py', '.venv/lib/python3.14/site-packages/posthog/capture_v1.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/falkordb/operations/next_episode_edge_ops.py', '.venv/lib/python3.14/site-packages/graphiti_core/utils/maintenance/__init__.py', '.venv/lib/python3.14/site-packages/graphiti_core/utils/datetime_utils.py', '.venv/lib/python3.14/site-packages/graphiti_core/prompts/__init__.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/falkordb/operations/saga_node_ops.py', '.venv/lib/python3.14/site-packages/posthog/test/mcp/__init__.py', '.venv/lib/python3.14/site-packages/posthog/ai/anthropic/anthropic_providers.py', '.venv/lib/python3.14/site-packages/backoff/_jitter.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/operations/community_edge_ops.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/falkordb/operations/entity_node_ops.py', '.venv/lib/python3.14/site-packages/backoff/_decorator.py', '.venv/lib/python3.14/site-packages/graphiti_core/utils/__init__.py', '.venv/lib/python3.14/site-packages/posthog/ai/claude_agent_sdk/client.py', '.venv/lib/python3.14/site-packages/graphiti_core/embedder/gemini.py', '.venv/lib/python3.14/site-packages/posthog/test/test_evaluate_flags.py', '.venv/lib/python3.14/site-packages/posthog/types.py', '.venv/lib/python3.14/site-packages/posthog/ai/gemini/__init__.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/kuzu/operations/entity_node_ops.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/kuzu/operations/episode_node_ops.py', '.venv/lib/python3.14/site-packages/posthog/mcp/_posthog_events.py', '.venv/lib/python3.14/site-packages/posthog/__init__.py', '.venv/lib/python3.14/site-packages/graphiti_core/models/nodes/__init__.py', '.venv/lib/python3.14/site-packages/posthog/ai/stream.py', '.venv/lib/python3.14/site-packages/posthog/ai/otel/spans.py', '.venv/lib/python3.14/site-packages/posthog/test/ai/test_async_stream_wrapper.py', '.venv/lib/python3.14/site-packages/posthog/test/test_feature_flag_result.py', '.venv/lib/python3.14/site-packages/posthog/test/test_client_fork.py', '.venv/lib/python3.14/site-packages/graphiti_core/migrations/__init__.py', '.venv/lib/python3.14/site-packages/graphiti_core/cross_encoder/bge_reranker_client.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/operations/graph_utils.py', '.venv/lib/python3.14/site-packages/graphiti_core/llm_client/token_tracker.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/neptune/operations/community_node_ops.py', '.venv/lib/python3.14/site-packages/graphiti_core/models/edges/edge_db_queries.py', '.venv/lib/python3.14/site-packages/posthog/mcp/logger.py', '.venv/lib/python3.14/site-packages/graphiti_core/prompts/snippets.py', '.venv/lib/python3.14/site-packages/posthog/mcp/_instrumentation.py', '.venv/lib/python3.14/site-packages/posthog/ai/anthropic/anthropic_async.py', '.venv/lib/python3.14/site-packages/graphiti_core/llm_client/client.py', '.venv/lib/python3.14/site-packages/posthog/test/ai/__init__.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/operations/has_episode_edge_ops.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/neptune/operations/community_edge_ops.py', '.venv/lib/python3.14/site-packages/posthog/ai/otel/__init__.py', '.venv/lib/python3.14/site-packages/graphiti_core/llm_client/openai_base_client.py', '.venv/lib/python3.14/site-packages/posthog/integrations/celery.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/falkordb/operations/community_edge_ops.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/neo4j/operations/episode_node_ops.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/neo4j/operations/__init__.py', '.venv/lib/python3.14/site-packages/graphiti_core/prompts/dedupe_edges.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/falkordb/operations/has_episode_edge_ops.py', '.venv/lib/python3.14/site-packages/posthog/ai/anthropic/anthropic.py', '.venv/lib/python3.14/site-packages/posthog/exception_utils.py', '.venv/lib/python3.14/site-packages/posthog/test/mcp/test_pipeline.py', '.venv/lib/python3.14/site-packages/posthog/test/ai/openai_agents/__init__.py', '.venv/lib/python3.14/site-packages/posthog/capture_compression.py', '.venv/lib/python3.14/site-packages/graphiti_core/llm_client/errors.py', '.venv/lib/python3.14/site-packages/posthog/test/test_capture_v1.py', '.venv/lib/python3.14/site-packages/graphiti_core/embedder/openai.py', '.venv/lib/python3.14/site-packages/posthog/test/ai/test_prompts.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/neptune/operations/graph_ops.py', '.venv/lib/python3.14/site-packages/graphiti_core/errors.py', '.venv/lib/python3.14/site-packages/graphiti_core/cross_encoder/gemini_reranker_client.py', '.venv/lib/python3.14/site-packages/posthog/integrations/django.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/neptune/operations/episodic_edge_ops.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/operations/community_node_ops.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/operations/graph_ops.py', '.venv/lib/python3.14/site-packages/posthog/mcp/session.py', '.venv/lib/python3.14/site-packages/posthog/test/test_consumer.py', '.venv/lib/python3.14/site-packages/graphiti_core/llm_client/cache.py', '.venv/lib/python3.14/site-packages/graphiti_core/telemetry/telemetry.py', '.venv/lib/python3.14/site-packages/posthog/mcp/_capture.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/kuzu/__init__.py', '.venv/lib/python3.14/site-packages/graphiti_core/utils/maintenance/community_operations.py', '.venv/lib/python3.14/site-packages/posthog/feature_flag_evaluations.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/operations/entity_edge_ops.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/operations/next_episode_edge_ops.py', '.venv/lib/python3.14/site-packages/posthog/test/test_utils.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/falkordb_driver.py', '.venv/lib/python3.14/site-packages/posthog/test/mcp/test_fastmcp_v2.py', '.venv/lib/python3.14/site-packages/posthog/request.py', '.venv/lib/python3.14/site-packages/graphiti_core/tracer.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/neo4j/operations/entity_node_ops.py', '.venv/lib/python3.14/site-packages/graphiti_core/graphiti_types.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/kuzu_driver.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/falkordb/__init__.py', '.venv/lib/python3.14/site-packages/graphiti_core/nodes.py', '.venv/lib/python3.14/site-packages/posthog/test/test_capture_mode.py', '.venv/lib/python3.14/site-packages/graphiti_core/namespaces/__init__.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/search_interface/search_interface.py', '.venv/lib/python3.14/site-packages/posthog/test/mcp/test_truncation.py', '.venv/lib/python3.14/site-packages/graphiti_core/cross_encoder/openai_reranker_client.py', '.venv/lib/python3.14/site-packages/posthog/test/logging_helpers.py', '.venv/lib/python3.14/site-packages/posthog/ai/openai/openai.py', '.venv/lib/python3.14/site-packages/graphiti_core/cross_encoder/client.py', '.venv/lib/python3.14/site-packages/posthog/ai/gemini/gemini.py', '.venv/lib/python3.14/site-packages/graphiti_core/embedder/client.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/kuzu/operations/community_edge_ops.py', '.venv/lib/python3.14/site-packages/posthog/test/ai/claude_agent_sdk/__init__.py', '.venv/lib/python3.14/site-packages/graphiti_core/utils/text_utils.py', '.venv/lib/python3.14/site-packages/posthog/ai/anthropic/anthropic_converter.py', '.venv/lib/python3.14/site-packages/posthog/ai/openai_agents/__init__.py', '.venv/lib/python3.14/site-packages/posthog/test/ai/claude_agent_sdk/test_processor.py', '.venv/lib/python3.14/site-packages/posthog/test/mcp/test_lowlevel.py', '.venv/lib/python3.14/site-packages/graphiti_core/namespaces/nodes.py', '.venv/lib/python3.14/site-packages/graphiti_core/utils/maintenance/edge_operations.py', '.venv/lib/python3.14/site-packages/graphiti_core/prompts/lib.py', '.venv/lib/python3.14/site-packages/graphiti_core/decorators.py', '.venv/lib/python3.14/site-packages/posthog/mcp/types.py', '.venv/lib/python3.14/site-packages/posthog/flag_definition_cache.py', '.venv/lib/python3.14/site-packages/backoff/_sync.py', '.venv/lib/python3.14/site-packages/posthog/ai/openai/openai_converter.py', '.venv/lib/python3.14/site-packages/posthog/test/ai/test_tokens_source.py', '.venv/lib/python3.14/site-packages/posthog/mcp/_compatibility.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/kuzu/operations/episodic_edge_ops.py', '.venv/lib/python3.14/site-packages/graphiti_core/utils/maintenance/attribute_utils.py', '.venv/lib/python3.14/site-packages/backoff/_typing.py', '.venv/lib/python3.14/site-packages/graphiti_core/llm_client/openai_client.py', '.venv/lib/python3.14/site-packages/graphiti_core/search/search_helpers.py', '.venv/lib/python3.14/site-packages/graphiti_core/telemetry/__init__.py', '.venv/lib/python3.14/site-packages/posthog/exception_capture.py', '.venv/lib/python3.14/site-packages/graphiti_core/utils/ontology_utils/entity_types_utils.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/kuzu/operations/__init__.py', '.venv/lib/python3.14/site-packages/graphiti_core/prompts/summarize_sagas.py', '.venv/lib/python3.14/site-packages/backoff/_async.py', '.venv/lib/python3.14/site-packages/posthog/test/test_request.py', '.venv/lib/python3.14/site-packages/posthog/ai/gateway.py', '.venv/lib/python3.14/site-packages/posthog/mcp/_instrument_lowlevel.py', '.venv/lib/python3.14/site-packages/graphiti_core/namespaces/edges.py', '.venv/lib/python3.14/site-packages/posthog/test/test_dedicated_ai_endpoint.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/operations/__init__.py', '.venv/lib/python3.14/site-packages/posthog/test/test_client.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/neptune/__init__.py', '.venv/lib/python3.14/site-packages/posthog/test/ai/otel/test_spans.py', '.venv/lib/python3.14/site-packages/posthog/mcp/version.py', '.venv/lib/python3.14/site-packages/posthog/ai/openai/wrapper_utils.py', '.venv/lib/python3.14/site-packages/graphiti_core/prompts/eval.py', '.venv/lib/python3.14/site-packages/posthog/client.py', '.venv/lib/python3.14/site-packages/graphiti_core/utils/content_chunking.py', '.venv/lib/python3.14/site-packages/graphiti_core/llm_client/gliner2_client.py', '.venv/lib/python3.14/site-packages/posthog/mcp/_event_types.py', '.venv/lib/python3.14/site-packages/posthog/consumer.py', '.venv/lib/python3.14/site-packages/graphiti_core/search/search_filters.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/operations/saga_node_ops.py', '.venv/lib/python3.14/site-packages/backoff/__init__.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/neo4j/operations/has_episode_edge_ops.py', '.venv/lib/python3.14/site-packages/posthog/_async_utils.py', '.venv/lib/python3.14/site-packages/posthog/ai/__init__.py', '.venv/lib/python3.14/site-packages/posthog/mcp/posthog_mcp.py', '.venv/lib/python3.14/site-packages/posthog/ai/utils.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/falkordb/operations/entity_edge_ops.py', '.venv/lib/python3.14/site-packages/posthog/test/test_exception_capture.py', '.venv/lib/python3.14/site-packages/graphiti_core/search/__init__.py', '.venv/lib/python3.14/site-packages/posthog/test/ai/openai_agents/test_processor.py', '.venv/lib/python3.14/site-packages/posthog/mcp/_exceptions.py', '.venv/lib/python3.14/site-packages/posthog/contexts.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/neptune/operations/search_ops.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/neo4j_driver.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/neptune/operations/__init__.py', '.venv/lib/python3.14/site-packages/graphiti_core/llm_client/utils.py', '.venv/lib/python3.14/site-packages/posthog/test/ai/test_sanitization.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/neo4j/operations/graph_ops.py', '.venv/lib/python3.14/site-packages/posthog/_logging.py', '.venv/lib/python3.14/site-packages/posthog/ai/otel/exporter.py', '.venv/lib/python3.14/site-packages/graphiti_core/models/nodes/node_db_queries.py', '.venv/lib/python3.14/site-packages/graphiti_core/search/search_config.py', '.venv/lib/python3.14/site-packages/graphiti_core/prompts/prompt_helpers.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/neptune/operations/has_episode_edge_ops.py', '.venv/lib/python3.14/site-packages/posthog/mcp/_context_parameters.py', '.venv/lib/python3.14/site-packages/graphiti_core/graphiti.py', '.venv/lib/python3.14/site-packages/graphiti_core/prompts/extract_nodes.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/kuzu/operations/graph_ops.py', '.venv/lib/python3.14/site-packages/graphiti_core/embedder/voyage.py', '.venv/lib/python3.14/site-packages/graphiti_core/search/search.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/falkordb/operations/graph_ops.py', '.venv/lib/python3.14/site-packages/posthog/test/ai/utils.py', '.venv/lib/python3.14/site-packages/graphiti_core/driver/driver.py', '.venv/lib/python3.14/site-packages/posthog/poller.py', '.venv/lib/python3.14/site-packages/posthog/ai/openai/openai_async.py', '.venv/lib/python3.14/site-packages/graphiti_core/llm_client/anthropic_client.py', '.venv/lib/python3.14/site-packages/posthog/test/ai/otel/conftest.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [6931]
+INFO:     Started server process [7555]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'services/graphiti_memory_service.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [7555]
+INFO:     Started server process [7637]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'services/graphiti_memory_service.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [7637]
+INFO:     Started server process [7765]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'services/graphiti_memory_service.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [7765]
+INFO:     Started server process [7771]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'services/graphiti_memory_service.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [7771]
+INFO:     Started server process [7867]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'services/graphiti_memory_service.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [7867]
+INFO:     Started server process [7875]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'services/graphiti_memory_service.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [7875]
+INFO:     Started server process [7941]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'services/graphiti_memory_service.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [7941]
+INFO:     Started server process [8592]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'services/graphiti_memory_service.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [8592]
+INFO:     Started server process [8599]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'services/graphiti_memory_service.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [8599]
+INFO:     Started server process [8603]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'tests/test_graphiti_memory_service.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [8603]
+INFO:     Started server process [8691]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'services/graphiti_memory_service.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [8691]
+INFO:     Started server process [8850]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'services/graphiti_memory_service.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [8850]
+INFO:     Started server process [8877]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'services/graphiti_memory_service.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [8877]
+INFO:     Started server process [8900]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'services/memory_service.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [8900]
+INFO:     Started server process [8909]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'services/memory_service.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [8909]
+INFO:     Started server process [8920]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'tests/test_memory_service.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [8920]
+INFO:     Started server process [8974]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'tests/test_memory_service.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [8974]
+INFO:     Started server process [8981]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'api/memory.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [8981]
+INFO:     Started server process [9017]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'api/memory.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [9017]
+INFO:     Started server process [9024]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'agents/graph.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [9024]
+INFO:     Started server process [9048]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'agents/graph.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [9048]
+INFO:     Started server process [9077]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'tests/test_api_memory_backend.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [9077]
+INFO:     Started server process [9141]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'api/settings.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [9141]
+INFO:     Started server process [9163]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'api/settings.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [9163]
+INFO:     Started server process [9175]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'tests/test_api_memory_backend.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [9175]
+INFO:     Started server process [9233]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'api/settings.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [9233]
+INFO:     Started server process [9291]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:64502 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64503 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64501 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64521 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64498 - "GET /query/default/triples HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64500 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64518 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64524 - "GET /reason/default/facts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64515 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64499 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64539 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64540 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64538 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64551 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64542 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64554 - "GET /reason/default/facts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64548 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64535 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64544 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64582 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64583 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64579 - "GET /query/default/triples HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64581 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64595 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64598 - "GET /reason/default/facts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64591 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64584 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64588 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64580 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64610 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64613 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64611 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64623 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64626 - "GET /reason/default/facts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64621 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64615 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64608 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64616 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64641 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64645 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64650 - "GET /query/default/triples HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64653 - "GET /query/default/triples HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64745 - "GET /settings/connections HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64748 - "GET /settings/connections HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64746 - "GET /settings/memory-backend HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64751 - "GET /settings/memory-backend HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64816 - "GET /settings/connections HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64817 - "GET /settings/memory-backend HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64884 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49436 - "PUT /settings/memory-backend HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49442 - "PUT /settings/memory-backend HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49456 - "PUT /settings/memory-backend HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49567 - "PUT /settings/memory-backend HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49582 - "PUT /settings/memory-backend HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49821 - "PUT /settings/memory-backend HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49824 - "PUT /settings/memory-backend HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49829 - "PUT /settings/memory-backend HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49836 - "PUT /settings/memory-backend HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49845 - "PUT /settings/memory-backend HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49850 - "PUT /settings/memory-backend HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49860 - "PUT /settings/memory-backend HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49869 - "PUT /settings/memory-backend HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50120 - "PUT /settings/memory-backend HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50124 - "PUT /settings/memory-backend HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52504 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52503 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52500 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52514 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52505 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52519 - "GET /reason/default/facts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52515 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52523 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52526 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52529 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52537 - "GET /reason/default/facts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52531 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52535 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52540 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52507 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52544 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52499 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52547 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52604 - "GET /settings/connections HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52607 - "GET /settings/connections HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52603 - "GET /settings/memory-backend HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52610 - "GET /settings/memory-backend HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52711 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52710 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52706 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52722 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52712 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52726 - "GET /reason/default/facts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52728 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52732 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52720 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52738 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52744 - "GET /reason/default/facts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52735 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52741 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52747 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52714 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52707 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52751 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52753 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52890 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52889 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52888 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52900 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52891 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52899 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52908 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52909 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52907 - "GET /reason/default/facts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52917 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52913 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52925 - "GET /reason/default/facts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52919 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52922 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52892 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52887 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52928 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52931 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53001 - "GET /settings/connections HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53006 - "GET /settings/connections HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53003 - "GET /settings/memory-backend HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53009 - "GET /settings/memory-backend HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53128 - "GET /settings/connections HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53131 - "GET /settings/connections HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53127 - "GET /settings/memory-backend HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53134 - "GET /settings/memory-backend HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53151 - "PUT /settings/memory-backend/graphiti-connection HTTP/1.1" 200 OK
+Task exception was never retrieved
+future: <Task finished name='Task-135' coro=<Neo4jDriver.build_indices_and_constraints() done, defined at /Users/akash/KG_Projects/neurosymbolic/backend/.venv/lib/python3.14/site-packages/graphiti_core/driver/neo4j_driver.py:206> exception=AuthError()>
+Traceback (most recent call last):
+  File "/Users/akash/KG_Projects/neurosymbolic/backend/.venv/lib/python3.14/site-packages/graphiti_core/driver/neo4j_driver.py", line 216, in build_indices_and_constraints
+    await semaphore_gather(*[self._execute_index_query(query) for query in index_queries])
+  File "/Users/akash/KG_Projects/neurosymbolic/backend/.venv/lib/python3.14/site-packages/graphiti_core/helpers.py", line 133, in semaphore_gather
+    return await asyncio.gather(*(_wrap_coroutine(coroutine) for coroutine in coroutines))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/akash/KG_Projects/neurosymbolic/backend/.venv/lib/python3.14/site-packages/graphiti_core/helpers.py", line 131, in _wrap_coroutine
+    return await coroutine
+           ^^^^^^^^^^^^^^^
+  File "/Users/akash/KG_Projects/neurosymbolic/backend/.venv/lib/python3.14/site-packages/graphiti_core/driver/neo4j_driver.py", line 198, in _execute_index_query
+    return await self.execute_query(query)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/akash/KG_Projects/neurosymbolic/backend/services/graphiti_memory_service.py", line 95, in execute_query
+    return await self.client.execute_query(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        cypher_query_, parameters_=params, database_=self._database, **kwargs
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/akash/KG_Projects/neurosymbolic/backend/.venv/lib/python3.14/site-packages/neo4j/_async/driver.py", line 951, in execute_query
+    return await session._run_transaction(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+    )
+    ^
+  File "/Users/akash/KG_Projects/neurosymbolic/backend/.venv/lib/python3.14/site-packages/neo4j/_async/work/session.py", line 566, in _run_transaction
+    await self._open_transaction(
+    ...<6 lines>...
+    )
+  File "/Users/akash/KG_Projects/neurosymbolic/backend/.venv/lib/python3.14/site-packages/neo4j/_async/work/session.py", line 432, in _open_transaction
+    await self._connect(access_mode=access_mode)
+  File "/Users/akash/KG_Projects/neurosymbolic/backend/.venv/lib/python3.14/site-packages/neo4j/_async/work/session.py", line 128, in _connect
+    await super()._connect(
+        access_mode, auth=self._config.auth, **acquire_kwargs
+    )
+  File "/Users/akash/KG_Projects/neurosymbolic/backend/.venv/lib/python3.14/site-packages/neo4j/_async/work/workspace.py", line 184, in _connect
+    self._connection = await self._pool.acquire(**acquire_kwargs_)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/akash/KG_Projects/neurosymbolic/backend/.venv/lib/python3.14/site-packages/neo4j/_async/io/_pool.py", line 681, in acquire
+    return await self._acquire(
+           ^^^^^^^^^^^^^^^^^^^^
+        self.address, auth, deadline, liveness_check_timeout, unprepared
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/akash/KG_Projects/neurosymbolic/backend/.venv/lib/python3.14/site-packages/neo4j/_async/io/_pool.py", line 421, in _acquire
+    return await connection_creator()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/akash/KG_Projects/neurosymbolic/backend/.venv/lib/python3.14/site-packages/neo4j/_async/io/_pool.py", line 234, in connection_creator
+    connection = await self.opener(
+                 ^^^^^^^^^^^^^^^^^^
+        address, auth or self.pool_config.auth, deadline
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/akash/KG_Projects/neurosymbolic/backend/.venv/lib/python3.14/site-packages/neo4j/_async/io/_pool.py", line 641, in opener
+    return await AsyncBolt.open(
+           ^^^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+    )
+    ^
+  File "/Users/akash/KG_Projects/neurosymbolic/backend/.venv/lib/python3.14/site-packages/neo4j/_async/io/_bolt.py", line 426, in open
+    await connection.hello()
+  File "/Users/akash/KG_Projects/neurosymbolic/backend/.venv/lib/python3.14/site-packages/neo4j/_async/io/_bolt6.py", line 185, in hello
+    await self.fetch_all()
+  File "/Users/akash/KG_Projects/neurosymbolic/backend/.venv/lib/python3.14/site-packages/neo4j/_async/io/_bolt.py", line 883, in fetch_all
+    detail_delta, summary_delta = await self.fetch_message()
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/akash/KG_Projects/neurosymbolic/backend/.venv/lib/python3.14/site-packages/neo4j/_async/io/_bolt.py", line 868, in fetch_message
+    res = await self._process_message(tag, fields)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/akash/KG_Projects/neurosymbolic/backend/.venv/lib/python3.14/site-packages/neo4j/_async/io/_bolt6.py", line 548, in _process_message
+    await response.on_failure(summary_metadata or {})
+  File "/Users/akash/KG_Projects/neurosymbolic/backend/.venv/lib/python3.14/site-packages/neo4j/_async/io/_common.py", line 304, in on_failure
+    raise self._hydrate_error(metadata)
+neo4j.exceptions.AuthError: {neo4j_code: Neo.ClientError.Security.Unauthorized} {message: The client is unauthorized due to authentication failure.} {gql_status: 42NFF} {gql_status_description: error: syntax error or access rule violation - permission/access denied. Access denied, see the security logs for details.}
+INFO:     127.0.0.1:53366 - "PUT /settings/memory-backend/embedding HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53375 - "GET /settings/connections HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53379 - "GET /settings/connections HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53376 - "GET /settings/memory-backend HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53382 - "GET /settings/memory-backend HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53559 - "POST /chat/default/stream HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53578 - "PUT /settings/memory-backend HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53583 - "PUT /settings/memory-backend HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54183 - "GET /skills HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54186 - "GET /skills HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54322 - "GET /skills/kg-extraction/content HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55040 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55038 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55039 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55043 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55053 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55049 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55059 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55057 - "GET /reason/default/facts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55065 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55062 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55076 - "GET /reason/default/facts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55077 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55068 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55074 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55044 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55035 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55080 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55084 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55228 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55227 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55225 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55241 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55243 - "GET /reason/default/facts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55231 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55246 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55249 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55258 - "GET /reason/default/facts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55254 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55240 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55256 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55262 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55266 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55232 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55224 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55269 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55272 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55301 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55298 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55297 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55311 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55315 - "GET /reason/default/facts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55319 - "GET /rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55302 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55322 - "GET /history/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55312 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55331 - "GET /reason/default/facts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55328 - "GET /enrich/default/approved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55325 - "GET /graph/default HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55334 - "GET /graphs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55337 - "GET /enrich/default/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55304 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55296 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55341 - "GET /ontology HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55344 - "GET /health HTTP/1.1" 200 OK

@@ -10,6 +10,7 @@ import uuid
 import pytest
 
 from app.config import get_settings
+from app.dependencies import get_embedder
 from db.neo4j_client import Neo4jClient
 from reasoning.engine import DerivedFact, ProofStep
 from services import chat_history_service, chat_service, graph_service
@@ -128,3 +129,25 @@ def test_chat_stream_remembers_prior_turns_in_same_session(neo4j):
     list(chat_service.stream_answer(neo4j=client, llm=llm2, graph_id=graph_id, message="What's my favorite number?", session_id="s1"))
 
     assert "My favorite number is 42." in llm2.last_call["system"]
+
+
+def test_chat_indexes_message_embeddings_when_embedder_given(neo4j):
+    """GRAPHITI_INTEGRATION_PLAN.md §4 Option A: when an embedder is passed,
+    both the user turn and the reply get embedded for native vector search."""
+    client, graph_id = neo4j
+    embedder = get_embedder()
+    try:
+        embedder.verify()
+    except Exception:
+        pytest.skip("Embedding endpoint not reachable")
+    llm = FakeLLM("A grounded reply about the graph.")
+
+    chat_service.answer(neo4j=client, llm=llm, graph_id=graph_id, message="What's in this graph?", session_id="s1", embedder=embedder)
+
+    rows = client.run(
+        "MATCH (s:ChatSession {graphId: $gid, id: $sid})-[:HAS_MESSAGE]->(m:ChatMessage) "
+        "RETURN m.role AS role, m.contentEmbedding AS embedding ORDER BY m.seq",
+        gid=graph_id, sid="s1",
+    )
+    assert len(rows) == 2
+    assert all(r["embedding"] is not None and len(r["embedding"]) == embedder.dimensions for r in rows)

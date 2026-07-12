@@ -8,9 +8,11 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends
 
-from app.dependencies import get_neo4j
+from app.config import Settings, get_settings
+from app.dependencies import get_embedder, get_neo4j
 from app.schemas import ApiModel
 from db.neo4j_client import Neo4jClient
+from llm.embedder import EmbeddingClient
 from services import memory_service, preferences_store
 
 router = APIRouter(tags=["memory"])
@@ -45,8 +47,12 @@ class SavePreferenceRequest(ApiModel):
 
 
 @router.post("/memory/{graph_id}/search", response_model=MemorySearchResponse, response_model_by_alias=True)
-def search_memory(graph_id: str, request: MemorySearchRequest, neo4j: Neo4jClient = Depends(get_neo4j)) -> MemorySearchResponse:
-    hits = memory_service.search_memory(neo4j, graph_id=graph_id, query=request.query)
+def search_memory(
+    graph_id: str, request: MemorySearchRequest,
+    neo4j: Neo4jClient = Depends(get_neo4j), embedder: EmbeddingClient = Depends(get_embedder),
+    settings: Settings = Depends(get_settings),
+) -> MemorySearchResponse:
+    hits = memory_service.search_memory(neo4j, graph_id=graph_id, query=request.query, embedder=embedder, settings=settings)
     return MemorySearchResponse(
         hits=[MemoryHitItem(kind=h.kind, id=h.id, text=h.text, created_at=h.created_at) for h in hits]
     )

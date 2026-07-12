@@ -388,7 +388,18 @@ export function GraphCanvas({ nodes, edges, selectedNodeId, onSelectNode, onMove
                 </text>
 
                 {activation > 0.01 && (
-                  <text y={4} textAnchor="middle" className="fill-badgeink text-[9px] font-bold pointer-events-none select-none">
+                  // Unselected nodes' own fill is near-black in dark theme (typeColorFill,
+                  // 8% lightness) -- fixed-dark badgeink text was invisible against it.
+                  // Selected nodes' fill is mid-lightness (~55%) in both themes, and
+                  // unselected fill is light (92%) in light theme -- badgeink stays
+                  // readable there, so only the unselected+dark case needs white text.
+                  <text
+                    y={4}
+                    textAnchor="middle"
+                    className={`text-[9px] font-bold pointer-events-none select-none ${
+                      !isSelected && !isLight ? 'fill-white' : 'fill-badgeink'
+                    }`}
+                  >
                     {(activation * 100).toFixed(0)}
                   </text>
                 )}

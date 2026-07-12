@@ -63,6 +63,16 @@ class Settings(BaseSettings):
     # key/endpoint. Swap back once glm-5.2 availability is confirmed working.
     nvidia_model: str = Field(default="meta/llama-3.1-8b-instruct")
 
+    # --- Embeddings (GRAPHITI_INTEGRATION_PLAN.md §1.3/§4 Option A+B) ---------
+    # Defaults to the same NVIDIA endpoint/key as the LLM -- confirmed live
+    # (curl) to serve real embedding models, so no separate provider is needed.
+    # Overridable independently (embedding_base_url/api_key) since a user may
+    # point this at a different provider from the Connection Center.
+    embedding_base_url: str = Field(default="")
+    embedding_api_key: str = Field(default="")
+    embedding_model: str = Field(default="nvidia/nv-embedqa-e5-v5")
+    embedding_dimensions: int = Field(default=1024)
+
     # --- Reasoning parameters (all tunable; no magic numbers in the engine) ---
     reason_decay: float = Field(default=0.45)
     reason_epsilon: float = Field(default=1e-3)
@@ -121,6 +131,15 @@ class Settings(BaseSettings):
     @property
     def graphdb_sparql_endpoint(self) -> str:
         return f"{self.graphdb_base_url}/repositories/{self.graphdb_repository}"
+
+    # --- Embedding resolved views ---------------------------------------------
+    @property
+    def resolved_embedding_base_url(self) -> str:
+        return self.embedding_base_url or self.llm_base_url
+
+    @property
+    def resolved_embedding_api_key(self) -> str:
+        return self.embedding_api_key or self.nvidia_api_key
 
 
 @lru_cache

@@ -5,11 +5,11 @@
 // /settings/connections + /health, so every value here is live backend state,
 // not a fabricated settings editor.
 import { useEffect, useState } from 'react';
-import { Database, Cpu, Puzzle, ShieldAlert, X, Plug } from 'lucide-react';
-import type { ConnectionsResponse, HealthResponse } from '../lib/api';
+import { Database, Cpu, Puzzle, ShieldAlert, X, Plug, BrainCircuit, Loader2, CheckCircle2, XCircle } from 'lucide-react';
+import type { ConnectionsResponse, HealthResponse, MemoryBackend, MemoryBackendStatus } from '../lib/api';
 import { api } from '../lib/api';
 
-type TabType = 'database' | 'cognitive' | 'ingestion' | 'system';
+type TabType = 'database' | 'cognitive' | 'memory' | 'ingestion' | 'system';
 
 interface ConnectionCenterProps {
   onClose: () => void;
@@ -19,6 +19,7 @@ interface ConnectionCenterProps {
 const TABS: { id: TabType; label: string; icon: typeof Database; accent: string }[] = [
   { id: 'database', label: 'Database Connectors', icon: Database, accent: 'border-emerald-500 text-emerald-400' },
   { id: 'cognitive', label: 'Cognitive Engine', icon: Cpu, accent: 'border-blue-500 text-blue-400' },
+  { id: 'memory', label: 'Memory Backend', icon: BrainCircuit, accent: 'border-purple-500 text-purple-400' },
   { id: 'ingestion', label: 'Ingestion Path', icon: Puzzle, accent: 'border-sky-500 text-sky-400' },
   { id: 'system', label: 'System Status', icon: ShieldAlert, accent: 'border-amber-500 text-amber-400' },
 ];
@@ -53,17 +54,114 @@ const SERVICE_LABELS: Record<string, string> = {
   huggingface: 'Hugging Face',
 };
 
+function TextField({
+  label, value, onChange, type = 'text', placeholder,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  type?: string;
+  placeholder?: string;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block">{label}</label>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full bg-zinc-950/80 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-200 font-mono placeholder:text-zinc-700 focus:outline-none focus:border-purple-500 transition-colors"
+      />
+    </div>
+  );
+}
+
+function TestResultBanner({ result }: { result: { ok: boolean; error: string | null } | null }) {
+  if (!result) return null;
+  return (
+    <div
+      className={`flex items-start gap-2 p-3 rounded-lg border text-[11px] ${
+        result.ok ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400' : 'bg-rose-500/5 border-rose-500/20 text-rose-400'
+      }`}
+    >
+      {result.ok ? <CheckCircle2 className="w-3.5 h-3.5 shrink-0 mt-0.5" /> : <XCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />}
+      <span className="font-mono break-all">{result.ok ? 'Connected successfully.' : result.error}</span>
+    </div>
+  );
+}
+
 export function ConnectionCenter({ onClose, health }: ConnectionCenterProps) {
   const [activeTab, setActiveTab] = useState<TabType>('database');
   const [connections, setConnections] = useState<ConnectionsResponse | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const [memoryStatus, setMemoryStatus] = useState<MemoryBackendStatus | null>(null);
+  const [switchingBackend, setSwitchingBackend] = useState(false);
+
+  const [graphitiUri, setGraphitiUri] = useState('bolt://localhost:7687');
+  const [graphitiUser, setGraphitiUser] = useState('neo4j');
+  const [graphitiPassword, setGraphitiPassword] = useState('');
+  const [graphitiDatabase, setGraphitiDatabase] = useState('graphiti-memory');
+  const [graphitiTesting, setGraphitiTesting] = useState(false);
+  const [graphitiResult, setGraphitiResult] = useState<{ ok: boolean; error: string | null } | null>(null);
+
+  const [embeddingBaseUrl, setEmbeddingBaseUrl] = useState('');
+  const [embeddingModel, setEmbeddingModel] = useState('nvidia/nv-embedqa-e5-v5');
+  const [embeddingApiKey, setEmbeddingApiKey] = useState('');
+  const [embeddingTesting, setEmbeddingTesting] = useState(false);
+  const [embeddingResult, setEmbeddingResult] = useState<{ ok: boolean; error: string | null } | null>(null);
 
   useEffect(() => {
     api
       .getConnections()
       .then(setConnections)
       .finally(() => setLoading(false));
+    api.getMemoryBackend().then((status) => {
+      setMemoryStatus(status);
+      if (status.embeddingBaseUrl) setEmbeddingBaseUrl(status.embeddingBaseUrl);
+      if (status.embeddingModel) setEmbeddingModel(status.embeddingModel);
+      if (status.graphitiNeo4jUri) setGraphitiUri(status.graphitiNeo4jUri);
+      if (status.graphitiNeo4jDatabase) setGraphitiDatabase(status.graphitiNeo4jDatabase);
+    });
   }, []);
+
+  const handleSwitchBackend = async (backend: MemoryBackend) => {
+    setSwitchingBackend(true);
+    try {
+      setMemoryStatus(await api.setMemoryBackend(backend));
+    } finally {
+      setSwitchingBackend(false);
+    }
+  };
+
+  const handleTestGraphiti = async () => {
+    setGraphitiTesting(true);
+    setGraphitiResult(null);
+    try {
+      const result = await api.setGraphitiConnection(graphitiUri, graphitiUser, graphitiPassword, graphitiDatabase);
+      setGraphitiResult({ ok: result.ok, error: result.error });
+      setMemoryStatus(result.status);
+    } catch (e) {
+      setGraphitiResult({ ok: false, error: String(e) });
+    } finally {
+      setGraphitiTesting(false);
+    }
+  };
+
+  const handleTestEmbedding = async () => {
+    setEmbeddingTesting(true);
+    setEmbeddingResult(null);
+    try {
+      const result = await api.setEmbeddingOverride(embeddingBaseUrl, embeddingModel, embeddingApiKey);
+      setEmbeddingResult({ ok: result.ok, error: result.error });
+      setMemoryStatus(result.status);
+    } catch (e) {
+      setEmbeddingResult({ ok: false, error: String(e) });
+    } finally {
+      setEmbeddingTesting(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
@@ -195,7 +293,101 @@ export function ConnectionCenter({ onClose, health }: ConnectionCenterProps) {
                   </div>
 
                   <div className="bg-zinc-950/30 border border-zinc-900 rounded-lg p-4 text-[11px] text-zinc-400">
-                    No embedding model is configured. Search (memory, entity lookup) uses Neo4j text-substring matching, not vector similarity.
+                    Embedding model: <span className="text-zinc-200 font-mono">nvidia/nv-embedqa-e5-v5</span> on this same NVIDIA endpoint. Used for
+                    memory search and Graphiti (see Memory Backend tab) -- configurable there.
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'memory' && (
+                <div className="space-y-5">
+                  <div className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-5 space-y-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center border border-purple-500/20">
+                        <BrainCircuit className="w-5 h-5 text-purple-400" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-bold text-white uppercase tracking-wider">Active Memory Backend</h3>
+                        <p className="text-[11px] text-zinc-500 mt-0.5">
+                          Native: Neo4j vector search, no new dependency. Graphiti: real graphiti-core, isolated database.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      {(['native', 'graphiti'] as const).map((backend) => {
+                        const isActive = memoryStatus?.backend === backend;
+                        return (
+                          <button
+                            key={backend}
+                            onClick={() => void handleSwitchBackend(backend)}
+                            disabled={switchingBackend}
+                            className={`p-3 rounded-lg border text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50 ${
+                              isActive
+                                ? 'bg-purple-500/10 border-purple-500/40 text-purple-400'
+                                : 'bg-zinc-950/40 border-zinc-800 text-zinc-500 hover:border-zinc-700 hover:text-zinc-300'
+                            }`}
+                          >
+                            {switchingBackend && isActive ? <Loader2 className="w-3.5 h-3.5 animate-spin mx-auto" /> : backend}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {memoryStatus?.backend === 'graphiti' && !memoryStatus.graphitiConfigured && (
+                      <p className="text-[10px] text-amber-400">
+                        Graphiti selected but no connection saved yet -- search falls back to the native path until you connect below.
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-5 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-bold text-white uppercase tracking-wider">Graphiti Neo4j Database</h3>
+                      {memoryStatus?.graphitiConfigured && <StatusBadge ok={true} />}
+                    </div>
+                    <p className="text-[11px] text-zinc-500">
+                      A separate, isolated Neo4j database (never the graphos database's :Entity/:RELATES schema). Created automatically if it
+                      doesn't exist yet.
+                    </p>
+                    <div className="grid grid-cols-2 gap-4">
+                      <TextField label="Bolt URI" value={graphitiUri} onChange={setGraphitiUri} placeholder="bolt://localhost:7687" />
+                      <TextField label="Database name" value={graphitiDatabase} onChange={setGraphitiDatabase} placeholder="graphiti-memory" />
+                      <TextField label="Username" value={graphitiUser} onChange={setGraphitiUser} placeholder="neo4j" />
+                      <TextField label="Password" type="password" value={graphitiPassword} onChange={setGraphitiPassword} placeholder="••••••••" />
+                    </div>
+                    <button
+                      onClick={() => void handleTestGraphiti()}
+                      disabled={graphitiTesting || !graphitiUri || !graphitiDatabase}
+                      className="w-full h-9 bg-purple-600 hover:bg-purple-500 text-onaccent text-xs font-bold rounded-lg flex items-center justify-center gap-2 disabled:opacity-40 transition-colors"
+                    >
+                      {graphitiTesting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plug className="w-3.5 h-3.5" />}
+                      Test &amp; Save Connection
+                    </button>
+                    <TestResultBanner result={graphitiResult} />
+                  </div>
+
+                  <div className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-5 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-bold text-white uppercase tracking-wider">Embedding Model</h3>
+                      {memoryStatus?.embeddingConfigured && <StatusBadge ok={true} />}
+                    </div>
+                    <p className="text-[11px] text-zinc-500">
+                      Used by native vector search and by Graphiti's entity/fact dedup. Defaults to the same NVIDIA endpoint as the LLM if left
+                      blank.
+                    </p>
+                    <div className="grid grid-cols-2 gap-4">
+                      <TextField label="Base URL" value={embeddingBaseUrl} onChange={setEmbeddingBaseUrl} placeholder={connections.llm.baseUrl} />
+                      <TextField label="Model" value={embeddingModel} onChange={setEmbeddingModel} placeholder="nvidia/nv-embedqa-e5-v5" />
+                    </div>
+                    <TextField label="API Key (optional override)" type="password" value={embeddingApiKey} onChange={setEmbeddingApiKey} placeholder="Leave blank to reuse the LLM key" />
+                    <button
+                      onClick={() => void handleTestEmbedding()}
+                      disabled={embeddingTesting || !embeddingModel}
+                      className="w-full h-9 bg-purple-600 hover:bg-purple-500 text-onaccent text-xs font-bold rounded-lg flex items-center justify-center gap-2 disabled:opacity-40 transition-colors"
+                    >
+                      {embeddingTesting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plug className="w-3.5 h-3.5" />}
+                      Test &amp; Save Embedding Model
+                    </button>
+                    <TestResultBanner result={embeddingResult} />
                   </div>
                 </div>
               )}

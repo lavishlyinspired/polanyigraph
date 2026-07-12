@@ -10,12 +10,13 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.config import Settings, get_settings
-from app.dependencies import get_graphdb, get_llm, get_neo4j
+from app.dependencies import get_embedder, get_graphdb, get_llm, get_neo4j
 from app.schemas import ApiModel
 from db.graphdb_client import GraphDBClient
 from db.neo4j_client import Neo4jClient
 from llm.client import LLMClient
-from services import edgar_service
+from llm.embedder import EmbeddingClient
+from services import edgar_service, memory_config_service
 from services.ingest_service import ingest_text
 
 router = APIRouter(tags=["ingest"])
@@ -68,6 +69,7 @@ def ingest(
     graphdb: GraphDBClient = Depends(get_graphdb),
     llm: LLMClient = Depends(get_llm),
     settings: Settings = Depends(get_settings),
+    embedder: EmbeddingClient = Depends(get_embedder),
 ) -> IngestResponse:
     if request.source.type == "text":
         if not request.source.text or not request.source.text.strip():
@@ -88,6 +90,10 @@ def ingest(
     else:
         raise HTTPException(status_code=400, detail=f"Unsupported source type '{request.source.type}'. Use 'text' or 'edgar'.")
 
+    # Only index embeddings when the native memory backend is active
+    # (GRAPHITI_INTEGRATION_PLAN.md §4 Option A) -- when "graphiti" is
+    # selected instead, Graphiti owns its own embedding pipeline.
+    active_embedder = embedder if memory_config_service.get_backend(neo4j) == "native" else None
     record, result = ingest_text(
         neo4j=neo4j,
         graphdb=graphdb,
@@ -96,6 +102,7 @@ def ingest(
         text=text,
         source_doc=source_doc,
         repository=settings.graphdb_repository,
+        embedder=active_embedder,
     )
 
     return IngestResponse(

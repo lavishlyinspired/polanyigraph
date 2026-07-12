@@ -13,6 +13,7 @@ import uuid
 import pytest
 
 from app.config import get_settings
+from app.dependencies import get_embedder
 from db.graphdb_client import GraphDBClient
 from db.neo4j_client import Neo4jClient
 from services import graph_service, history_service
@@ -178,3 +179,29 @@ def test_ingest_generates_and_accumulates_entity_summaries(services):
     acme = next(n for n in record.nodes if n.label == "Acme Corp")
     assert acme.summary != ""
     assert "Acme Corp issued preferred stock." in acme.summary
+
+
+def test_ingest_indexes_entity_summary_embedding_when_embedder_given(services):
+    """GRAPHITI_INTEGRATION_PLAN.md §4 Option A: when an embedder is passed,
+    each entity's summary gets embedded for native vector search -- optional,
+    off by default (existing callers pass no embedder and are unaffected)."""
+    neo4j, graphdb, settings, graph_id = services
+    embedder = get_embedder()
+    try:
+        embedder.verify()
+    except Exception:
+        pytest.skip("Embedding endpoint not reachable")
+    llm = FakeLLM(_PAYLOAD)
+
+    ingest_text(
+        neo4j=neo4j, graphdb=graphdb, llm=llm, graph_id=graph_id,
+        text="Acme Corp issued preferred stock.", source_doc="d1",
+        repository=settings.graphdb_repository, embedder=embedder,
+    )
+
+    rows = neo4j.run(
+        "MATCH (e:Entity {graphId: $gid, label: 'Acme Corp'}) RETURN e.summaryEmbedding AS embedding",
+        gid=graph_id,
+    )
+    assert rows[0]["embedding"] is not None
+    assert len(rows[0]["embedding"]) == embedder.dimensions

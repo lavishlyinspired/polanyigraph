@@ -39,7 +39,8 @@ from app.config import Settings
 from db.graphdb_client import GraphDBClient
 from db.neo4j_client import Neo4jClient
 from llm.client import LLMClient
-from services import enrichment_service, graph_service, ingest_service, memory_service, reasoning_service
+from llm.embedder import EmbeddingClient
+from services import enrichment_service, graph_service, ingest_service, memory_config_service, memory_service, reasoning_service
 from services.query_engine import execute_query
 
 _ROUTER_SYSTEM = """You are a routing classifier for a knowledge graph agent. Classify the \
@@ -100,7 +101,7 @@ _RECALL_STOPWORDS = {
 }
 
 
-def build_graph(neo4j: Neo4jClient, graphdb: GraphDBClient, llm: LLMClient, settings: Settings):
+def build_graph(neo4j: Neo4jClient, graphdb: GraphDBClient, llm: LLMClient, settings: Settings, embedder: EmbeddingClient | None = None):
     def router_node(state: AgentState) -> dict:
         raw = llm.complete_json(system=_ROUTER_SYSTEM, user=state["text"])
         intent = raw.strip().lower()
@@ -115,10 +116,12 @@ def build_graph(neo4j: Neo4jClient, graphdb: GraphDBClient, llm: LLMClient, sett
         # PLAN.md §13.2: Discovery -> Activation -> Execution, for real --
         # the runtime skill's content becomes part of the actual LLM prompt.
         guidance = skill_store.load("kg-extraction")
+        active_embedder = embedder if embedder is not None and memory_config_service.get_backend(neo4j) == "native" else None
         _record, result = ingest_service.ingest_text(
             neo4j=neo4j, graphdb=graphdb, llm=llm, graph_id=state["graph_id"],
             text=state["text"], source_doc=f"agent:{state['graph_id']}",
             repository=settings.graphdb_repository, extra_guidance=guidance,
+            embedder=active_embedder,
         )
         return {
             "entities_extracted": len(result.entities),
@@ -162,7 +165,7 @@ def build_graph(neo4j: Neo4jClient, graphdb: GraphDBClient, llm: LLMClient, sett
         seen_ids: set[str] = set()
         hits = []
         for term in terms:
-            for hit in memory_service.search_memory(neo4j, graph_id=state["graph_id"], query=term):
+            for hit in memory_service.search_memory(neo4j, graph_id=state["graph_id"], query=term, embedder=embedder, settings=settings):
                 if hit.id not in seen_ids:
                     seen_ids.add(hit.id)
                     hits.append(hit)

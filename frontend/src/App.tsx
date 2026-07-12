@@ -154,22 +154,6 @@ export function App() {
             </button>
             {showHistory && <HistoryPopover onClose={() => setShowHistory(false)} />}
           </div>
-
-          <button
-            onClick={() => setShowConnections(true)}
-            className="p-1 rounded border border-zinc-800 bg-zinc-900/40 text-zinc-400 hover:text-white hover:bg-zinc-800/80 transition-all"
-            title="Connection Center"
-          >
-            <Plug className="w-3.5 h-3.5" />
-          </button>
-
-          <button
-            onClick={toggleTheme}
-            className="p-1 rounded border border-zinc-800 bg-zinc-900/40 text-zinc-400 hover:text-white hover:bg-zinc-800/80 transition-all"
-            title={theme === 'dark' ? 'Switch to day theme' : 'Switch to night theme'}
-          >
-            {theme === 'dark' ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
-          </button>
         </div>
 
         <div className="flex items-center gap-3">
@@ -198,6 +182,24 @@ export function App() {
           >
             <Play className="w-3 h-3 fill-onaccent" />
             <span>Run Neurosymbolic Loop</span>
+          </button>
+
+          <div className="h-4 w-[1px] bg-zinc-800" />
+
+          <button
+            onClick={() => setShowConnections(true)}
+            className="p-1 rounded border border-zinc-800 bg-zinc-900/40 text-zinc-400 hover:text-white hover:bg-zinc-800/80 transition-all"
+            title="Connection Center"
+          >
+            <Plug className="w-3.5 h-3.5" />
+          </button>
+
+          <button
+            onClick={toggleTheme}
+            className="p-1 rounded border border-zinc-800 bg-zinc-900/40 text-zinc-400 hover:text-white hover:bg-zinc-800/80 transition-all"
+            title={theme === 'dark' ? 'Switch to day theme' : 'Switch to night theme'}
+          >
+            {theme === 'dark' ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
           </button>
         </div>
       </header>

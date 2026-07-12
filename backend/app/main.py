@@ -20,13 +20,21 @@ from app.schemas import ApiModel
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    from app.dependencies import get_neo4j
+    from app.dependencies import get_embedder, get_neo4j
     from ontology.sync import ensure_constraints
+    from services import vector_search_service
 
     try:
         ensure_constraints(get_neo4j())
     except Exception:
         # Neo4j may be down at boot; /health surfaces this. Don't crash startup.
+        pass
+    try:
+        vector_search_service.ensure_indexes(get_neo4j(), dimensions=get_embedder().dimensions)
+    except Exception:
+        # Same as above -- Neo4j may be down, or the vector index feature may
+        # be unavailable on an older Neo4j; /settings/connections surfaces
+        # embedding status separately. Don't crash startup either way.
         pass
     yield
 

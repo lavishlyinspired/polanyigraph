@@ -332,6 +332,26 @@ export interface ConnectionsResponse {
   provisionedNotWired: string[];
 }
 
+// GET/PUT /settings/memory-backend -- runtime memory-backend selection
+// (GRAPHITI_INTEGRATION_PLAN.md §4). Never includes passwords/API keys.
+export type MemoryBackend = 'native' | 'graphiti';
+
+export interface MemoryBackendStatus {
+  backend: MemoryBackend;
+  graphitiConfigured: boolean;
+  graphitiNeo4jUri: string;
+  graphitiNeo4jDatabase: string;
+  embeddingConfigured: boolean;
+  embeddingBaseUrl: string;
+  embeddingModel: string;
+}
+
+export interface ConnectionTestResult {
+  ok: boolean;
+  error: string | null;
+  status: MemoryBackendStatus;
+}
+
 const BASE = '/api';
 
 async function json<T>(res: Response): Promise<T> {
@@ -346,6 +366,29 @@ export const api = {
   health: () => fetch(`${BASE}/health`).then(json<HealthResponse>),
 
   getConnections: () => fetch(`${BASE}/settings/connections`).then(json<ConnectionsResponse>),
+
+  getMemoryBackend: () => fetch(`${BASE}/settings/memory-backend`).then(json<MemoryBackendStatus>),
+
+  setMemoryBackend: (backend: MemoryBackend) =>
+    fetch(`${BASE}/settings/memory-backend`, {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ backend }),
+    }).then(json<MemoryBackendStatus>),
+
+  setGraphitiConnection: (uri: string, user: string, password: string, database: string) =>
+    fetch(`${BASE}/settings/memory-backend/graphiti-connection`, {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ uri, user, password, database }),
+    }).then(json<ConnectionTestResult>),
+
+  setEmbeddingOverride: (baseUrl: string, model: string, apiKey: string) =>
+    fetch(`${BASE}/settings/memory-backend/embedding`, {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ baseUrl, model, apiKey }),
+    }).then(json<ConnectionTestResult>),
 
   ingestText: (graphId: string, text: string) =>
     fetch(`${BASE}/ingest`, {

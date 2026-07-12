@@ -14,8 +14,9 @@ from db.graphdb_client import GraphDBClient
 from db.neo4j_client import Neo4jClient
 from extraction.pipeline import ExtractionResult, extract
 from llm.client import LLMClient
+from llm.embedder import EmbeddingClient
 from ontology.loader import load_schema
-from services import graph_service, history_service, summary_service
+from services import graph_service, history_service, summary_service, vector_search_service
 from services.graph_service import GraphRecord
 from services.ids import edge_id, entity_id
 
@@ -30,6 +31,7 @@ def ingest_text(
     source_doc: str,
     repository: str,
     extra_guidance: str = "",
+    embedder: EmbeddingClient | None = None,
 ) -> tuple[GraphRecord, ExtractionResult]:
     schema = load_schema(graphdb, repository)
     result = extract(text, schema=schema, llm=llm, extra_guidance=extra_guidance)
@@ -56,6 +58,10 @@ def ingest_text(
             llm, label=entity.name, type_=entity.type, existing_summary=existing_summary, new_context=text,
         )
         graph_service.update_entity_summary(neo4j, graph_id=graph_id, entity_id=eid, summary=new_summary)
+        if embedder is not None:
+            vector_search_service.index_entity_summary(
+                neo4j, embedder, graph_id=graph_id, entity_id=eid, summary=new_summary,
+            )
 
     for rel in result.relationships:
         graph_service.upsert_relationship(

@@ -14,8 +14,9 @@ import uuid
 import pytest
 
 from app.config import get_settings
+from app.dependencies import get_embedder
 from db.neo4j_client import Neo4jClient
-from services import chat_history_service, graph_service, memory_service
+from services import chat_history_service, graph_service, memory_config_service, memory_service, vector_search_service
 
 
 @pytest.fixture
@@ -99,3 +100,54 @@ def test_search_memory_respects_limit_across_combined_sources(neo4j):
 def test_search_memory_returns_empty_for_no_matches(neo4j):
     client, graph_id = neo4j
     assert memory_service.search_memory(client, graph_id=graph_id, query="nonexistent") == []
+
+
+def test_search_memory_with_embedder_finds_semantic_match_with_no_literal_overlap(neo4j):
+    """GRAPHITI_INTEGRATION_PLAN.md §4 Option A: passing an embedder upgrades
+    search from plain CONTAINS to hybrid vector+text -- a query with zero
+    literal word overlap should still surface a semantically related summary."""
+    client, graph_id = neo4j
+    embedder = get_embedder()
+    try:
+        embedder.verify()
+    except Exception:
+        pytest.skip("Embedding endpoint not reachable")
+    vector_search_service.ensure_indexes(client, dimensions=embedder.dimensions)
+
+    graph_service.upsert_entity(
+        client, graph_id=graph_id, entity_id="e1", label="Deutsche Bank AG",
+        type_="organization", source_doc="d", extraction_confidence=1.0,
+    )
+    graph_service.update_entity_summary(
+        client, graph_id=graph_id, entity_id="e1",
+        summary="A large German commercial bank headquartered in Frankfurt, regulated by BaFin.",
+    )
+    vector_search_service.index_entity_summary(
+        client, embedder, graph_id=graph_id, entity_id="e1",
+        summary="A large German commercial bank headquartered in Frankfurt, regulated by BaFin.",
+    )
+
+    hits_without_embedder = memory_service.search_memory(client, graph_id=graph_id, query="German banking oversight")
+    hits_with_embedder = memory_service.search_memory(client, graph_id=graph_id, query="German banking oversight", embedder=embedder)
+
+    assert hits_without_embedder == []  # no literal substring overlap -- CONTAINS-only finds nothing
+    assert any(h.id == "e1" for h in hits_with_embedder)
+
+
+def test_search_memory_falls_back_to_native_when_graphiti_backend_selected_but_unconfigured(neo4j):
+    """GRAPHITI_INTEGRATION_PLAN.md §4: flipping the backend toggle to
+    'graphiti' before saving a connection shouldn't silently return nothing
+    -- it should fall through to the native path so search keeps working."""
+    client, graph_id = neo4j
+    try:
+        memory_config_service.set_backend(client, "graphiti")
+        chat_history_service.append_message(
+            client, graph_id=graph_id, session_id="s1", message_id="m1", role="user", content="Who regulates FINMA?",
+        )
+
+        hits = memory_service.search_memory(client, graph_id=graph_id, query="regulates", embedder=get_embedder(), settings=get_settings())
+
+        assert len(hits) == 1
+        assert hits[0].kind == "chat_message"
+    finally:
+        memory_config_service.set_backend(client, "native")
