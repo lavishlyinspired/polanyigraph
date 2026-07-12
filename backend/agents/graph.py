@@ -35,7 +35,13 @@ skill calls record_usage() after acting on it, so the graph's Skill.confidence
 is a real rolling average of outcomes, not a static number. _SKILL_BY_INTENT
 stays the actual (deterministic, tested) selector -- discovery augments it,
 doesn't replace it, per the "quick match first, deep search as a fallback"
-design in §2.9.14's own system-prompt sketch.
+design in §2.9.14's own system-prompt sketch. The discovery query itself is
+built by _discovery_query(intent, text), not raw state["text"] alone: routed
+text is often bare document content ("Acme Corp issued preferred stock.")
+sharing no vocabulary with skill descriptions ("Use when extracting
+entities..."), which would make the Lucene full-text match return nothing --
+folding in an intent-derived phrase guarantees a match while the real text
+still contributes to ranking among matches.
 """
 
 from __future__ import annotations
@@ -96,6 +102,29 @@ _SKILL_BY_INTENT = {
     "recall": "memory-recall",
 }
 
+# find_relevant_skills is a Lucene full-text match against skill
+# *descriptions* (e.g. kg-extraction's: "Use when extracting entities and
+# relationships from real-world source text..."). Routed text is often the
+# raw document being ingested ("Acme Corp issued preferred stock."), which
+# shares no vocabulary with any skill description and would return zero
+# matches. Once intent is classified, prefix the discovery query with a
+# phrase lifted from the matching skill's own description -- guarantees
+# vocabulary overlap -- while still folding in the real text so genuine
+# content can still influence ranking among the skills that do match.
+_DISCOVERY_PHRASE_BY_INTENT = {
+    "extract": "extracting entities and relationships from real-world source text into the knowledge graph, extraction ingest",
+    "enrich": "inferring implicit unstated knowledge from a knowledge graph's existing content and its source text, enrichment",
+    "query": "answering a structured query or formatting query results from the knowledge graph",
+    "reason": "explaining neurosymbolic reasoning results, spread activation, derived facts, proof paths",
+    "visualize": "visualize, export, or get a visual overview of the knowledge graph",
+    "recall": "a question that references prior conversation, a point in time, or how a fact has changed, temporal historical recall",
+}
+
+
+def _discovery_query(intent: str, text: str) -> str:
+    phrase = _DISCOVERY_PHRASE_BY_INTENT.get(intent, "")
+    return f"{phrase} {text}".strip()
+
 # Lightweight heuristic, not an LLM call -- matches PLAN.md §20's memory-recall
 # skill's own trigger condition: "activates on temporal/historical requests."
 _TEMPORAL_KEYWORDS = ("historical", "as of", "previously", "used to", "before", "changed", "supersede")
@@ -123,7 +152,7 @@ def build_graph(neo4j: Neo4jClient, graphdb: GraphDBClient, llm: LLMClient, sett
         # independent of (and never gating) the deterministic intent->skill
         # lookup below -- degrades to filesystem keyword matching if Neo4j
         # is down (ResilientSkillDiscovery), never blocks routing.
-        discovered = discovery.find_skills(state["text"], limit=3)
+        discovered = discovery.find_skills(_discovery_query(intent, state["text"]), limit=3)
         return {"intent": intent, "discovered_skills": [d.name for d in discovered]}
 
     def route_by_intent(state: AgentState) -> str:

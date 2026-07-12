@@ -139,14 +139,14 @@ def test_router_calls_find_relevant_skills_before_any_node_loads_a_skill(service
     extractor/responder, the only nodes that call load_skill), and populates
     discovered_skills from the real Neo4j skill graph -- not a placeholder.
 
-    Uses task-phrased text ("extract entities...") rather than bare document
-    content deliberately: find_relevant_skills is a Lucene full-text match
-    against skill *descriptions* ("Use when extracting entities..."), which
-    only hits when the routed text shares vocabulary with that description.
-    Raw document text being ingested (e.g. "Acme Corp issued preferred
-    stock.") shares no such vocabulary and legitimately returns zero matches
-    -- a real, separate discovery-quality limitation, not something this test
-    should paper over."""
+    Deliberately uses bare document content with NO extraction-task
+    vocabulary ("Acme Corp issued preferred stock." -- what a real ingested
+    document looks like, not a task description). find_relevant_skills is a
+    Lucene full-text match against skill *descriptions* ("Use when
+    extracting entities..."), so a raw document alone would share no
+    vocabulary and return nothing -- the router now folds in an
+    intent-derived phrase (_discovery_query) precisely so this realistic
+    case still resolves correctly."""
     neo4j, graphdb, settings, graph_id = services
     skill_graph_service.ensure_schema(neo4j)
     skill_graph_service.seed_skills(neo4j)
@@ -154,12 +154,28 @@ def test_router_calls_find_relevant_skills_before_any_node_loads_a_skill(service
     agent = build_graph(neo4j, graphdb, llm, settings)
 
     result = agent.invoke(
-        _initial_state(graph_id, "Extract entities and relationships from this text: Acme Corp issued preferred stock."),
+        _initial_state(graph_id, "Acme Corp issued preferred stock."),
         config={"configurable": {"thread_id": f"{graph_id}:default"}},
     )
 
     assert result["discovered_skills"]
     assert "kg-extraction" in result["discovered_skills"]
+
+
+def test_discovery_query_folds_in_intent_vocabulary_so_bare_documents_still_match():
+    """Unit-level proof of the fix, independent of Neo4j: for every intent,
+    the synthesized discovery query must contain words a human would
+    recognize from that skill's own SKILL.md description, plus the original
+    text (so real content can still contribute to ranking)."""
+    from agents.graph import _discovery_query
+
+    assert "extract" in _discovery_query("extract", "Acme Corp issued preferred stock.").lower()
+    assert "Acme Corp issued preferred stock." in _discovery_query("extract", "Acme Corp issued preferred stock.")
+    assert "implicit" in _discovery_query("enrich", "some text").lower()
+    assert "quer" in _discovery_query("query", "regulates(X, Y)").lower()
+    assert "reason" in _discovery_query("reason", "some text").lower()
+    assert "visual" in _discovery_query("visualize", "some text").lower()
+    assert "prior conversation" in _discovery_query("recall", "some text").lower()
 
 
 def test_graph_handles_extraction_that_yields_no_reasonable_facts(services):
