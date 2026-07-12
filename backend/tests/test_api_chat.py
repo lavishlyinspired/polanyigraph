@@ -20,6 +20,12 @@ class FakeLLM:
         self.last_call = {"system": system, "user": user}
         return self._response
 
+    def stream_complete(self, *, system: str, user: str, temperature: float = 0.0):
+        self.last_call = {"system": system, "user": user}
+        words = self._response.split(" ")
+        for i, word in enumerate(words):
+            yield word + (" " if i < len(words) - 1 else "")
+
 
 @pytest.fixture
 def client_and_graph():
@@ -50,6 +56,32 @@ def test_chat_returns_reply(client_and_graph):
     resp = client.post(f"/chat/{graph_id}", json={"message": "What's in this graph?"})
     assert resp.status_code == 200
     assert resp.json()["reply"] == "Grounded real answer."
+
+
+def test_chat_stream_returns_sse_chunks_ending_in_done(client_and_graph):
+    client, graph_id = client_and_graph
+    with client.stream("POST", f"/chat/{graph_id}/stream", json={"message": "What's in this graph?"}) as resp:
+        assert resp.status_code == 200
+        assert resp.headers["content-type"].startswith("text/event-stream")
+        body = "".join(resp.iter_text())
+
+    assert "data: Grounded" in body
+    assert body.strip().endswith("data: [DONE]")
+
+
+def test_chat_stream_persists_message_history_visible_to_later_non_streaming_call(client_and_graph):
+    client, graph_id = client_and_graph
+    from app.dependencies import get_llm
+    from app.main import app
+
+    with client.stream("POST", f"/chat/{graph_id}/stream", json={"message": "My favorite number is 42."}) as resp:
+        list(resp.iter_text())
+
+    llm2 = FakeLLM("second reply")
+    app.dependency_overrides[get_llm] = lambda: llm2
+    client.post(f"/chat/{graph_id}", json={"message": "What's my favorite number?"})
+
+    assert "My favorite number is 42." in llm2.last_call["system"]
 
 
 def test_chat_remembers_prior_turns_without_explicit_session_id(client_and_graph):

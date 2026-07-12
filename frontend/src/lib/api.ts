@@ -321,6 +321,17 @@ export interface HealthResponse {
   llm: { ok: boolean; model: string; error?: string };
 }
 
+// GET /settings/connections -- real, non-secret connection info for the
+// Connection Center. Never includes passwords/API keys.
+export interface ConnectionsResponse {
+  profile: string;
+  neo4j: { uri: string; database: string };
+  graphdb: { baseUrl: string; repository: string };
+  llm: { baseUrl: string; model: string };
+  reasoning: { decay: number; epsilon: number; maxIterations: number; activationFloor: number; feedbackGain: number };
+  provisionedNotWired: string[];
+}
+
 const BASE = '/api';
 
 async function json<T>(res: Response): Promise<T> {
@@ -333,6 +344,8 @@ async function json<T>(res: Response): Promise<T> {
 
 export const api = {
   health: () => fetch(`${BASE}/health`).then(json<HealthResponse>),
+
+  getConnections: () => fetch(`${BASE}/settings/connections`).then(json<ConnectionsResponse>),
 
   ingestText: (graphId: string, text: string) =>
     fetch(`${BASE}/ingest`, {
@@ -379,6 +392,40 @@ export const api = {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ message }),
     }).then(json<ChatResponse>),
+
+  // SSE stream: invokes onChunk as each token arrives, resolves once the
+  // server sends its terminal [DONE] event.
+  chatStream: async (graphId: string, message: string, onChunk: (chunk: string) => void): Promise<void> => {
+    const res = await fetch(`${BASE}/chat/${graphId}/stream`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ message }),
+    });
+    if (!res.ok || !res.body) {
+      throw new Error(`chat stream failed: ${res.status}`);
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+
+      const events = buffer.split('\n\n');
+      buffer = events.pop() ?? '';
+      for (const event of events) {
+        const text = event
+          .split('\n')
+          .map((line) => line.replace(/^data: ?/, ''))
+          .join('\n');
+        if (text === '[DONE]') return;
+        onChunk(text);
+      }
+    }
+  },
 
   getOntology: () => fetch(`${BASE}/ontology`).then(json<OntologySchemaResponse>),
 

@@ -130,3 +130,255 @@
 3:23:12 am [vite] hmr update /src/App.tsx, /src/index.css
 3:23:15 am [vite] hmr update /src/App.tsx, /src/index.css
 3:23:24 am [vite] hmr update /src/App.tsx, /src/index.css
+2:26:12 pm [vite] hmr update /src/App.tsx, /src/index.css
+2:26:12 pm [vite] Internal server error: Failed to resolve import "./components/pages/DocumentsPage" from "src/App.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/akash/KG_Projects/neurosymbolic/frontend/src/App.tsx:21:30
+  26 |  import { NodeInspectorCard } from "./components/NodeInspectorCard";
+  27 |  import { LeftNavigation } from "./components/LeftNavigation";
+  28 |  import { DocumentsPage } from "./components/pages/DocumentsPage";
+     |                                 ^
+  29 |  import { LogicPage } from "./components/pages/LogicPage";
+  30 |  import { InferencePage } from "./components/pages/InferencePage";
+      at TransformPluginContext._formatError (file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49258:41)
+      at TransformPluginContext.error (file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49253:16)
+      at normalizeUrl (file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64307:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64439:39
+      at async Promise.all (index 13)
+      at async TransformPluginContext.transform (file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64366:7)
+      at async PluginContainer.transform (file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49099:18)
+      at async loadAndTransform (file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51978:27)
+      at async viteTransformMiddleware (file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:62106:24)
+2:27:28 pm [vite] page reload src/components/pages/DocumentsPage.tsx
+2:27:28 pm [vite] Pre-transform error: Failed to resolve import "./components/pages/LogicPage" from "src/App.tsx". Does the file exist?
+2:27:28 pm [vite] Internal server error: Failed to resolve import "./components/pages/LogicPage" from "src/App.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/akash/KG_Projects/neurosymbolic/frontend/src/App.tsx:22:26
+  27 |  import { LeftNavigation } from "./components/LeftNavigation";
+  28 |  import { DocumentsPage } from "./components/pages/DocumentsPage";
+  29 |  import { LogicPage } from "./components/pages/LogicPage";
+     |                             ^
+  30 |  import { InferencePage } from "./components/pages/InferencePage";
+  31 |  import { QueryPage } from "./components/pages/QueryPage";
+      at TransformPluginContext._formatError (file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49258:41)
+      at TransformPluginContext.error (file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49253:16)
+      at normalizeUrl (file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64307:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64439:39
+      at async Promise.all (index 14)
+      at async TransformPluginContext.transform (file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64366:7)
+      at async PluginContainer.transform (file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49099:18)
+      at async loadAndTransform (file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51978:27)
+      at async viteTransformMiddleware (file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:62106:24)
+2:28:51 pm [vite] page reload src/components/pages/LogicPage.tsx
+2:28:52 pm [vite] Pre-transform error: Failed to resolve import "./components/pages/InferencePage" from "src/App.tsx". Does the file exist?
+2:28:52 pm [vite] Internal server error: Failed to resolve import "./components/pages/InferencePage" from "src/App.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/akash/KG_Projects/neurosymbolic/frontend/src/App.tsx:23:30
+  28 |  import { DocumentsPage } from "./components/pages/DocumentsPage";
+  29 |  import { LogicPage } from "./components/pages/LogicPage";
+  30 |  import { InferencePage } from "./components/pages/InferencePage";
+     |                                 ^
+  31 |  import { QueryPage } from "./components/pages/QueryPage";
+  32 |  import { api } from "./lib/api";
+      at TransformPluginContext._formatError (file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49258:41)
+      at TransformPluginContext.error (file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49253:16)
+      at normalizeUrl (file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64307:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64439:39
+      at async Promise.all (index 15)
+      at async TransformPluginContext.transform (file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64366:7)
+      at async PluginContainer.transform (file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49099:18)
+      at async loadAndTransform (file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51978:27)
+      at async viteTransformMiddleware (file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:62106:24)
+2:30:17 pm [vite] page reload src/components/pages/InferencePage.tsx
+2:30:17 pm [vite] Pre-transform error: Failed to resolve import "./components/pages/QueryPage" from "src/App.tsx". Does the file exist?
+2:30:17 pm [vite] Internal server error: Failed to resolve import "./components/pages/QueryPage" from "src/App.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/akash/KG_Projects/neurosymbolic/frontend/src/App.tsx:24:26
+  29 |  import { LogicPage } from "./components/pages/LogicPage";
+  30 |  import { InferencePage } from "./components/pages/InferencePage";
+  31 |  import { QueryPage } from "./components/pages/QueryPage";
+     |                             ^
+  32 |  import { api } from "./lib/api";
+  33 |  import { useGraphStore } from "./stores/graphStore";
+      at TransformPluginContext._formatError (file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49258:41)
+      at TransformPluginContext.error (file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49253:16)
+      at normalizeUrl (file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64307:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64439:39
+      at async Promise.all (index 16)
+      at async TransformPluginContext.transform (file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64366:7)
+      at async PluginContainer.transform (file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49099:18)
+      at async loadAndTransform (file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51978:27)
+      at async viteTransformMiddleware (file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:62106:24)
+2:30:34 pm [vite] hmr update /src/components/pages/InferencePage.tsx, /src/index.css
+2:30:34 pm [vite] Pre-transform error: Failed to resolve import "./components/pages/QueryPage" from "src/App.tsx". Does the file exist?
+2:30:34 pm [vite] Internal server error: Failed to resolve import "./components/pages/QueryPage" from "src/App.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/akash/KG_Projects/neurosymbolic/frontend/src/App.tsx:24:26
+  29 |  import { LogicPage } from "./components/pages/LogicPage";
+  30 |  import { InferencePage } from "./components/pages/InferencePage";
+  31 |  import { QueryPage } from "./components/pages/QueryPage";
+     |                             ^
+  32 |  import { api } from "./lib/api";
+  33 |  import { useGraphStore } from "./stores/graphStore";
+      at TransformPluginContext._formatError (file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49258:41)
+      at TransformPluginContext.error (file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49253:16)
+      at normalizeUrl (file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64307:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64439:39
+      at async Promise.all (index 16)
+      at async TransformPluginContext.transform (file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64366:7)
+      at async PluginContainer.transform (file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49099:18)
+      at async loadAndTransform (file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51978:27)
+      at async viteTransformMiddleware (file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:62106:24)
+2:30:41 pm [vite] hmr update /src/components/pages/InferencePage.tsx, /src/index.css
+2:30:41 pm [vite] Pre-transform error: Failed to resolve import "./components/pages/QueryPage" from "src/App.tsx". Does the file exist?
+2:30:41 pm [vite] Internal server error: Failed to resolve import "./components/pages/QueryPage" from "src/App.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/akash/KG_Projects/neurosymbolic/frontend/src/App.tsx:24:26
+  29 |  import { LogicPage } from "./components/pages/LogicPage";
+  30 |  import { InferencePage } from "./components/pages/InferencePage";
+  31 |  import { QueryPage } from "./components/pages/QueryPage";
+     |                             ^
+  32 |  import { api } from "./lib/api";
+  33 |  import { useGraphStore } from "./stores/graphStore";
+      at TransformPluginContext._formatError (file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49258:41)
+      at TransformPluginContext.error (file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49253:16)
+      at normalizeUrl (file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64307:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64439:39
+      at async Promise.all (index 16)
+      at async TransformPluginContext.transform (file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64366:7)
+      at async PluginContainer.transform (file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49099:18)
+      at async loadAndTransform (file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51978:27)
+      at async viteTransformMiddleware (file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:62106:24)
+2:30:47 pm [vite] hmr update /src/components/pages/InferencePage.tsx, /src/index.css
+2:30:48 pm [vite] Pre-transform error: Failed to resolve import "./components/pages/QueryPage" from "src/App.tsx". Does the file exist?
+2:30:48 pm [vite] Internal server error: Failed to resolve import "./components/pages/QueryPage" from "src/App.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/akash/KG_Projects/neurosymbolic/frontend/src/App.tsx:24:26
+  29 |  import { LogicPage } from "./components/pages/LogicPage";
+  30 |  import { InferencePage } from "./components/pages/InferencePage";
+  31 |  import { QueryPage } from "./components/pages/QueryPage";
+     |                             ^
+  32 |  import { api } from "./lib/api";
+  33 |  import { useGraphStore } from "./stores/graphStore";
+      at TransformPluginContext._formatError (file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49258:41)
+      at TransformPluginContext.error (file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49253:16)
+      at normalizeUrl (file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64307:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64439:39
+      at async Promise.all (index 16)
+      at async TransformPluginContext.transform (file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64366:7)
+      at async PluginContainer.transform (file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49099:18)
+      at async loadAndTransform (file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51978:27)
+      at async viteTransformMiddleware (file:///Users/akash/KG_Projects/neurosymbolic/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:62106:24)
+2:32:00 pm [vite] page reload src/components/pages/QueryPage.tsx
+2:46:04 pm [vite] hmr update /src/components/ConstructionPanel.tsx, /src/index.css
+2:46:15 pm [vite] hmr update /src/components/AgentPanel.tsx, /src/index.css
+2:46:31 pm [vite] hmr update /src/components/GraphCanvas.tsx, /src/index.css
+2:46:41 pm [vite] hmr update /src/components/GraphCanvas.tsx, /src/index.css
+2:46:48 pm [vite] hmr update /src/components/GraphCanvas.tsx, /src/index.css
+2:49:24 pm [vite] hmr update /src/index.css
+3:10:25 pm [vite] hmr update /src/components/GraphCanvas.tsx, /src/index.css
+3:10:32 pm [vite] hmr update /src/components/GraphCanvas.tsx, /src/index.css
+3:10:39 pm [vite] hmr update /src/components/GraphCanvas.tsx, /src/index.css
+3:11:25 pm [vite] hmr update /src/components/GraphCanvas.tsx, /src/index.css
+3:12:07 pm [vite] hmr update /src/components/IngestPanel.tsx, /src/index.css
+3:12:16 pm [vite] hmr update /src/components/IngestPanel.tsx, /src/index.css
+3:12:22 pm [vite] hmr update /src/components/IngestPanel.tsx, /src/index.css
+3:12:43 pm [vite] hmr update /src/components/ConstructionPanel.tsx, /src/index.css
+3:12:51 pm [vite] hmr update /src/components/ConstructionPanel.tsx, /src/index.css
+3:13:05 pm [vite] hmr update /src/components/ConstructionPanel.tsx, /src/index.css
+3:13:31 pm [vite] hmr update /src/components/EnrichmentPanel.tsx, /src/index.css
+3:52:54 pm [vite] hmr update /src/components/GraphCanvas.tsx, /src/index.css
+3:53:01 pm [vite] hmr update /src/components/GraphCanvas.tsx, /src/index.css
+3:53:12 pm [vite] hmr update /src/components/GraphCanvas.tsx, /src/index.css
+3:54:59 pm [vite] hmr update /src/components/GraphCanvas.tsx, /src/index.css
+4:06:24 pm [vite] hmr update /src/App.tsx, /src/index.css
+4:06:24 pm [vite] hmr update /src/components/AgentPanel.tsx, /src/index.css
+4:06:24 pm [vite] hmr update /src/components/EnrichmentPanel.tsx, /src/index.css
+4:06:24 pm [vite] hmr update /src/components/ConstructionPanel.tsx, /src/index.css
+4:06:24 pm [vite] hmr update /src/components/LeftNavigation.tsx, /src/index.css
+4:06:24 pm [vite] hmr update /src/components/QueryPanel.tsx, /src/index.css
+4:06:24 pm [vite] hmr update /src/components/Sidebar.tsx, /src/index.css
+4:06:24 pm [vite] hmr update /src/components/NodeInspectorCard.tsx, /src/index.css
+4:06:24 pm [vite] hmr update /src/components/IngestPanel.tsx, /src/index.css
+4:06:24 pm [vite] hmr update /src/components/ReasoningPanel.tsx, /src/index.css
+4:06:24 pm [vite] hmr update /src/components/OntologyPanel.tsx, /src/index.css
+4:06:24 pm [vite] hmr update /src/components/GraphCanvas.tsx, /src/index.css
+4:06:24 pm [vite] hmr update /src/components/panels/AssistantPanel.tsx, /src/index.css
+4:06:24 pm [vite] hmr update /src/components/panels/BuildPanel.tsx, /src/index.css
+4:06:24 pm [vite] hmr update /src/components/pages/InferencePage.tsx, /src/index.css
+4:06:24 pm [vite] hmr update /src/components/pages/QueryPage.tsx, /src/index.css
+4:06:24 pm [vite] hmr update /src/components/pages/DocumentsPage.tsx, /src/index.css
+4:06:24 pm [vite] hmr update /src/components/pages/LogicPage.tsx, /src/index.css
+4:07:52 pm [vite] hmr update /src/components/GraphCanvas.tsx, /src/index.css
+4:15:50 pm [vite] hmr update /src/components/GraphCanvas.tsx, /src/index.css
+4:16:04 pm [vite] hmr update /src/components/GraphCanvas.tsx, /src/index.css
+4:16:36 pm [vite] hmr update /src/components/LeftNavigation.tsx, /src/index.css
+4:16:56 pm [vite] hmr update /src/components/pages/InferencePage.tsx, /src/index.css
+4:25:24 pm [vite] hmr update /src/components/LeftNavigation.tsx, /src/index.css
+4:25:32 pm [vite] hmr update /src/components/Sidebar.tsx, /src/index.css
+4:25:48 pm [vite] hmr update /src/components/Sidebar.tsx, /src/index.css
+4:26:44 pm [vite] hmr update /src/components/StatusFooter.tsx, /src/index.css
+4:26:44 pm [vite] hmr update /src/components/panels/BuildPanel.tsx, /src/index.css
+4:53:26 pm [vite] hmr update /src/components/LeftNavigation.tsx, /src/index.css
+4:53:29 pm [vite] hmr update /src/components/Sidebar.tsx, /src/index.css
+4:53:32 pm [vite] hmr update /src/components/Sidebar.tsx, /src/index.css
+4:53:36 pm [vite] hmr update /src/components/Sidebar.tsx, /src/index.css
+4:55:31 pm [vite] hmr update /src/components/panels/BuildPanel.tsx, /src/index.css
+5:11:41 pm [vite] hmr update /src/App.tsx, /src/index.css, /src/components/LlmPanel.tsx, /src/components/HistoryPopover.tsx, /src/components/QueryPanel.tsx, /src/components/GraphCanvas.tsx, /src/components/ConstructionPanel.tsx, /src/components/ReasoningPanel.tsx, /src/components/IngestPanel.tsx, /src/components/GraphsPopover.tsx, /src/components/TripleStorePanel.tsx, /src/components/EnrichmentPanel.tsx, /src/components/AgentPanel.tsx, /src/components/MemoryInspector.tsx, /src/components/SkillManager.tsx, /src/components/StatusFooter.tsx, /src/components/panels/BuildPanel.tsx, /src/components/pages/DocumentsPage.tsx, /src/components/pages/LogicPage.tsx, /src/components/pages/InferencePage.tsx, /src/components/pages/QueryPage.tsx, /src/components/OntologyPanel.tsx
+5:11:56 pm [vite] hmr update /src/App.tsx, /src/index.css, /src/components/LlmPanel.tsx, /src/components/HistoryPopover.tsx, /src/components/QueryPanel.tsx, /src/components/GraphCanvas.tsx, /src/components/ConstructionPanel.tsx, /src/components/ReasoningPanel.tsx, /src/components/IngestPanel.tsx, /src/components/GraphsPopover.tsx, /src/components/TripleStorePanel.tsx, /src/components/EnrichmentPanel.tsx, /src/components/AgentPanel.tsx, /src/components/MemoryInspector.tsx, /src/components/SkillManager.tsx, /src/components/StatusFooter.tsx, /src/components/panels/BuildPanel.tsx, /src/components/pages/DocumentsPage.tsx, /src/components/pages/LogicPage.tsx, /src/components/pages/InferencePage.tsx, /src/components/pages/QueryPage.tsx
+5:13:39 pm [vite] hmr update /src/components/LlmPanel.tsx, /src/index.css
+5:30:02 pm [vite] hmr update /src/components/GraphCanvas.tsx, /src/index.css
+5:30:23 pm [vite] hmr update /src/components/GraphCanvas.tsx, /src/index.css
+5:30:33 pm [vite] hmr update /src/components/panels/BuildPanel.tsx, /src/index.css
+5:30:41 pm [vite] hmr update /src/components/panels/BuildPanel.tsx, /src/index.css
+5:30:49 pm [vite] hmr update /src/components/panels/BuildPanel.tsx, /src/index.css
+5:30:53 pm [vite] hmr update /src/components/panels/BuildPanel.tsx, /src/index.css
+5:31:02 pm [vite] hmr update /src/App.tsx, /src/index.css
+5:31:10 pm [vite] hmr update /src/components/Sidebar.tsx, /src/index.css
+7:00:37 pm [vite] hmr update /src/App.tsx, /src/index.css, /src/components/LlmPanel.tsx, /src/components/HistoryPopover.tsx, /src/components/QueryPanel.tsx, /src/components/GraphCanvas.tsx, /src/components/ConstructionPanel.tsx, /src/components/ReasoningPanel.tsx, /src/components/IngestPanel.tsx, /src/components/GraphsPopover.tsx, /src/components/TripleStorePanel.tsx, /src/components/EnrichmentPanel.tsx, /src/components/AgentPanel.tsx, /src/components/MemoryInspector.tsx, /src/components/SkillManager.tsx, /src/components/StatusFooter.tsx, /src/components/panels/BuildPanel.tsx, /src/components/pages/DocumentsPage.tsx, /src/components/pages/LogicPage.tsx, /src/components/pages/InferencePage.tsx, /src/components/pages/QueryPage.tsx, /src/components/OntologyPanel.tsx
+7:00:41 pm [vite] hmr update /src/App.tsx, /src/index.css, /src/components/LlmPanel.tsx, /src/components/HistoryPopover.tsx, /src/components/QueryPanel.tsx, /src/components/GraphCanvas.tsx, /src/components/ConstructionPanel.tsx, /src/components/ReasoningPanel.tsx, /src/components/IngestPanel.tsx, /src/components/GraphsPopover.tsx, /src/components/TripleStorePanel.tsx, /src/components/EnrichmentPanel.tsx, /src/components/AgentPanel.tsx, /src/components/MemoryInspector.tsx, /src/components/SkillManager.tsx, /src/components/StatusFooter.tsx, /src/components/panels/BuildPanel.tsx, /src/components/pages/DocumentsPage.tsx, /src/components/pages/LogicPage.tsx, /src/components/pages/InferencePage.tsx, /src/components/pages/QueryPage.tsx, /src/components/OntologyPanel.tsx
+7:03:33 pm [vite] hmr update /src/App.tsx, /src/index.css
+7:03:39 pm [vite] hmr update /src/App.tsx, /src/index.css
+7:03:46 pm [vite] hmr update /src/App.tsx, /src/index.css
+7:03:54 pm [vite] hmr update /src/App.tsx, /src/index.css
+7:04:05 pm [vite] hmr update /src/App.tsx, /src/index.css, /src/components/LlmPanel.tsx, /src/components/HistoryPopover.tsx, /src/components/QueryPanel.tsx, /src/components/GraphCanvas.tsx, /src/components/ConstructionPanel.tsx, /src/components/ReasoningPanel.tsx, /src/components/IngestPanel.tsx, /src/components/GraphsPopover.tsx, /src/components/TripleStorePanel.tsx, /src/components/EnrichmentPanel.tsx, /src/components/AgentPanel.tsx, /src/components/MemoryInspector.tsx, /src/components/SkillManager.tsx, /src/components/StatusFooter.tsx, /src/components/panels/BuildPanel.tsx, /src/components/pages/DocumentsPage.tsx, /src/components/pages/LogicPage.tsx, /src/components/pages/InferencePage.tsx, /src/components/pages/QueryPage.tsx, /src/components/OntologyPanel.tsx, /src/components/ConnectionCenter.tsx
+8:22:38 pm [vite] page reload tailwind.config.js
+8:22:46 pm [vite] page reload tailwind.config.js
+8:23:02 pm [vite] hmr update /src/index.css
+8:23:21 pm [vite] hmr update /src/components/TripleStorePanel.tsx, /src/index.css
+8:23:35 pm [vite] hmr update /src/components/ConstructionPanel.tsx, /src/index.css
+8:23:43 pm [vite] hmr update /src/components/QueryPanel.tsx, /src/index.css
+8:23:52 pm [vite] hmr update /src/components/ReasoningPanel.tsx, /src/index.css
+8:24:01 pm [vite] hmr update /src/components/pages/QueryPage.tsx, /src/index.css
+8:24:09 pm [vite] hmr update /src/components/pages/InferencePage.tsx, /src/index.css
+8:24:33 pm [vite] hmr update /src/components/GraphCanvas.tsx, /src/index.css
+8:24:38 pm [vite] hmr update /src/components/GraphCanvas.tsx, /src/index.css
+8:25:06 pm [vite] page reload tailwind.config.js
+8:25:23 pm [vite] hmr update /src/App.tsx, /src/index.css
+8:25:29 pm [vite] hmr update /src/components/ConstructionPanel.tsx, /src/index.css
+8:25:46 pm [vite] hmr update /src/components/EnrichmentPanel.tsx, /src/index.css
+8:25:55 pm [vite] hmr update /src/components/IngestPanel.tsx, /src/index.css
+8:26:03 pm [vite] hmr update /src/components/ReasoningPanel.tsx, /src/index.css
+8:26:13 pm [vite] hmr update /src/components/pages/InferencePage.tsx, /src/index.css
+8:26:23 pm [vite] hmr update /src/components/pages/InferencePage.tsx, /src/index.css
+8:26:34 pm [vite] hmr update /src/components/pages/LogicPage.tsx, /src/index.css
+8:27:07 pm [vite] hmr update /src/App.tsx, /src/index.css
+8:27:52 pm [vite] hmr update /src/App.tsx, /src/index.css
+8:28:10 pm [vite] hmr update /src/App.tsx, /src/index.css
+8:28:24 pm [vite] hmr update /src/App.tsx, /src/index.css
+8:29:09 pm [vite] hmr update /src/components/GraphCanvas.tsx, /src/index.css
+8:29:23 pm [vite] hmr update /src/components/GraphCanvas.tsx, /src/index.css
+8:29:33 pm [vite] hmr update /src/components/GraphCanvas.tsx, /src/index.css
+8:29:40 pm [vite] hmr update /src/components/GraphCanvas.tsx, /src/index.css
+8:29:45 pm [vite] hmr update /src/components/GraphCanvas.tsx, /src/index.css
+8:29:49 pm [vite] hmr update /src/components/GraphCanvas.tsx, /src/index.css
+8:29:55 pm [vite] hmr update /src/components/GraphCanvas.tsx, /src/index.css
+8:30:02 pm [vite] hmr update /src/components/GraphCanvas.tsx, /src/index.css
+8:30:09 pm [vite] hmr update /src/components/GraphCanvas.tsx, /src/index.css

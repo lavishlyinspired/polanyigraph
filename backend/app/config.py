@@ -70,6 +70,21 @@ class Settings(BaseSettings):
     reason_activation_floor: float = Field(default=0.01)
     reason_feedback_gain: float = Field(default=0.5)
 
+    # --- Provisioned-but-unwired credentials -----------------------------------
+    # These services have real credentials in .env but no code path reads them
+    # (rebuild-natively-in-Neo4j convention -- see PLAN.md §20). Read here only
+    # so /settings/connections can report which are configured, by name, so the
+    # gap is visible instead of silently invisible. Values themselves are never
+    # exposed over the API.
+    auth0_client_id: str = Field(default="")
+    auth0_client_secret: str = Field(default="")
+    auth0_domain: str = Field(default="")
+    qdrant_cluster_endpoint: str = Field(default="")
+    odrant_api_key: str = Field(default="")
+    falkor_db_host: str = Field(default="")
+    zep_api_key: str = Field(default="")
+    hf_token: str = Field(default="")
+
     # --- Neo4j resolved views -------------------------------------------------
     @property
     def neo4j_uri(self) -> str:

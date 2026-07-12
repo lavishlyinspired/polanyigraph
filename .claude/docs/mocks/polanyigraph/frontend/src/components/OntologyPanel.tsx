@@ -119,7 +119,7 @@ export function OntologyPanel() {
                 <div className="px-3 pb-2 space-y-1">
                   {schema.properties.map((prop, i) => (
                     <div key={i} className="text-[10px] font-mono">
-                      <span className="text-violet-400">{prop.label}</span>
+                      <span className="text-sky-400">{prop.label}</span>
                       {prop.domain && (
                         <span className="text-zinc-600 ml-2">
                           domain: <span className="text-zinc-400">{prop.domain}</span>

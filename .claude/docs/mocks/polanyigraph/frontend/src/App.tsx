@@ -16,6 +16,7 @@ import {
   Sparkles,
   Play,
   Loader,
+  Settings,
 } from 'lucide-react';
 import { GraphCanvas } from './components/GraphCanvas';
 import { GraphsPopover } from './components/GraphsPopover';
@@ -28,6 +29,7 @@ import { DocumentsPage } from './components/pages/DocumentsPage';
 import { LogicPage } from './components/pages/LogicPage';
 import { InferencePage } from './components/pages/InferencePage';
 import { QueryPage } from './components/pages/QueryPage';
+import { ConnectionsModal } from './components/ConnectionsModal';
 import { api, type HealthResponse } from './lib/api';
 import { useGraphStore } from './stores/graphStore';
 
@@ -73,6 +75,7 @@ export function App() {
 
   const [showHistory, setShowHistory] = useState(false);
   const [showGraphs, setShowGraphs] = useState(false);
+  const [showConnectionsModal, setShowConnectionsModal] = useState(false);
   
   const {
     nodes, edges, facts, selectedNodeId, loading, autoRunning, graphId,
@@ -127,7 +130,7 @@ export function App() {
       <header className="h-12 border-b border-zinc-800/80 bg-zinc-900/40 backdrop-blur flex items-center justify-between px-4 shrink-0 z-20">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2.5">
-            <div className="w-6 h-6 rounded bg-indigo-600 flex items-center justify-center shadow shadow-indigo-500/20">
+            <div className="w-6 h-6 rounded bg-blue-600 flex items-center justify-center shadow shadow-blue-500/20">
               <Network className="w-4 h-4 text-white" />
             </div>
             <div className="flex items-baseline gap-2">
@@ -194,10 +197,10 @@ export function App() {
               onClick={() => {
                 setActivePage('documents');
               }}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 hover:text-indigo-300 text-[10px] font-medium transition-all"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-blue-500/10 border border-blue-500/20 text-blue-400 hover:text-blue-300 text-[10px] font-medium transition-all"
               title="Click to review implicit facts"
             >
-              <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+              <Sparkles className="w-3.5 h-3.5 text-blue-400" />
               <span>✦ {pendingFacts.length} Pending</span>
             </button>
           )}
@@ -206,10 +209,19 @@ export function App() {
           <button
             onClick={handleRunLoop}
             disabled={loading || autoRunning}
-            className="flex items-center gap-1.5 px-3 py-1 rounded bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-[11px] font-medium transition-all"
+            className="flex items-center gap-1.5 px-3 py-1 rounded bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-[11px] font-medium transition-all"
           >
             <Play className="w-3 h-3 fill-white" />
             <span>Run Neurosymbolic Loop</span>
+          </button>
+
+          {/* Settings / Connection Center Trigger */}
+          <button
+            onClick={() => setShowConnectionsModal(true)}
+            className="p-1.5 rounded border border-zinc-800 bg-zinc-900/40 text-zinc-400 hover:text-white hover:bg-zinc-800/80 transition-all"
+            title="Open Connection Center Settings"
+          >
+            <Settings className="w-3.5 h-3.5" />
           </button>
         </div>
       </header>
@@ -288,6 +300,12 @@ export function App() {
           {activePage === 'query' && <QueryPage />}
         </div>
       </div>
+
+      {/* Connection Center Modal Settings */}
+      <ConnectionsModal 
+        isOpen={showConnectionsModal} 
+        onClose={() => setShowConnectionsModal(false)} 
+      />
 
       {/* FOOTER - Relocated Telemetry & Status Indicators */}
       <StatusFooter health={health} />

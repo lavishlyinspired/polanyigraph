@@ -9,6 +9,7 @@ facts in the prompt, so answers are grounded in what's really in Neo4j.
 from __future__ import annotations
 
 import uuid
+from collections.abc import Iterator
 
 from db.neo4j_client import Neo4jClient
 from llm.client import LLMClient
@@ -71,3 +72,25 @@ def answer(*, neo4j: Neo4jClient, llm: LLMClient, graph_id: str, message: str, s
         message_id=f"{session_id}:{uuid.uuid4().hex[:12]}", role="assistant", content=reply,
     )
     return reply
+
+
+def stream_answer(*, neo4j: Neo4jClient, llm: LLMClient, graph_id: str, message: str, session_id: str) -> Iterator[str]:
+    """Same grounding/history semantics as answer(), but yields the reply
+    incrementally as the LLM generates it instead of returning it all at once.
+    History is persisted once the stream is fully consumed, since the full
+    reply text isn't known until then."""
+    system = _build_system_prompt(graph_id, session_id, neo4j)
+    chunks: list[str] = []
+    for chunk in llm.stream_complete(system=system, user=message):
+        chunks.append(chunk)
+        yield chunk
+    reply = "".join(chunks)
+
+    chat_history_service.append_message(
+        neo4j, graph_id=graph_id, session_id=session_id,
+        message_id=f"{session_id}:{uuid.uuid4().hex[:12]}", role="user", content=message,
+    )
+    chat_history_service.append_message(
+        neo4j, graph_id=graph_id, session_id=session_id,
+        message_id=f"{session_id}:{uuid.uuid4().hex[:12]}", role="assistant", content=reply,
+    )

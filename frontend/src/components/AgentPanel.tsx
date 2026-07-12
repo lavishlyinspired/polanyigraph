@@ -18,10 +18,10 @@ const SUGGESTIONS = [
 
 const INTENT_META: Record<Exclude<AgentIntent, ''>, { label: string; icon: typeof Bot; color: string }> = {
   extract: { label: 'Extract', icon: FileText, color: 'text-emerald-400 border-emerald-400/40 bg-emerald-400/10' },
-  enrich: { label: 'Enrich', icon: Sparkles, color: 'text-violet-400 border-violet-400/40 bg-violet-400/10' },
+  enrich: { label: 'Enrich', icon: Sparkles, color: 'text-sky-400 border-sky-400/40 bg-sky-400/10' },
   query: { label: 'Query', icon: Search, color: 'text-sky-400 border-sky-400/40 bg-sky-400/10' },
   reason: { label: 'Reason', icon: Brain, color: 'text-amber-400 border-amber-400/40 bg-amber-400/10' },
-  visualize: { label: 'Visualize', icon: Eye, color: 'text-fuchsia-400 border-fuchsia-400/40 bg-fuchsia-400/10' },
+  visualize: { label: 'Visualize', icon: Eye, color: 'text-sky-400 border-sky-400/40 bg-sky-400/10' },
 };
 
 function IntentBadge({ intent }: { intent?: AgentIntent }) {
@@ -108,7 +108,7 @@ export function AgentPanel() {
             placeholder="Paste text to extract, ask a query, or say 'run reasoning'..."
             className="flex-1 bg-zinc-900 border border-zinc-700 rounded text-xs text-white placeholder:text-zinc-600 px-2 h-8 focus:outline-none focus:border-zinc-600"
           />
-          <button onClick={() => void handleSend()} className="h-8 px-3 rounded bg-white text-black hover:bg-zinc-200 transition-colors">
+          <button onClick={() => void handleSend()} className="h-8 px-3 rounded bg-blue-600 text-onaccent hover:bg-blue-500 transition-colors">
             <Send className="w-3.5 h-3.5" />
           </button>
         </div>

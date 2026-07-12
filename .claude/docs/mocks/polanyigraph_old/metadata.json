@@ -1,0 +1,8 @@
+{
+  "name": "Polanyi Neurosymbolic Graph",
+  "description": "A high-performance full-stack neurosymbolic knowledge graph platform pairing rule-based logical reasoning with neural activation propagation, featuring real-time document ingestion, semantic querying, cognitive enrichment under Polanyi's tacit knowledge theory, and automated community detection.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+
 from fastapi import APIRouter, Depends
+from fastapi.responses import StreamingResponse
 
 from app.dependencies import get_llm, get_neo4j
 from app.schemas import ApiModel
@@ -34,3 +37,28 @@ def chat(
     session_id = request.session_id or f"{graph_id}:default"
     reply = chat_service.answer(neo4j=neo4j, llm=llm, graph_id=graph_id, message=request.message, session_id=session_id)
     return ChatResponse(reply=reply)
+
+
+def _sse(data: str) -> str:
+    # SSE framing: each line of the payload gets its own "data:" prefix,
+    # event terminated by a blank line.
+    return "".join(f"data: {line}\n" for line in data.split("\n")) + "\n"
+
+
+@router.post("/chat/{graph_id}/stream")
+def chat_stream(
+    graph_id: str,
+    request: ChatRequest,
+    neo4j: Neo4jClient = Depends(get_neo4j),
+    llm: LLMClient = Depends(get_llm),
+) -> StreamingResponse:
+    session_id = request.session_id or f"{graph_id}:default"
+
+    def event_stream() -> Iterator[str]:
+        for chunk in chat_service.stream_answer(
+            neo4j=neo4j, llm=llm, graph_id=graph_id, message=request.message, session_id=session_id
+        ):
+            yield _sse(chunk)
+        yield _sse("[DONE]")
+
+    return StreamingResponse(event_stream(), media_type="text/event-stream")

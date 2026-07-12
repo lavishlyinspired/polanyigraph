@@ -83,7 +83,7 @@ export function GraphsPopover({ onClose }: GraphsPopoverProps) {
           placeholder="new-graph-name"
           className="flex-1 bg-zinc-950 border border-zinc-700 rounded text-[10px] text-white placeholder:text-zinc-600 px-2 h-7 focus:outline-none focus:border-zinc-600"
         />
-        <button onClick={() => void handleCreate()} className="h-7 px-2 rounded bg-white text-black hover:bg-zinc-200 transition-colors" title="Switch to (or create) this graph">
+        <button onClick={() => void handleCreate()} className="h-7 px-2 rounded bg-blue-600 text-onaccent hover:bg-blue-500 transition-colors" title="Switch to (or create) this graph">
           <Plus className="w-3.5 h-3.5" />
         </button>
       </div>

@@ -8,6 +8,7 @@ hardcoded in call sites — they depend on this interface only.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from typing import Any
 
 from openai import OpenAI
@@ -42,6 +43,29 @@ class LLMClient:
             ],
         )
         return resp.choices[0].message.content or ""
+
+    def stream_complete(self, *, system: str, user: str, temperature: float = 0.0) -> Iterator[str]:
+        """Yield the assistant reply incrementally as it's generated.
+
+        Same prompt contract as complete_json, but for the chat endpoint where
+        callers want to render tokens as they arrive rather than wait for the
+        full response.
+        """
+        stream = self._client.chat.completions.create(
+            model=self._model,
+            temperature=temperature,
+            stream=True,
+            messages=[
+                {"role": "system", "content": system},
+                {"role": "user", "content": user},
+            ],
+        )
+        for chunk in stream:
+            if not chunk.choices:
+                continue
+            delta = chunk.choices[0].delta.content
+            if delta:
+                yield delta
 
     def verify(self) -> bool:
         self._client.models.list()

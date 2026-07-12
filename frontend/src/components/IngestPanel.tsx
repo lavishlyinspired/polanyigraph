@@ -57,7 +57,7 @@ export function IngestPanel() {
             <button
               key={hint.label}
               onClick={() => handleLoadHint(hint.label)}
-              className="px-2.5 py-1 rounded border border-zinc-800 text-[10px] text-zinc-500 hover:text-zinc-300 hover:border-zinc-700 transition-colors"
+              className="px-2.5 py-1 rounded border border-zinc-800 text-[10px] text-zinc-500 hover:text-blue-300 hover:border-blue-500/40 transition-colors"
               title={hint.example}
             >
               {hint.label}
@@ -73,7 +73,7 @@ export function IngestPanel() {
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="Paste a document — SEC filing, press release, contract, article, or any structured text. The more context, the richer the extracted graph."
-            className="w-full h-full min-h-[160px] bg-zinc-900 border border-zinc-700 rounded-lg p-3 text-xs text-white placeholder:text-zinc-600 resize-none focus:outline-none focus:border-zinc-600 transition-colors"
+            className="w-full h-full min-h-[160px] bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-xs text-white placeholder:text-zinc-600 resize-none focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
           />
           {charCount > 0 && (
             <div className="absolute bottom-2 right-2 flex items-center gap-2 text-[9px] text-zinc-600">
@@ -88,11 +88,11 @@ export function IngestPanel() {
           <button
             onClick={() => void handleIngest()}
             disabled={loading || !text.trim()}
-            className="flex-1 h-9 bg-white text-black hover:bg-zinc-200 text-xs font-bold rounded-lg flex items-center justify-center gap-2 disabled:opacity-40 transition-colors"
+            className="flex-1 h-9 bg-blue-600 text-onaccent hover:bg-blue-500 text-xs font-bold rounded-lg flex items-center justify-center gap-2 disabled:opacity-40 transition-colors shadow shadow-blue-500/20"
           >
             {loading ? (
               <>
-                <div className="w-3 h-3 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 Extracting → Storing
               </>
             ) : (

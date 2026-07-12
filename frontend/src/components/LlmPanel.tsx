@@ -45,23 +45,30 @@ export function LlmPanel() {
             </div>
           </div>
         ) : (
-          chatMessages.map((msg) => (
-            <div
-              key={msg.id}
-              className={`p-2.5 rounded-lg text-[11px] ${
-                msg.role === 'user' ? 'bg-white text-black ml-4' : 'bg-zinc-900 text-zinc-300 border border-zinc-800 mr-4'
-              }`}
-            >
-              <div className="text-[9px] font-bold uppercase mb-1 opacity-50">{msg.role}</div>
-              <div className="whitespace-pre-wrap">{msg.content}</div>
-            </div>
-          ))
-        )}
-        {chatLoading && (
-          <div className="p-2.5 rounded-lg text-[11px] bg-zinc-900 text-zinc-500 border border-zinc-800 mr-4 flex items-center gap-2">
-            <div className="w-3 h-3 border-2 border-zinc-500 border-t-transparent rounded-full animate-spin" />
-            Thinking…
-          </div>
+          chatMessages.map((msg) => {
+            const streamingEmpty = chatLoading && msg.role === 'assistant' && msg.content === '';
+            return (
+              <div
+                key={msg.id}
+                className={`p-2.5 rounded-lg text-[11px] ${
+                  msg.role === 'user' ? 'bg-white text-black ml-4' : 'bg-zinc-900 text-zinc-300 border border-zinc-800 mr-4'
+                }`}
+              >
+                <div className="text-[9px] font-bold uppercase mb-1 opacity-50">{msg.role}</div>
+                {streamingEmpty ? (
+                  <div className="flex items-center gap-2 text-zinc-500">
+                    <div className="w-3 h-3 border-2 border-zinc-500 border-t-transparent rounded-full animate-spin" />
+                    Thinking…
+                  </div>
+                ) : (
+                  <div className="whitespace-pre-wrap">
+                    {msg.content}
+                    {chatLoading && msg.role === 'assistant' && <span className="inline-block w-1.5 h-3 bg-zinc-400 ml-0.5 animate-pulse align-middle" />}
+                  </div>
+                )}
+              </div>
+            );
+          })
         )}
       </div>
       <div className="p-3 border-t border-zinc-800 shrink-0">
@@ -73,7 +80,7 @@ export function LlmPanel() {
             placeholder="Ask about the graph state..."
             className="flex-1 bg-zinc-900 border border-zinc-700 rounded text-xs text-white placeholder:text-zinc-600 px-2 h-8 focus:outline-none focus:border-zinc-600"
           />
-          <button onClick={() => void handleSend()} className="h-8 px-3 rounded bg-white text-black hover:bg-zinc-200 transition-colors">
+          <button onClick={() => void handleSend()} className="h-8 px-3 rounded bg-blue-600 text-onaccent hover:bg-blue-500 transition-colors">
             <Send className="w-3.5 h-3.5" />
           </button>
         </div>

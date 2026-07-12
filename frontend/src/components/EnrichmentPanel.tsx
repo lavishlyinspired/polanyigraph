@@ -6,6 +6,7 @@
 import { useState } from 'react';
 import { Sparkles, Info, Check, X, Loader, ChevronDown, ChevronRight } from 'lucide-react';
 import { useGraphStore } from '../stores/graphStore';
+import { useThemeStore } from '../stores/themeStore';
 import type { HeuristicType, ImplicitFact } from '../lib/api';
 
 const HEURISTIC_LABELS: Record<HeuristicType, string> = {
@@ -32,8 +33,15 @@ function heuristicHue(type: string): number {
 
 function FactCard({ fact, onApprove, onReject }: { fact: ImplicitFact; onApprove?: () => void; onReject?: () => void }) {
   const hue = heuristicHue(fact.heuristicType);
+  const isLight = useThemeStore((s) => s.theme === 'light');
   return (
-    <div className="p-2.5 rounded-lg border" style={{ borderColor: `hsl(${hue}, 45%, 30%)`, backgroundColor: `hsl(${hue}, 45%, 12%)` }}>
+    <div
+      className="p-2.5 rounded-lg border"
+      style={{
+        borderColor: `hsl(${hue}, 45%, ${isLight ? 78 : 30}%)`,
+        backgroundColor: `hsl(${hue}, 45%, ${isLight ? 93 : 12}%)`,
+      }}
+    >
       <div className="flex items-center justify-between gap-2 mb-1">
         <span className="px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider" style={{ backgroundColor: `hsl(${hue}, 55%, 55%)`, color: '#000' }}>
           {HEURISTIC_LABELS[fact.heuristicType]}
@@ -81,9 +89,9 @@ export function EnrichmentPanel() {
     <div className="h-full flex flex-col overflow-y-auto">
       <div className="p-4 border-b border-zinc-800 bg-zinc-900/50">
         <div className="flex gap-2">
-          <Sparkles className="w-3.5 h-3.5 text-violet-400 shrink-0 mt-0.5" />
+          <Sparkles className="w-3.5 h-3.5 text-sky-400 shrink-0 mt-0.5" />
           <div className="text-[10px] text-zinc-400 leading-relaxed">
-            Runs all <span className="text-violet-400 font-bold">11 Polanyi heuristics</span> (Presuppositions,
+            Runs all <span className="text-sky-400 font-bold">11 Polanyi heuristics</span> (Presuppositions,
             Implicatures, Causal Relations, ...) against the real graph + text below, inferring implicit
             knowledge no explicit edge captures. Every result is <span className="text-amber-400 font-bold">pending</span> until
             you approve or reject it -- nothing merges into the graph automatically.
@@ -96,12 +104,12 @@ export function EnrichmentPanel() {
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="Paste or reuse the text to enrich against (usually the same document you ingested)."
-          className="w-full h-24 bg-zinc-900 border border-zinc-700 rounded-lg p-2.5 text-xs text-white placeholder:text-zinc-600 resize-none focus:outline-none focus:border-zinc-600 transition-colors"
+          className="w-full h-24 bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-xs text-white placeholder:text-zinc-600 resize-none focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
         />
         <button
           onClick={() => void handleEnrich()}
           disabled={enriching || !text.trim()}
-          className="w-full h-9 bg-white text-black hover:bg-zinc-200 text-xs font-bold rounded-lg flex items-center justify-center gap-2 disabled:opacity-40 transition-colors"
+          className="w-full h-9 bg-blue-600 text-onaccent hover:bg-blue-500 text-xs font-bold rounded-lg flex items-center justify-center gap-2 disabled:opacity-40 transition-colors shadow shadow-blue-500/20"
         >
           {enriching ? (
             <>

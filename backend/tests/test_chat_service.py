@@ -12,7 +12,7 @@ import pytest
 from app.config import get_settings
 from db.neo4j_client import Neo4jClient
 from reasoning.engine import DerivedFact, ProofStep
-from services import chat_service, graph_service
+from services import chat_history_service, chat_service, graph_service
 
 
 class FakeLLM:
@@ -23,6 +23,12 @@ class FakeLLM:
     def complete_json(self, *, system: str, user: str, temperature: float = 0.0) -> str:
         self.last_call = {"system": system, "user": user}
         return self._response
+
+    def stream_complete(self, *, system: str, user: str, temperature: float = 0.0):
+        self.last_call = {"system": system, "user": user}
+        words = self._response.split(" ")
+        for i, word in enumerate(words):
+            yield word + (" " if i < len(words) - 1 else "")
 
 
 @pytest.fixture
@@ -90,3 +96,35 @@ def test_chat_sessions_do_not_leak_across_each_other(neo4j):
     chat_service.answer(neo4j=client, llm=llm2, graph_id=graph_id, message="Session B message.", session_id="session-b")
 
     assert "Session A message." not in llm2.last_call["system"]
+
+
+def test_chat_stream_yields_incremental_chunks_that_join_into_the_full_reply(neo4j):
+    client, graph_id = neo4j
+    llm = FakeLLM("Hello there friend")
+
+    chunks = list(chat_service.stream_answer(neo4j=client, llm=llm, graph_id=graph_id, message="Hi", session_id="s1"))
+
+    assert len(chunks) > 1  # actually streamed in pieces, not one shot
+    assert "".join(chunks) == "Hello there friend"
+
+
+def test_chat_stream_persists_full_reply_and_grounds_like_answer(neo4j):
+    client, graph_id = neo4j
+    llm = FakeLLM("Streamed grounded reply.")
+
+    list(chat_service.stream_answer(neo4j=client, llm=llm, graph_id=graph_id, message="Hi", session_id="s1"))
+
+    history = chat_history_service.get_recent_messages(client, graph_id=graph_id, session_id="s1")
+    assert any(m.role == "user" and m.content == "Hi" for m in history)
+    assert any(m.role == "assistant" and m.content == "Streamed grounded reply." for m in history)
+
+
+def test_chat_stream_remembers_prior_turns_in_same_session(neo4j):
+    client, graph_id = neo4j
+    llm = FakeLLM("first reply")
+    list(chat_service.stream_answer(neo4j=client, llm=llm, graph_id=graph_id, message="My favorite number is 42.", session_id="s1"))
+
+    llm2 = FakeLLM("second reply")
+    list(chat_service.stream_answer(neo4j=client, llm=llm2, graph_id=graph_id, message="What's my favorite number?", session_id="s1"))
+
+    assert "My favorite number is 42." in llm2.last_call["system"]

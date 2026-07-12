@@ -102,6 +102,7 @@ from api import ontology as ontology_routes  # noqa: E402
 from api import query as query_routes  # noqa: E402
 from api import reason as reason_routes  # noqa: E402
 from api import rules as rules_routes  # noqa: E402
+from api import settings as settings_routes  # noqa: E402
 from api import skills as skills_routes  # noqa: E402
 
 app.include_router(ingest_routes.router)
@@ -117,3 +118,4 @@ app.include_router(enrich_routes.router)
 app.include_router(agent_routes.router)
 app.include_router(skills_routes.router)
 app.include_router(memory_routes.router)
+app.include_router(settings_routes.router)

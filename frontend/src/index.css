@@ -1,11 +1,78 @@
+@import '@fontsource/inter/300.css';
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/inter/700.css';
+@import '@fontsource/jetbrains-mono/400.css';
+@import '@fontsource/jetbrains-mono/500.css';
+@import '@fontsource/jetbrains-mono/600.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* Theme tokens: the app's zinc/white/black usage is re-pointed at these
+   variables (see tailwind.config.js) so every existing class becomes
+   theme-aware without per-component edits.
+
+   Light mode is NOT a literal mirror of dark mode's RGB values. In dark mode,
+   "elevated" chrome (header/sidebar, zinc-900) reads as LIGHTER than the
+   near-black canvas/page base (zinc-950) -- there's room to go lighter. In
+   light mode there's no room to go lighter than white, so elevation has to
+   flip direction: chrome must go MORE GRAY than the near-white canvas base,
+   not less. A naive mirror (zinc-900 at 244 vs zinc-950 at 250) put both
+   within 6 units of white, which washes out completely once the app's
+   many bg-zinc-900/40-style translucent overlays blend over an
+   already-near-white body -- headers, sidebars, and cards all but
+   disappeared. These values are hand-tuned for real separation instead. */
+:root {
+  --c-white: 255 255 255;
+  --c-black: 0 0 0;
+  --c-zinc-50: 250 250 250;
+  --c-zinc-100: 244 244 245;
+  --c-zinc-200: 228 228 231;
+  --c-zinc-300: 212 212 216;
+  --c-zinc-400: 161 161 170;
+  --c-zinc-500: 113 113 122;
+  --c-zinc-600: 82 82 91;
+  --c-zinc-700: 63 63 70;
+  --c-zinc-800: 39 39 42;
+  --c-zinc-900: 24 24 27;
+  --c-zinc-950: 9 9 11;
+  /* Chrome (header/left-nav/sidebar/footer) matches the canvas base in dark
+     mode -- unchanged. */
+  --c-chrome: 9 9 11;
+}
+
+html.light {
+  --c-white: 10 10 11;
+  --c-black: 255 255 255;
+  --c-zinc-50: 12 12 14;
+  --c-zinc-100: 26 26 29;
+  --c-zinc-200: 45 45 49;
+  --c-zinc-300: 65 65 71;
+  --c-zinc-400: 90 90 97;
+  --c-zinc-500: 113 113 122;
+  --c-zinc-600: 141 141 148;
+  --c-zinc-700: 191 191 197;
+  --c-zinc-800: 212 212 217;
+  --c-zinc-900: 231 231 235;
+  --c-zinc-950: 250 250 251;
+  /* Chrome needs to read as distinctly darker than the near-white canvas --
+     bg-zinc-950/bg-zinc-900 alone (used by header/sidebar/footer/left-nav)
+     wasn't enough separation on its own. */
+  --c-chrome: 214 214 219;
+}
+
 html, body, #root {
   height: 100%;
   margin: 0;
-  background: #09090b;
-  color: #e4e4e7;
-  font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+  background: rgb(var(--c-zinc-950));
+  color: rgb(var(--c-zinc-200));
+  font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  transition: background-color 150ms, color 150ms;
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
 }

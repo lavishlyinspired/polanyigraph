@@ -1,53 +1,31 @@
 // Real backend only, no demo data. An empty graph shows an ingest prompt
 // (acceptance criterion #1 in docs/MVP_PLAN.md).
 //
-// Layout mirrors the prototype (.claude/docs/src/App.tsx): left sidebar
-// Construct/Reason tabs (+ a separate Ingest tab, per explicit direction),
-// right sidebar Query/LLM tabs, header badges. Sidebars are drag-resizable.
+// Layout per UI_REFACTOR_PLAN.md: single right sidebar (5 tabs via an
+// embedded icon rail) as a quick-access companion to the canvas, plus a
+// left navigation rail switching to 4 dedicated, richer, canvas-free Lab
+// pages that deliberately duplicate the same real data/actions rather than
+// migrating them. Ported from .claude/docs/mocks/polanyigraph/frontend, with
+// no source-file changes needed beyond wiring -- verified against the real
+// store/api this session.
 import { useEffect, useState } from 'react';
 import { Toaster } from 'sonner';
-import {
-  Network,
-  Zap,
-  PanelLeftOpen,
-  PanelLeftClose,
-  PanelRightOpen,
-  PanelRightClose,
-  CircleDot,
-  GitBranch,
-  Brain,
-  Loader,
-  History,
-  FolderOpen,
-  Layers,
-  Activity,
-  FileText,
-  Search,
-  Terminal,
-  Cpu,
-  Database,
-  BookOpen,
-  Sparkles,
-  Bot,
-  Wrench,
-  BrainCircuit,
-} from 'lucide-react';
-import { AgentPanel } from './components/AgentPanel';
-import { ConstructionPanel } from './components/ConstructionPanel';
-import { EnrichmentPanel } from './components/EnrichmentPanel';
+import { Network, FolderOpen, ChevronDown, History, Sparkles, Play, Loader, Plug, Sun, Moon } from 'lucide-react';
 import { GraphCanvas } from './components/GraphCanvas';
 import { GraphsPopover } from './components/GraphsPopover';
 import { HistoryPopover } from './components/HistoryPopover';
-import { IngestPanel } from './components/IngestPanel';
-import { LlmPanel } from './components/LlmPanel';
-import { MemoryInspector } from './components/MemoryInspector';
-import { OntologyPanel } from './components/OntologyPanel';
-import { QueryPanel } from './components/QueryPanel';
-import { ReasoningPanel } from './components/ReasoningPanel';
-import { SkillManager } from './components/SkillManager';
-import { TripleStorePanel } from './components/TripleStorePanel';
+import { ConnectionCenter } from './components/ConnectionCenter';
+import { Sidebar } from './components/Sidebar';
+import { StatusFooter } from './components/StatusFooter';
+import { NodeInspectorCard } from './components/NodeInspectorCard';
+import { LeftNavigation, type PageType } from './components/LeftNavigation';
+import { DocumentsPage } from './components/pages/DocumentsPage';
+import { LogicPage } from './components/pages/LogicPage';
+import { InferencePage } from './components/pages/InferencePage';
+import { QueryPage } from './components/pages/QueryPage';
 import { api, type HealthResponse } from './lib/api';
 import { useGraphStore } from './stores/graphStore';
+import { useThemeStore } from './stores/themeStore';
 
 const MIN_SIDEBAR = 300;
 const MAX_SIDEBAR = 640;
@@ -78,20 +56,27 @@ function LoadingSkeleton() {
 
 export function App() {
   const [health, setHealth] = useState<HealthResponse | null>(null);
-  const [leftCollapsed, setLeftCollapsed] = useState(false);
-  const [rightCollapsed, setRightCollapsed] = useState(false);
-  const [leftWidth, setLeftWidth] = useState(DEFAULT_SIDEBAR);
-  const [rightWidth, setRightWidth] = useState(DEFAULT_SIDEBAR);
-  const [resizing, setResizing] = useState<'left' | 'right' | null>(null);
-  const [leftTab, setLeftTab] = useState<'ingest' | 'construct' | 'reason' | 'enrich'>('ingest');
-  const [rightTab, setRightTab] = useState<'query' | 'triples' | 'ontology' | 'llm' | 'agent' | 'skills' | 'memory'>('query');
+  const [activePage, setActivePage] = useState<PageType>('workspace');
+
+  const [activeTab, setActiveTab] = useState<'build' | 'reason' | 'query' | 'assistant' | 'tools'>('build');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_SIDEBAR);
+  const [resizing, setResizing] = useState(false);
+  const [buildSection, setBuildSection] = useState<'ingest' | 'construct' | 'enrich' | null>(null);
+
   const [showHistory, setShowHistory] = useState(false);
   const [showGraphs, setShowGraphs] = useState(false);
+  const [showConnections, setShowConnections] = useState(false);
+
+  const { theme, toggleTheme } = useThemeStore();
+
   const {
-    nodes, edges, facts, rules, selectedNodeId, loading, iterations, autoRunning,
+    nodes, edges, facts, selectedNodeId, loading, autoRunning, graphId,
     loadGraph, loadHistory, loadRules, loadGraphs, loadOntology, selectNode, moveNode,
-    loadPendingFacts, loadApprovedFacts, pendingFacts, loadReasonFacts,
+    loadPendingFacts, loadApprovedFacts, pendingFacts, loadReasonFacts, reason,
   } = useGraphStore();
+
+  const selectedNode = nodes.find((n) => n.id === selectedNodeId) ?? null;
 
   useEffect(() => {
     api.health().then(setHealth).catch(() => void 0);
@@ -107,11 +92,8 @@ export function App() {
 
   useEffect(() => {
     if (!resizing) return;
-    const handleMove = (e: MouseEvent) => {
-      if (resizing === 'left') setLeftWidth(Math.min(MAX_SIDEBAR, Math.max(MIN_SIDEBAR, e.clientX)));
-      else setRightWidth(Math.min(MAX_SIDEBAR, Math.max(MIN_SIDEBAR, window.innerWidth - e.clientX)));
-    };
-    const handleUp = () => setResizing(null);
+    const handleMove = (e: MouseEvent) => setSidebarWidth(Math.min(MAX_SIDEBAR, Math.max(MIN_SIDEBAR, window.innerWidth - e.clientX)));
+    const handleUp = () => setResizing(false);
     window.addEventListener('mousemove', handleMove);
     window.addEventListener('mouseup', handleUp);
     return () => {
@@ -120,264 +102,171 @@ export function App() {
     };
   }, [resizing]);
 
+  const handleRunLoop = async () => {
+    await reason();
+  };
+
   const empty = nodes.length === 0;
 
   return (
     <div className={`h-screen w-screen flex flex-col bg-zinc-950 text-zinc-100 overflow-hidden ${resizing ? 'select-none cursor-col-resize' : ''}`}>
       <Toaster theme="dark" position="bottom-right" />
 
-      {/* Header */}
-      <header className="h-14 border-b border-zinc-800 flex items-center justify-between px-4 shrink-0 bg-zinc-900/50 backdrop-blur">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center">
-            <Network className="w-5 h-5 text-black" />
+      <header className="h-12 border-b border-zinc-800/80 bg-chrome/90 backdrop-blur flex items-center justify-between px-4 shrink-0 z-20">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2.5">
+            <div className="w-6 h-6 rounded bg-blue-600 flex items-center justify-center shadow shadow-blue-500/20">
+              <Network className="w-4 h-4 text-onaccent" />
+            </div>
+            <div className="flex items-baseline gap-2">
+              <h1 className="text-xs font-semibold tracking-tight text-white">Neurosymbolic KG</h1>
+              <span className="text-[9px] text-zinc-500 font-mono">{health ? `ontology: ${health.ontologyRepository}` : 'connecting...'}</span>
+            </div>
           </div>
-          <div>
-            <h1 className="text-sm font-bold tracking-tight">Neurosymbolic KG</h1>
-            <p className="text-[10px] text-zinc-500">{health ? `ontology: ${health.ontologyRepository}` : 'connecting...'}</p>
+
+          <div className="h-4 w-[1px] bg-zinc-800" />
+
+          <div className="relative">
+            <button
+              onClick={() => {
+                setShowGraphs((v) => !v);
+                setShowHistory(false);
+              }}
+              className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium rounded border border-zinc-800 bg-zinc-900/40 text-zinc-300 hover:bg-zinc-800/80 hover:text-white transition-all select-none"
+            >
+              <FolderOpen className="w-3.5 h-3.5 text-zinc-400" />
+              <span>{graphId || 'default'}</span>
+              <ChevronDown className="w-3 h-3 text-zinc-500" />
+            </button>
+            {showGraphs && <GraphsPopover onClose={() => setShowGraphs(false)} />}
           </div>
+
+          <div className="relative">
+            <button
+              onClick={() => {
+                setShowHistory((v) => !v);
+                setShowGraphs(false);
+              }}
+              className={`p-1 rounded border transition-all ${showHistory ? 'border-zinc-700 bg-zinc-800 text-white' : 'border-zinc-800 bg-zinc-900/40 text-zinc-400 hover:text-white hover:bg-zinc-800/80'}`}
+              title="View Ingestion History"
+            >
+              <History className="w-3.5 h-3.5" />
+            </button>
+            {showHistory && <HistoryPopover onClose={() => setShowHistory(false)} />}
+          </div>
+
+          <button
+            onClick={() => setShowConnections(true)}
+            className="p-1 rounded border border-zinc-800 bg-zinc-900/40 text-zinc-400 hover:text-white hover:bg-zinc-800/80 transition-all"
+            title="Connection Center"
+          >
+            <Plug className="w-3.5 h-3.5" />
+          </button>
+
+          <button
+            onClick={toggleTheme}
+            className="p-1 rounded border border-zinc-800 bg-zinc-900/40 text-zinc-400 hover:text-white hover:bg-zinc-800/80 transition-all"
+            title={theme === 'dark' ? 'Switch to day theme' : 'Switch to night theme'}
+          >
+            {theme === 'dark' ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+          </button>
         </div>
+
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 text-zinc-400">
-            <Database className="w-3 h-3" />
-            <span className="font-mono text-[11px]">{nodes.length} nodes · {edges.length} edges</span>
-          </div>
-          <div className="flex items-center gap-1.5 text-zinc-400">
-            <Cpu className="w-3 h-3" />
-            <span className="font-mono text-[11px]">{rules.length} rules</span>
-          </div>
-          {facts.length > 0 && (
-            <div className="flex items-center gap-1.5 text-amber-400">
-              <Brain className="w-3 h-3" />
-              <span className="font-mono text-[11px]">{facts.length} facts</span>
+          {autoRunning && (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-amber-500/10 border border-amber-500/25 text-amber-400 text-[10px] font-medium">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+              <span>AUTO-RUN ACTIVE</span>
             </div>
           )}
+
           {pendingFacts.length > 0 && (
             <button
-              onClick={() => setLeftTab('enrich')}
-              className="flex items-center gap-1.5 text-violet-400 hover:text-violet-300 transition-colors"
-              title="Pending implicit facts awaiting review"
+              onClick={() => setActivePage('documents')}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-blue-500/10 border border-blue-500/20 text-blue-400 hover:text-blue-300 text-[10px] font-medium transition-all"
+              title="Click to review implicit facts"
             >
-              <Sparkles className="w-3 h-3" />
-              <span className="font-mono text-[11px]">{pendingFacts.length} pending</span>
+              <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+              <span>✦ {pendingFacts.length} Pending</span>
             </button>
           )}
-          {iterations > 0 && (
-            <div className="flex items-center gap-1.5 text-zinc-400">
-              <Zap className="w-3 h-3" />
-              <span className="font-mono text-[11px]">iter {iterations}</span>
-            </div>
-          )}
-          {autoRunning && (
-            <span className="px-2 py-0.5 rounded-full bg-white text-black text-[9px] font-bold flex items-center gap-1.5 animate-pulse">
-              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping" /> AUTO-RUN
-            </span>
-          )}
-          <div className="flex items-center gap-2 ml-2">
-            <div className="flex items-center gap-1">
-              <CircleDot className="w-3 h-3 text-emerald-400" />
-              <span className="text-[10px] text-zinc-500">neo4j {health?.neo4j.ok ? 'up' : 'down'}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <GitBranch className="w-3 h-3 text-emerald-400" />
-              <span className="text-[10px] text-zinc-500">graphdb {health?.graphdb.ok ? 'up' : 'down'}</span>
-            </div>
-          </div>
+
+          <button
+            onClick={() => void handleRunLoop()}
+            disabled={loading || autoRunning}
+            className="flex items-center gap-1.5 px-3 py-1 rounded bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-onaccent text-[11px] font-medium transition-all"
+          >
+            <Play className="w-3 h-3 fill-onaccent" />
+            <span>Run Neurosymbolic Loop</span>
+          </button>
         </div>
       </header>
 
-      {/* Main content */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Left sidebar: Ingest / Construct / Reason */}
-        <div
-          className="relative flex flex-col border-r border-zinc-800 bg-zinc-900/30 shrink-0"
-          style={{ width: leftCollapsed ? 40 : leftWidth, transition: resizing ? 'none' : 'width 300ms' }}
-        >
-          {leftCollapsed ? (
-            <button onClick={() => setLeftCollapsed(false)} className="h-full flex items-center justify-center hover:bg-zinc-800 transition-colors">
-              <PanelLeftOpen className="w-4 h-4 text-zinc-500" />
-            </button>
-          ) : (
-            <>
-              <div className="h-9 border-b border-zinc-800 flex items-center shrink-0">
-                {([
-                  { key: 'ingest' as const, icon: FileText, label: 'Ingest' },
-                  { key: 'construct' as const, icon: Layers, label: 'Construct' },
-                  { key: 'reason' as const, icon: Activity, label: 'Reason' },
-                  { key: 'enrich' as const, icon: Sparkles, label: 'Enrich' },
-                ]).map((tab) => (
-                  <button
-                    key={tab.key}
-                    onClick={() => setLeftTab(tab.key)}
-                    className={`flex-1 h-full text-[9px] font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-1 ${
-                      leftTab === tab.key ? 'bg-white text-black' : 'text-zinc-500 hover:text-zinc-300'
-                    }`}
-                  >
-                    <tab.icon className="w-2.5 h-2.5" /> {tab.label}
-                  </button>
-                ))}
-                <div className="relative shrink-0">
-                  <button
-                    onClick={() => setShowGraphs((v) => !v)}
-                    className={`w-8 h-full flex items-center justify-center transition-colors ${showGraphs ? 'text-white' : 'text-zinc-600 hover:text-zinc-300'}`}
-                    title="Graphs"
-                  >
-                    <FolderOpen className="w-4 h-4" />
-                  </button>
-                  {showGraphs && <GraphsPopover onClose={() => setShowGraphs(false)} />}
-                </div>
-                <div className="relative shrink-0">
-                  <button
-                    onClick={() => setShowHistory((v) => !v)}
-                    className={`w-8 h-full flex items-center justify-center transition-colors ${showHistory ? 'text-white' : 'text-zinc-600 hover:text-zinc-300'}`}
-                    title="Ingest history"
-                  >
-                    <History className="w-4 h-4" />
-                  </button>
-                  {showHistory && <HistoryPopover onClose={() => setShowHistory(false)} />}
-                </div>
-                <button onClick={() => setLeftCollapsed(true)} className="w-8 h-full flex items-center justify-center text-zinc-600 hover:text-zinc-300 transition-colors shrink-0">
-                  <PanelLeftClose className="w-4 h-4" />
-                </button>
-              </div>
-              <div className="flex-1 overflow-hidden">
-                {leftTab === 'ingest' ? (
-                  <IngestPanel />
-                ) : leftTab === 'construct' ? (
-                  <ConstructionPanel />
-                ) : leftTab === 'reason' ? (
-                  <ReasoningPanel />
+        <LeftNavigation activePage={activePage} onPageChange={setActivePage} />
+
+        <div className="flex-1 flex overflow-hidden relative">
+          {activePage === 'workspace' && (
+            <div className="flex-1 flex overflow-hidden">
+              <div className="flex-1 relative overflow-hidden bg-zinc-950">
+                {empty && loading ? (
+                  <LoadingSkeleton />
+                ) : empty ? (
+                  <div className="h-full flex flex-col items-center justify-center text-zinc-600 gap-4">
+                    <Network className="w-12 h-12 text-zinc-800" />
+                    <div className="text-center">
+                      <p className="text-sm font-medium text-zinc-500">Empty graph</p>
+                      <p className="text-xs text-zinc-600 mt-1">Paste a document in the Build panel to populate it</p>
+                    </div>
+                    <div className="flex gap-2 text-[10px] text-zinc-700">
+                      <span className="px-2 py-1 rounded border border-zinc-800">8-K filing</span>
+                      <span className="px-2 py-1 rounded border border-zinc-800">Press release</span>
+                      <span className="px-2 py-1 rounded border border-zinc-800">Contract</span>
+                    </div>
+                  </div>
                 ) : (
-                  <EnrichmentPanel />
+                  <>
+                    <GraphCanvas nodes={nodes} edges={edges} selectedNodeId={selectedNodeId} onSelectNode={selectNode} onMoveNode={moveNode} />
+                    {selectedNode && (
+                      <NodeInspectorCard
+                        node={selectedNode}
+                        facts={facts}
+                        onClose={() => selectNode(null)}
+                        onEditShortcut={() => {
+                          setActiveTab('build');
+                          setBuildSection('construct');
+                        }}
+                      />
+                    )}
+                  </>
                 )}
               </div>
-              <div
-                onMouseDown={() => setResizing('left')}
-                className="absolute top-0 -right-1 h-full w-2.5 cursor-col-resize hover:bg-zinc-600 active:bg-zinc-500 transition-colors z-10"
-              />
-            </>
-          )}
-        </div>
 
-        {/* Canvas */}
-        <div className="flex-1 relative overflow-hidden bg-zinc-950">
-          {empty && loading ? (
-            <LoadingSkeleton />
-          ) : empty ? (
-            <div className="h-full flex flex-col items-center justify-center text-zinc-600 gap-4">
-              <Network className="w-12 h-12 text-zinc-800" />
-              <div className="text-center">
-                <p className="text-sm font-medium text-zinc-500">Empty graph</p>
-                <p className="text-xs text-zinc-600 mt-1">Paste a document in the Ingest panel to populate it</p>
-              </div>
-              <div className="flex gap-2 text-[10px] text-zinc-700">
-                <span className="px-2 py-1 rounded border border-zinc-800">8-K filing</span>
-                <span className="px-2 py-1 rounded border border-zinc-800">Press release</span>
-                <span className="px-2 py-1 rounded border border-zinc-800">Contract</span>
-              </div>
+              <Sidebar
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                collapsed={sidebarCollapsed}
+                setCollapsed={setSidebarCollapsed}
+                width={sidebarWidth}
+                setWidth={setSidebarWidth}
+                resizing={resizing}
+                setResizing={setResizing}
+                buildSection={buildSection}
+                setBuildSection={setBuildSection}
+              />
             </div>
-          ) : (
-            <GraphCanvas nodes={nodes} edges={edges} selectedNodeId={selectedNodeId} onSelectNode={selectNode} onMoveNode={moveNode} />
           )}
-        </div>
 
-        {/* Right sidebar: Query / LLM */}
-        <div
-          className="relative flex flex-col border-l border-zinc-800 bg-zinc-900/30 shrink-0"
-          style={{ width: rightCollapsed ? 40 : rightWidth, transition: resizing ? 'none' : 'width 300ms' }}
-        >
-          {rightCollapsed ? (
-            <button onClick={() => setRightCollapsed(false)} className="h-full flex items-center justify-center hover:bg-zinc-800 transition-colors">
-              <PanelRightOpen className="w-4 h-4 text-zinc-500" />
-            </button>
-          ) : (
-            <>
-              <div
-                onMouseDown={() => setResizing('right')}
-                className="absolute top-0 -left-1 h-full w-2.5 cursor-col-resize hover:bg-zinc-600 active:bg-zinc-500 transition-colors z-10"
-              />
-              <div className="h-9 border-b border-zinc-800 flex items-center shrink-0">
-                <button
-                  onClick={() => setRightTab('query')}
-                  className={`flex-1 h-full text-[9px] font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-1 ${
-                    rightTab === 'query' ? 'bg-white text-black' : 'text-zinc-500 hover:text-zinc-300'
-                  }`}
-                >
-                  <Search className="w-2.5 h-2.5" /> Query
-                </button>
-                <button
-                  onClick={() => setRightTab('triples')}
-                  className={`flex-1 h-full text-[9px] font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-1 ${
-                    rightTab === 'triples' ? 'bg-white text-black' : 'text-zinc-500 hover:text-zinc-300'
-                  }`}
-                >
-                  <Database className="w-2.5 h-2.5" /> Triples
-                </button>
-                <button
-                  onClick={() => setRightTab('ontology')}
-                  className={`flex-1 h-full text-[9px] font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-1 ${
-                    rightTab === 'ontology' ? 'bg-white text-black' : 'text-zinc-500 hover:text-zinc-300'
-                  }`}
-                >
-                  <BookOpen className="w-2.5 h-2.5" /> Ontology
-                </button>
-                <button
-                  onClick={() => setRightTab('llm')}
-                  className={`flex-1 h-full text-[9px] font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-1 ${
-                    rightTab === 'llm' ? 'bg-white text-black' : 'text-zinc-500 hover:text-zinc-300'
-                  }`}
-                >
-                  <Terminal className="w-2.5 h-2.5" /> LLM
-                </button>
-                <button
-                  onClick={() => setRightTab('agent')}
-                  className={`flex-1 h-full text-[9px] font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-1 ${
-                    rightTab === 'agent' ? 'bg-white text-black' : 'text-zinc-500 hover:text-zinc-300'
-                  }`}
-                >
-                  <Bot className="w-2.5 h-2.5" /> Agent
-                </button>
-                <button
-                  onClick={() => setRightTab('skills')}
-                  className={`flex-1 h-full text-[9px] font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-1 ${
-                    rightTab === 'skills' ? 'bg-white text-black' : 'text-zinc-500 hover:text-zinc-300'
-                  }`}
-                >
-                  <Wrench className="w-2.5 h-2.5" /> Skills
-                </button>
-                <button
-                  onClick={() => setRightTab('memory')}
-                  className={`flex-1 h-full text-[9px] font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-1 ${
-                    rightTab === 'memory' ? 'bg-white text-black' : 'text-zinc-500 hover:text-zinc-300'
-                  }`}
-                >
-                  <BrainCircuit className="w-2.5 h-2.5" /> Memory
-                </button>
-                <button onClick={() => setRightCollapsed(true)} className="w-9 h-full flex items-center justify-center text-zinc-600 hover:text-zinc-300 transition-colors shrink-0">
-                  <PanelRightClose className="w-4 h-4" />
-                </button>
-              </div>
-              <div className="flex-1 overflow-hidden">
-                {rightTab === 'query' ? (
-                  <QueryPanel />
-                ) : rightTab === 'triples' ? (
-                  <TripleStorePanel />
-                ) : rightTab === 'ontology' ? (
-                  <OntologyPanel />
-                ) : rightTab === 'llm' ? (
-                  <LlmPanel />
-                ) : rightTab === 'agent' ? (
-                  <AgentPanel />
-                ) : rightTab === 'skills' ? (
-                  <SkillManager />
-                ) : (
-                  <MemoryInspector />
-                )}
-              </div>
-            </>
-          )}
+          {activePage === 'documents' && <DocumentsPage />}
+          {activePage === 'logic' && <LogicPage />}
+          {activePage === 'inference' && <InferencePage />}
+          {activePage === 'query' && <QueryPage />}
         </div>
       </div>
+
+      <StatusFooter health={health} />
+
+      {showConnections && <ConnectionCenter onClose={() => setShowConnections(false)} health={health} />}
     </div>
   );
 }

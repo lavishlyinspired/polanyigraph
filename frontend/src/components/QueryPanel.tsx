@@ -65,7 +65,7 @@ export function QueryPanel() {
             placeholder='e.g., regulates("FINMA", X)'
             className="flex-1 bg-zinc-900 border border-zinc-700 rounded text-xs text-white placeholder:text-zinc-600 font-mono px-2 h-8 focus:outline-none focus:border-zinc-600"
           />
-          <button onClick={() => void handleRunQuery(queryText)} className="h-8 px-3 rounded bg-white text-black hover:bg-zinc-200 transition-colors">
+          <button onClick={() => void handleRunQuery(queryText)} className="h-8 px-3 rounded bg-blue-600 text-onaccent hover:bg-blue-500 transition-colors">
             <Search className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -111,7 +111,7 @@ export function QueryPanel() {
           <button
             onClick={() => void handleFindPath()}
             disabled={pathLoading || !pathSource.trim() || !pathTarget.trim()}
-            className="w-full h-8 rounded bg-white text-black text-[10px] font-bold uppercase tracking-wider hover:bg-zinc-200 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="w-full h-8 rounded bg-blue-600 text-onaccent text-[10px] font-bold uppercase tracking-wider hover:bg-blue-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {pathLoading ? 'Finding...' : 'Find Path'}
           </button>
@@ -142,7 +142,7 @@ export function QueryPanel() {
                 ))}
               </div>
               {/* Proof string */}
-              <div className="p-2 rounded bg-violet-400/5 border border-violet-400/20">
+              <div className="p-2 rounded bg-sky-400/5 border border-sky-400/20">
                 <div className="text-[8px] text-zinc-500 uppercase tracking-wider mb-1">Proof</div>
                 <div className="text-[10px] text-zinc-300 font-mono leading-relaxed break-all">{pathResult.proof}</div>
               </div>
@@ -181,7 +181,7 @@ export function QueryPanel() {
                 </div>
                 <div className="flex items-center gap-2 mt-1">
                   {r.derived ? (
-                    <span className="px-1.5 py-0.5 rounded text-[8px] bg-amber-400 text-black font-bold">DERIVED</span>
+                    <span className="px-1.5 py-0.5 rounded text-[8px] bg-amber-400 text-badgeink font-bold">DERIVED</span>
                   ) : (
                     <span className="px-1.5 py-0.5 rounded text-[8px] border border-zinc-700 text-zinc-500">BASE FACT</span>
                   )}

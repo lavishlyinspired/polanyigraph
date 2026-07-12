@@ -422,11 +422,16 @@ export const useGraphStore = create<GraphState>((set, get) => ({
 
   sendChatMessage: async (text: string) => {
     const userMsg: ChatMessage = { id: `u-${Date.now()}`, role: 'user', content: text };
-    set({ chatMessages: [...get().chatMessages, userMsg], chatLoading: true });
+    const assistantId = `a-${Date.now()}`;
+    const assistantMsg: ChatMessage = { id: assistantId, role: 'assistant', content: '' };
+    set({ chatMessages: [...get().chatMessages, userMsg, assistantMsg], chatLoading: true });
     try {
-      const res = await api.chat(get().graphId, text);
-      const assistantMsg: ChatMessage = { id: `a-${Date.now()}`, role: 'assistant', content: res.reply };
-      set({ chatMessages: [...get().chatMessages, assistantMsg], chatLoading: false });
+      await api.chatStream(get().graphId, text, (chunk) => {
+        set({
+          chatMessages: get().chatMessages.map((m) => (m.id === assistantId ? { ...m, content: m.content + chunk } : m)),
+        });
+      });
+      set({ chatLoading: false });
     } catch (e) {
       set({ chatLoading: false });
       toast.error(String(e));

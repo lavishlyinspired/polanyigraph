@@ -1,0 +1,255 @@
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { cn } from '@/lib/utils';
+import type { GraphNode, DerivedFact, NodeType, EdgeType } from '../types';
+
+interface InspectorPanelProps {
+  selectedNode: GraphNode | null;
+  derivedFacts: DerivedFact[];
+  onRunActivation: (id: string) => void;
+  onClearActivation: () => void;
+  onUpdateNote: (id: string, note: string) => void;
+  onAddNode: (label: string, type: NodeType) => void;
+  onLinkMode: (type: EdgeType) => void;
+  linkMode: string | null;
+  onRunInference: () => void;
+  onClearFacts: () => void;
+}
+
+const TYPE_LABELS: Record<NodeType, string> = {
+  concept: 'Concept', evidence: 'Evidence', question: 'Question', conclusion: 'Conclusion',
+};
+
+const EDGE_OPTIONS: { type: EdgeType; label: string; desc: string }[] = [
+  { type: 'causes', label: 'causes', desc: 'A causes B' },
+  { type: 'implies', label: 'implies', desc: 'A implies B' },
+  { type: 'depends-on', label: 'depends-on', desc: 'A depends on B' },
+  { type: 'contradicts', label: 'contradicts', desc: 'A contradicts B' },
+  { type: 'related', label: 'related', desc: 'A relates to B' },
+];
+
+export function InspectorPanel({
+  selectedNode, derivedFacts, onRunActivation, onClearActivation,
+  onUpdateNote, onAddNode, onLinkMode, linkMode, onRunInference, onClearFacts,
+}: InspectorPanelProps) {
+  return (
+    <div className="flex flex-col gap-4 h-full overflow-y-auto p-4">
+      {/* Ask a question */}
+      <Card className="border-amber-200 bg-amber-50/50">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-serif text-amber-900">Ask the graph</CardTitle>
+          <CardDescription className="text-amber-700/70">
+            Select a node, then spread activation to see what's relevant.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {selectedNode ? (
+            <>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="border-amber-300 text-amber-800">
+                  {TYPE_LABELS[selectedNode.type]}
+                </Badge>
+                <span className="text-sm font-semibold text-slate-800 truncate">{selectedNode.label}</span>
+              </div>
+              <Button
+                size="sm"
+                className="w-full bg-amber-600 hover:bg-amber-700 text-white"
+                onClick={() => onRunActivation(selectedNode.id)}
+              >
+                Spread activation from here
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="w-full border-slate-300 text-slate-600"
+                onClick={onClearActivation}
+              >
+                Clear activation
+              </Button>
+            </>
+          ) : (
+            <p className="text-sm text-slate-500 italic">Click a node in the graph to select it.</p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Node detail */}
+      {selectedNode && (
+        <Card className="border-slate-200">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-serif text-slate-800">Node detail</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div>
+              <Label className="text-xs text-slate-500">Note</Label>
+              <Textarea
+                value={selectedNode.note}
+                onChange={(e) => onUpdateNote(selectedNode.id, e.target.value)}
+                className="mt-1 text-sm bg-white"
+                rows={3}
+                placeholder="Add a note about this node…"
+              />
+            </div>
+            {selectedNode.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {selectedNode.tags.map((tag) => (
+                  <Badge key={tag} variant="secondary" className="text-xs bg-slate-100 text-slate-600">
+                    #{tag}
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Add node */}
+      <Card className="border-slate-200">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-serif text-slate-800">Add a node</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <AddNodeForm onAdd={onAddNode} />
+        </CardContent>
+      </Card>
+
+      {/* Link mode */}
+      <Card className="border-slate-200">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-serif text-slate-800">Link mode</CardTitle>
+          <CardDescription className="text-xs">
+            Pick a relation, then click two nodes to connect them.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <RadioGroup
+            value={linkMode ?? ''}
+            onValueChange={(v) => onLinkMode(v as EdgeType)}
+            className="grid grid-cols-1 gap-1.5"
+          >
+            {EDGE_OPTIONS.map((opt) => (
+              <div key={opt.type} className="flex items-center gap-2">
+                <RadioGroupItem value={opt.type} id={`edge-${opt.type}`} />
+                <Label htmlFor={`edge-${opt.type}`} className="text-xs cursor-pointer flex-1">
+                  <span className="font-semibold text-slate-700">{opt.label}</span>
+                  <span className="text-slate-400 ml-1">— {opt.desc}</span>
+                </Label>
+              </div>
+            ))}
+          </RadioGroup>
+          {linkMode && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="mt-2 w-full text-slate-500"
+              onClick={() => onLinkMode(null as any)}
+            >
+              Cancel linking
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Derived facts console */}
+      <Card className="border-cyan-200 bg-cyan-50/40">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-serif text-cyan-900">Inference console</CardTitle>
+          <CardDescription className="text-xs text-cyan-700/70">
+            Symbolic rules derive new conclusions from your graph.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              className="flex-1 bg-cyan-700 hover:bg-cyan-800 text-white"
+              onClick={onRunInference}
+            >
+              Run inference
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="border-cyan-300 text-cyan-700"
+              onClick={onClearFacts}
+            >
+              Clear
+            </Button>
+          </div>
+          {derivedFacts.length === 0 ? (
+            <p className="text-xs text-slate-500 italic pt-1">No facts derived yet.</p>
+          ) : (
+            <div className="space-y-1.5 max-h-48 overflow-y-auto">
+              {derivedFacts.map((fact) => (
+                <div
+                  key={fact.id}
+                  className="rounded-md bg-white border border-cyan-200 px-3 py-2"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-cyan-800">{fact.rule}</span>
+                    <Badge variant="secondary" className="text-[10px] bg-cyan-100 text-cyan-700">
+                      {Math.round(fact.confidence * 100)}%
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-slate-700 mt-0.5">{fact.fact}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function AddNodeForm({ onAdd }: { onAdd: (label: string, type: NodeType) => void }) {
+  return (
+    <div className="space-y-2">
+      <input
+        id="new-node-label"
+        type="text"
+        placeholder="Node label…"
+        className="w-full rounded-md border border-slate-200 px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            const input = e.currentTarget;
+            const select = document.getElementById('new-node-type') as HTMLSelectElement;
+            if (input.value.trim()) {
+              onAdd(input.value.trim(), (select?.value as NodeType) || 'concept');
+              input.value = '';
+            }
+          }
+        }}
+      />
+      <select
+        id="new-node-type"
+        defaultValue="concept"
+        className="w-full rounded-md border border-slate-200 px-3 py-1.5 text-sm bg-white"
+      >
+        <option value="concept">Concept</option>
+        <option value="evidence">Evidence</option>
+        <option value="question">Question</option>
+        <option value="conclusion">Conclusion</option>
+      </select>
+      <Button
+        size="sm"
+        variant="outline"
+        className="w-full border-slate-300 text-slate-600"
+        onClick={() => {
+          const input = document.getElementById('new-node-label') as HTMLInputElement;
+          const select = document.getElementById('new-node-type') as HTMLSelectElement;
+          if (input?.value.trim()) {
+            onAdd(input.value.trim(), (select.value as NodeType) || 'concept');
+            input.value = '';
+          }
+        }}
+      >
+        Add node
+      </Button>
+    </div>
+  );
+}

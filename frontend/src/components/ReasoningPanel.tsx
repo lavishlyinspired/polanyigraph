@@ -53,7 +53,7 @@ export function ReasoningPanel() {
             <span className="text-amber-400 font-bold">Activation</span> spreads from a source node
             (directed, decays per hop, weighted by edge weight & node salience — persists across
             iterations). <span className="text-emerald-400 font-bold">Derived</span> = a rule fired on
-            an active node. <span className="text-violet-400 font-bold">Proof paths</span> = the
+            an active node. <span className="text-sky-400 font-bold">Proof paths</span> = the
             derivation chain, including <span className="text-sky-400 font-bold">ontology resolution</span>{' '}
             when a rule matched via a real subclass relationship, not an exact type.
           </div>
@@ -96,7 +96,7 @@ export function ReasoningPanel() {
           {autoRunning ? (
             <button
               onClick={stopAutoRun}
-              className="flex-1 h-8 rounded bg-rose-500 text-white hover:bg-rose-600 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
+              className="flex-1 h-8 rounded bg-rose-500 text-onaccent hover:bg-rose-600 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
             >
               <Square className="w-3.5 h-3.5" /> Stop Auto-Run
             </button>
@@ -104,7 +104,7 @@ export function ReasoningPanel() {
             <button
               onClick={startAutoRun}
               disabled={!selected}
-              className="flex-1 h-8 rounded bg-white text-black hover:bg-zinc-200 text-xs font-bold flex items-center justify-center gap-1.5 disabled:opacity-40 transition-colors"
+              className="flex-1 h-8 rounded bg-blue-600 text-onaccent hover:bg-blue-500 text-xs font-bold flex items-center justify-center gap-1.5 disabled:opacity-40 transition-colors"
             >
               <Play className="w-3.5 h-3.5" /> Auto-Run Loop
             </button>
@@ -118,7 +118,7 @@ export function ReasoningPanel() {
           </button>
           <button
             onClick={toggleProofPath}
-            className={`h-8 px-3 rounded border text-xs transition-colors ${showProofPath ? 'bg-violet-400/20 border-violet-400/40 text-violet-400' : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:text-white'}`}
+            className={`h-8 px-3 rounded border text-xs transition-colors ${showProofPath ? 'bg-sky-400/20 border-sky-400/40 text-sky-400' : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:text-white'}`}
             title="Toggle proof-path highlighting"
           >
             <GitFork className="w-3.5 h-3.5" />
@@ -152,7 +152,7 @@ export function ReasoningPanel() {
         <button
           onClick={() => void spreadActivationStep()}
           disabled={!selected || loading || autoRunning}
-          className="w-full h-8 bg-white text-black hover:bg-zinc-200 text-xs font-bold rounded flex items-center justify-center gap-2 disabled:opacity-40 transition-colors"
+          className="w-full h-8 bg-blue-600 text-onaccent hover:bg-blue-500 text-xs font-bold rounded flex items-center justify-center gap-2 disabled:opacity-40 transition-colors"
         >
           <Zap className="w-3.5 h-3.5" /> Spread Activation
         </button>
@@ -195,7 +195,7 @@ export function ReasoningPanel() {
         <button
           onClick={() => void runInferenceStep()}
           disabled={!hasActivation || loading || autoRunning}
-          className="w-full h-8 bg-white text-black hover:bg-zinc-200 text-xs font-bold rounded flex items-center justify-center gap-2 disabled:opacity-40 transition-colors"
+          className="w-full h-8 bg-blue-600 text-onaccent hover:bg-blue-500 text-xs font-bold rounded flex items-center justify-center gap-2 disabled:opacity-40 transition-colors"
         >
           <Sparkles className="w-3.5 h-3.5" /> Run Inference
         </button>
@@ -205,7 +205,7 @@ export function ReasoningPanel() {
           <div className="mt-3">
             <div className="flex items-center gap-2 mb-1.5">
               <span className="text-[10px] text-zinc-500">Inference trace:</span>
-              <span className="px-1.5 py-0.5 rounded text-[8px] bg-emerald-400 text-black font-bold">{firedCount} fired</span>
+              <span className="px-1.5 py-0.5 rounded text-[8px] bg-emerald-400 text-badgeink font-bold">{firedCount} fired</span>
               {skippedCount > 0 && <span className="px-1.5 py-0.5 rounded text-[8px] border border-zinc-700 text-zinc-500">{skippedCount} skipped</span>}
             </div>
             <div className="space-y-1 max-h-40 overflow-y-auto">
@@ -250,7 +250,7 @@ export function ReasoningPanel() {
                       {f.fedBack ? '✓ fed back' : '⏳ pending feedback'}
                     </span>
                     {f.proofPath.length > 1 && (
-                      <span className="text-[9px] text-violet-400 flex items-center gap-0.5">
+                      <span className="text-[9px] text-sky-400 flex items-center gap-0.5">
                         <GitFork className="w-2.5 h-2.5" /> {f.proofPath.length}-hop proof
                       </span>
                     )}
@@ -259,7 +259,7 @@ export function ReasoningPanel() {
                     <div className="mt-1.5 border-t border-zinc-800 pt-1.5">
                       {f.proofPath.map((step, i) => (
                         <div key={i} className="text-[9px] text-zinc-400 ml-1 mb-1">
-                          <span className="text-violet-400 font-bold">{i + 1}.</span> [{step.ruleName}]{' '}
+                          <span className="text-sky-400 font-bold">{i + 1}.</span> [{step.ruleName}]{' '}
                           {step.sourceLabel} → {step.targetLabel}
                           <div className="text-zinc-600 ml-3">activation: {(step.premiseActivation * 100).toFixed(0)}%</div>
                           {step.typeResolution && (
@@ -287,7 +287,7 @@ export function ReasoningPanel() {
         <button
           onClick={() => void feedBackStep()}
           disabled={!hasFacts || pendingFeedback === 0 || loading || autoRunning}
-          className="w-full h-8 bg-white text-black hover:bg-zinc-200 text-xs font-bold rounded flex items-center justify-center gap-2 disabled:opacity-40 transition-colors"
+          className="w-full h-8 bg-blue-600 text-onaccent hover:bg-blue-500 text-xs font-bold rounded flex items-center justify-center gap-2 disabled:opacity-40 transition-colors"
         >
           <RefreshCw className="w-3.5 h-3.5" /> Feed Back{pendingFeedback > 0 ? ` (${pendingFeedback})` : ''}
         </button>
@@ -318,11 +318,11 @@ export function ReasoningPanel() {
         <button
           onClick={() => void reason()}
           disabled={!selected || loading || autoRunning}
-          className="w-full h-8 bg-white text-black hover:bg-zinc-200 text-xs font-bold rounded flex items-center justify-center gap-2 disabled:opacity-40 transition-colors"
+          className="w-full h-8 bg-blue-600 text-onaccent hover:bg-blue-500 text-xs font-bold rounded flex items-center justify-center gap-2 disabled:opacity-40 transition-colors"
         >
           {loading ? (
             <>
-              <div className="w-3 h-3 border-2 border-black border-t-transparent rounded-full animate-spin" />
+              <div className="w-3 h-3 border-2 border-onaccent border-t-transparent rounded-full animate-spin" />
               Reasoning…
             </>
           ) : (

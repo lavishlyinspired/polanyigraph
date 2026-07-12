@@ -78,7 +78,7 @@ export function SkillManager() {
                   <button
                     onClick={() => void activateSkill(skill.name)}
                     disabled={skill.active || activatingSkillName === skill.name}
-                    className="w-full h-7 rounded bg-white text-black hover:bg-zinc-200 text-[9px] font-bold flex items-center justify-center gap-1.5 disabled:opacity-40 transition-colors"
+                    className="w-full h-7 rounded bg-blue-600 text-onaccent hover:bg-blue-500 text-[9px] font-bold flex items-center justify-center gap-1.5 disabled:opacity-40 transition-colors"
                   >
                     {activatingSkillName === skill.name ? (
                       <Loader className="w-3 h-3 animate-spin" />

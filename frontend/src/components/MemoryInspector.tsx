@@ -72,7 +72,7 @@ export function MemoryInspector() {
           <button
             onClick={() => void handleSearch()}
             disabled={memorySearching || !memoryQuery.trim()}
-            className="h-8 px-3 rounded bg-white text-black hover:bg-zinc-200 transition-colors disabled:opacity-40"
+            className="h-8 px-3 rounded bg-blue-600 text-onaccent hover:bg-blue-500 transition-colors disabled:opacity-40"
           >
             {memorySearching ? <Loader className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />}
           </button>
@@ -115,7 +115,7 @@ export function MemoryInspector() {
               <button
                 onClick={() => void handleAddPreference()}
                 disabled={!prefKey.trim() || !prefValue.trim()}
-                className="w-6 h-6 rounded bg-white text-black hover:bg-zinc-200 flex items-center justify-center disabled:opacity-40 transition-colors"
+                className="w-6 h-6 rounded bg-blue-600 text-onaccent hover:bg-blue-500 flex items-center justify-center disabled:opacity-40 transition-colors"
               >
                 <Plus className="w-3 h-3" />
               </button>

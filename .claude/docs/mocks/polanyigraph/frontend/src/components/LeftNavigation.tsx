@@ -1,5 +1,5 @@
 import { 
-  Network, FileText, Cpu, Brain, Terminal, Activity, HelpCircle 
+  Network, FileText, Cpu, Brain, Terminal, Activity, HelpCircle, Settings 
 } from 'lucide-react';
 
 export type PageType = 'workspace' | 'documents' | 'logic' | 'inference' | 'query';
@@ -23,7 +23,7 @@ const NAV_ITEMS: NavItem[] = [
     label: 'Canvas', 
     subLabel: 'Visual KG', 
     icon: Network, 
-    accent: 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20' 
+    accent: 'text-blue-400 bg-blue-500/10 border-blue-500/20' 
   },
   { 
     id: 'documents', 
@@ -37,11 +37,11 @@ const NAV_ITEMS: NavItem[] = [
     label: 'Logic Lab', 
     subLabel: 'FIBO Schema', 
     icon: Cpu, 
-    accent: 'text-violet-400 bg-violet-500/10 border-violet-500/20' 
+    accent: 'text-sky-400 bg-sky-500/10 border-sky-500/20' 
   },
   { 
     id: 'inference', 
-    label: 'Solver Lab', 
+    label: 'Inference Lab', 
     subLabel: 'NS-Solver', 
     icon: Brain, 
     accent: 'text-amber-400 bg-amber-500/10 border-amber-400/20' 
@@ -74,14 +74,14 @@ export function LeftNavigation({ activePage, onPageChange }: LeftNavigationProps
                 onClick={() => onPageChange(item.id)}
                 className={`w-13 h-13 rounded-xl flex flex-col items-center justify-center relative group transition-all duration-200 select-none border ${
                   isSelected
-                    ? `${item.accent} border border-indigo-500/30 scale-102`
-                    : 'border-transparent text-zinc-500 hover:text-zinc-200 hover:bg-zinc-900/60 hover:scale-102'
+                    ? `${item.accent} border border-blue-500/30 scale-102`
+                    : 'border-transparent text-zinc-200 hover:text-white hover:bg-zinc-900/60 hover:scale-102'
                 }`}
                 title={`${item.label} - ${item.subLabel}`}
               >
                 {/* Active indicator bar */}
                 {isSelected && (
-                  <span className="absolute left-0 top-3 bottom-3 w-[3px] bg-indigo-500 rounded-r" />
+                  <span className="absolute left-0 top-3 bottom-3 w-[3px] bg-blue-500 rounded-r" />
                 )}
 
                 <Icon className={`w-5 h-5 ${isSelected ? '' : 'group-hover:scale-105 transition-transform'}`} />

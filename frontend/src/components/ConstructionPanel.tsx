@@ -12,8 +12,8 @@ import { useEffect, useState } from 'react';
 import { Layers, Cpu, Info, ChevronRight, Plus, GitBranch, GitFork, Trash2, X, Lightbulb } from 'lucide-react';
 import { useGraphStore } from '../stores/graphStore';
 
-const SELECT_CLS = 'w-full bg-zinc-900 border border-zinc-700 rounded text-xs text-white h-8 px-2 focus:outline-none focus:border-zinc-600 transition-colors appearance-none cursor-pointer';
-const INPUT_CLS = 'w-full bg-zinc-900 border border-zinc-700 rounded text-xs text-white placeholder:text-zinc-600 h-8 px-2 focus:outline-none focus:border-zinc-600 transition-colors';
+const SELECT_CLS = 'w-full bg-zinc-900 border border-zinc-700 rounded text-xs text-white h-8 px-2 focus:outline-none focus:border-blue-500 transition-colors appearance-none cursor-pointer';
+const INPUT_CLS = 'w-full bg-zinc-900 border border-zinc-700 rounded text-xs text-white placeholder:text-zinc-600 h-8 px-2 focus:outline-none focus:border-blue-500 transition-colors';
 
 export function ConstructionPanel() {
   const {
@@ -113,7 +113,7 @@ export function ConstructionPanel() {
                 {selected.type}
               </span>
               {selected.derived && (
-                <span className="px-2 py-0.5 rounded text-[9px] bg-amber-400 text-black font-bold">DERIVED</span>
+                <span className="px-2 py-0.5 rounded text-[9px] bg-amber-400 text-badgeink font-bold">DERIVED</span>
               )}
               {(selected.activation ?? 0) > 0.01 && (
                 <span className="px-2 py-0.5 rounded text-[9px] border border-zinc-600 text-zinc-300">
@@ -138,7 +138,7 @@ export function ConstructionPanel() {
                 onChange={(e) => setSalienceDraft(parseFloat(e.target.value))}
                 onMouseUp={handleSaveSalience}
                 onTouchEnd={handleSaveSalience}
-                className="w-full mt-1 accent-white"
+                className="w-full mt-1 accent-blue-500"
               />
               <p className="text-[9px] text-zinc-600 mt-0.5">Higher salience = receives more activation from neighbors.</p>
             </div>
@@ -153,7 +153,7 @@ export function ConstructionPanel() {
                     <input
                       value={value}
                       onChange={(e) => setPropsDraft({ ...propsDraft, [key]: e.target.value })}
-                      className="flex-1 bg-zinc-900 border border-zinc-700 rounded text-[10px] text-white h-7 px-1.5 focus:outline-none focus:border-zinc-600 transition-colors"
+                      className="flex-1 bg-zinc-900 border border-zinc-700 rounded text-[10px] text-white h-7 px-1.5 focus:outline-none focus:border-blue-500 transition-colors"
                     />
                     <button
                       onClick={() => {
@@ -172,14 +172,14 @@ export function ConstructionPanel() {
                     value={newPropKey}
                     onChange={(e) => setNewPropKey(e.target.value)}
                     placeholder="key"
-                    className="w-20 shrink-0 bg-zinc-900 border border-zinc-700 rounded text-[10px] text-white placeholder:text-zinc-600 h-7 px-1.5 focus:outline-none focus:border-zinc-600 transition-colors"
+                    className="w-20 shrink-0 bg-zinc-900 border border-zinc-700 rounded text-[10px] text-white placeholder:text-zinc-600 h-7 px-1.5 focus:outline-none focus:border-blue-500 transition-colors"
                   />
                   <input
                     value={newPropValue}
                     onChange={(e) => setNewPropValue(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleAddProperty()}
                     placeholder="value"
-                    className="flex-1 bg-zinc-900 border border-zinc-700 rounded text-[10px] text-white placeholder:text-zinc-600 h-7 px-1.5 focus:outline-none focus:border-zinc-600 transition-colors"
+                    className="flex-1 bg-zinc-900 border border-zinc-700 rounded text-[10px] text-white placeholder:text-zinc-600 h-7 px-1.5 focus:outline-none focus:border-blue-500 transition-colors"
                   />
                   <button onClick={handleAddProperty} className="text-zinc-500 hover:text-white transition-colors shrink-0">
                     <Plus className="w-3.5 h-3.5" />
@@ -203,13 +203,13 @@ export function ConstructionPanel() {
 
             {/* Proof path */}
             {nodeProofPath.length > 0 && (
-              <div className="p-2 rounded-lg bg-violet-400/10 border border-violet-400/30">
-                <div className="text-[10px] text-violet-400 font-bold mb-1.5 flex items-center gap-1">
+              <div className="p-2 rounded-lg bg-sky-400/10 border border-sky-400/30">
+                <div className="text-[10px] text-sky-400 font-bold mb-1.5 flex items-center gap-1">
                   <GitFork className="w-3 h-3" /> Proof Path ({nodeProofPath.length} hops)
                 </div>
                 {nodeProofPath.map((step, i) => (
                   <div key={i} className="text-[9px] text-zinc-400 ml-3 mb-1">
-                    <span className="text-violet-400 font-bold">{i + 1}.</span> [{step.ruleName}] {step.sourceLabel} → {step.targetLabel}
+                    <span className="text-sky-400 font-bold">{i + 1}.</span> [{step.ruleName}] {step.sourceLabel} → {step.targetLabel}
                     <div className="text-zinc-600 ml-3">activation: {(step.premiseActivation * 100).toFixed(0)}% · iter {step.iteration}</div>
                     {step.typeResolution && <div className="text-sky-400 ml-3">ontology: {step.typeResolution}</div>}
                   </div>
@@ -225,7 +225,7 @@ export function ConstructionPanel() {
                 onChange={(e) => setNoteDraft(e.target.value)}
                 onBlur={handleSaveNote}
                 placeholder="Add a note..."
-                className="mt-1 w-full bg-zinc-900 border border-zinc-700 rounded p-2 text-xs text-white placeholder:text-zinc-600 min-h-[60px] resize-none focus:outline-none focus:border-zinc-600 transition-colors"
+                className="mt-1 w-full bg-zinc-900 border border-zinc-700 rounded p-2 text-xs text-white placeholder:text-zinc-600 min-h-[60px] resize-none focus:outline-none focus:border-blue-500 transition-colors"
               />
             </div>
           </div>
@@ -260,7 +260,7 @@ export function ConstructionPanel() {
           <button
             onClick={() => void handleAddNode()}
             disabled={!newNodeLabel.trim() || !newNodeType.trim()}
-            className="w-full h-8 bg-white text-black hover:bg-zinc-200 text-xs font-bold rounded flex items-center justify-center gap-1.5 disabled:opacity-40 transition-colors"
+            className="w-full h-8 bg-blue-600 text-onaccent hover:bg-blue-500 text-xs font-bold rounded flex items-center justify-center gap-1.5 disabled:opacity-40 transition-colors shadow shadow-blue-500/20"
           >
             <Plus className="w-3.5 h-3.5" /> Add Node
           </button>
@@ -296,7 +296,7 @@ export function ConstructionPanel() {
             <button
               onClick={() => newEdgeType.trim() && setLinkMode(newEdgeType.trim())}
               disabled={!newEdgeType.trim()}
-              className="w-full h-8 bg-white text-black hover:bg-zinc-200 text-xs font-bold rounded flex items-center justify-center gap-1.5 disabled:opacity-40 transition-colors"
+              className="w-full h-8 bg-blue-600 text-onaccent hover:bg-blue-500 text-xs font-bold rounded flex items-center justify-center gap-1.5 disabled:opacity-40 transition-colors shadow shadow-blue-500/20"
             >
               <GitBranch className="w-3.5 h-3.5" /> Start Linking
             </button>
@@ -324,14 +324,14 @@ export function ConstructionPanel() {
               value={ruleName}
               onChange={(e) => setRuleName(e.target.value)}
               placeholder="Rule name..."
-              className="w-full bg-zinc-950 border border-zinc-700 rounded text-xs text-white placeholder:text-zinc-600 h-8 px-2 focus:outline-none focus:border-zinc-600 transition-colors"
+              className="w-full bg-zinc-950 border border-zinc-700 rounded text-xs text-white placeholder:text-zinc-600 h-8 px-2 focus:outline-none focus:border-blue-500 transition-colors"
             />
             <div className="grid grid-cols-2 gap-2">
               <div className="relative">
                 <select
                   value={ruleSourceType}
                   onChange={(e) => setRuleSourceType(e.target.value)}
-                  className="w-full bg-zinc-950 border border-zinc-700 rounded text-xs text-white h-8 px-2 pr-6 focus:outline-none focus:border-zinc-600 transition-colors appearance-none cursor-pointer"
+                  className="w-full bg-zinc-950 border border-zinc-700 rounded text-xs text-white h-8 px-2 pr-6 focus:outline-none focus:border-blue-500 transition-colors appearance-none cursor-pointer"
                 >
                   <option value="" disabled>Source type...</option>
                   {ontologyClasses.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -342,7 +342,7 @@ export function ConstructionPanel() {
                 <select
                   value={ruleTargetType}
                   onChange={(e) => setRuleTargetType(e.target.value)}
-                  className="w-full bg-zinc-950 border border-zinc-700 rounded text-xs text-white h-8 px-2 pr-6 focus:outline-none focus:border-zinc-600 transition-colors appearance-none cursor-pointer"
+                  className="w-full bg-zinc-950 border border-zinc-700 rounded text-xs text-white h-8 px-2 pr-6 focus:outline-none focus:border-blue-500 transition-colors appearance-none cursor-pointer"
                 >
                   <option value="" disabled>Target type...</option>
                   {ontologyClasses.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -354,7 +354,7 @@ export function ConstructionPanel() {
               <select
                 value={ruleEdgeType}
                 onChange={(e) => setRuleEdgeType(e.target.value)}
-                className="w-full bg-zinc-950 border border-zinc-700 rounded text-xs text-white h-8 px-2 pr-6 focus:outline-none focus:border-zinc-600 transition-colors appearance-none cursor-pointer"
+                className="w-full bg-zinc-950 border border-zinc-700 rounded text-xs text-white h-8 px-2 pr-6 focus:outline-none focus:border-blue-500 transition-colors appearance-none cursor-pointer"
               >
                 <option value="" disabled>Edge type (relation)...</option>
                 {ontologyProperties.map((p) => <option key={p} value={p}>{p}</option>)}
@@ -366,19 +366,19 @@ export function ConstructionPanel() {
               <input
                 type="range" min={0} max={100} step={5} value={ruleThreshold}
                 onChange={(e) => setRuleThreshold(e.target.value)}
-                className="w-full accent-white"
+                className="w-full accent-blue-500"
               />
             </div>
             <input
               value={ruleDescription}
               onChange={(e) => setRuleDescription(e.target.value)}
               placeholder="Description with {source} and {target}"
-              className="w-full bg-zinc-950 border border-zinc-700 rounded text-xs text-white placeholder:text-zinc-600 h-8 px-2 focus:outline-none focus:border-zinc-600 transition-colors"
+              className="w-full bg-zinc-950 border border-zinc-700 rounded text-xs text-white placeholder:text-zinc-600 h-8 px-2 focus:outline-none focus:border-blue-500 transition-colors"
             />
             <button
               onClick={() => void handleAddRule()}
               disabled={!ruleName.trim() || !ruleEdgeType.trim() || !ruleSourceType.trim() || !ruleTargetType.trim()}
-              className="w-full h-8 bg-white text-black hover:bg-zinc-200 text-xs font-bold rounded flex items-center justify-center gap-1.5 disabled:opacity-40 transition-colors"
+              className="w-full h-8 bg-blue-600 text-onaccent hover:bg-blue-500 text-xs font-bold rounded flex items-center justify-center gap-1.5 disabled:opacity-40 transition-colors shadow shadow-blue-500/20"
             >
               Add Rule
             </button>
@@ -393,7 +393,7 @@ export function ConstructionPanel() {
                   <div className="flex items-center gap-1.5">
                     <span className="text-xs font-semibold text-white truncate">{rule.name}</span>
                     {rule.source === 'custom' && (
-                      <span className="px-1.5 py-0.5 rounded text-[8px] bg-sky-400/20 text-sky-400 font-bold shrink-0">CUSTOM</span>
+                      <span className="px-1.5 py-0.5 rounded text-[8px] bg-zinc-800 text-zinc-300 border border-zinc-700/50 font-bold shrink-0">CUSTOM</span>
                     )}
                   </div>
                   <div className="text-[10px] text-zinc-500 mt-0.5 flex items-center gap-1 flex-wrap">

@@ -4,7 +4,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ApiEdge } from '../lib/api';
 import type { LayoutNode } from '../stores/graphStore';
 import { useGraphStore } from '../stores/graphStore';
-import { ZoomIn, ZoomOut, Maximize2, Layers, Eye, GitBranch, X, Boxes, Sparkles } from 'lucide-react';
+import { useThemeStore } from '../stores/themeStore';
+import { ZoomIn, ZoomOut, Maximize2, Layers, Eye, GitBranch, X, Boxes, Sparkles, ChevronDown, ChevronUp, Info } from 'lucide-react';
 
 interface GraphCanvasProps {
   nodes: LayoutNode[];
@@ -24,8 +25,21 @@ function typeColor(type: string): string {
   return `hsl(${hashHue(type)}, 55%, 55%)`;
 }
 
-function typeColorDark(type: string): string {
-  return `hsl(${hashHue(type)}, 30%, 18%)`;
+// Node border (unselected/non-hovered) and fill are tuned by lightness for
+// each theme: dark mode wants a near-black fill with a subtly lighter border;
+// light mode mirrors that with a near-white pastel fill and a slightly darker
+// border, so nodes keep the same "tinted but subtle" read in both themes.
+function typeColorDark(type: string, isLight: boolean): string {
+  return `hsl(${hashHue(type)}, 30%, ${isLight ? 78 : 18}%)`;
+}
+
+// UI_REFACTOR_PLAN.md node polish: a subtly type-tinted fill for the node's
+// own circle (not just its border), so every node reads as "belonging" to
+// its type even before selection or activation -- mirrors the reference
+// mockup's per-type-tinted node fills instead of one flat color for every
+// unselected node.
+function typeColorFill(type: string, isLight: boolean): string {
+  return `hsl(${hashHue(type)}, 45%, ${isLight ? 92 : 8}%)`;
 }
 
 // UI_PLAN.md §9.5.2: same hash-hue approach applied to communityId (a number,
@@ -35,8 +49,12 @@ function communityColor(communityId: number): string {
   return `hsl(${hashHue(String(communityId))}, 55%, 55%)`;
 }
 
-function communityColorDark(communityId: number): string {
-  return `hsl(${hashHue(String(communityId))}, 30%, 18%)`;
+function communityColorDark(communityId: number, isLight: boolean): string {
+  return `hsl(${hashHue(String(communityId))}, 30%, ${isLight ? 78 : 18}%)`;
+}
+
+function communityColorFill(communityId: number, isLight: boolean): string {
+  return `hsl(${hashHue(String(communityId))}, 45%, ${isLight ? 92 : 8}%)`;
 }
 
 function activationGlow(activation: number): string {
@@ -51,11 +69,26 @@ export function GraphCanvas({ nodes, edges, selectedNodeId, onSelectNode, onMove
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [panning, setPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [legendCollapsed, setLegendCollapsed] = useState(false);
   const {
     zoom, pan, setZoom, setPan, showHeatmap, showProofPath, toggleHeatmap, toggleProofPath,
     linkMode, linkSourceId, setLinkMode, handleCanvasNodeClick,
     pendingFacts, approvedFacts, showCommunities, detectingCommunities, detectCommunities, toggleCommunities,
   } = useGraphStore();
+  const isLight = useThemeStore((s) => s.theme === 'light');
+  // Neutral canvas tones aren't Tailwind classes (raw SVG attributes), so they
+  // need an explicit light/dark pair here -- everything else in this file
+  // re-themes for free via the CSS-variable-backed zinc palette. Accent hues
+  // (sky/amber) are deliberately unchanged in both themes.
+  const gridStroke = isLight ? '#d4d4d9' : '#27272a';
+  const arrowDefault = isLight ? '#8d8d94' : '#52525b';
+  const strongNeutral = isLight ? '#1a1a1d' : '#fff';
+  const pillFillActive = isLight ? '#d4d4d9' : '#27272a';
+  const pillFillDefault = isLight ? '#fafafb' : '#09090b';
+  const pillFillProof = isLight ? '#e0f2fe' : '#082f49';
+  const pillTextProof = isLight ? '#075985' : '#bae6fd';
+  const implicitMarkerRing = isLight ? '#d4d4d9' : '#18181b';
 
   const handleWheel = useCallback((e: React.WheelEvent) => {
     e.preventDefault();
@@ -161,17 +194,17 @@ export function GraphCanvas({ nodes, edges, selectedNodeId, onSelectNode, onMove
         onWheel={handleWheel}
       >
         <defs>
-          <pattern id="grid" width={40} height={40} patternUnits="userSpaceOnUse" patternTransform={`translate(${pan.x % (40 * zoom)}, ${pan.y % (40 * zoom)}) scale(${zoom})`}>
-            <circle cx={20} cy={20} r={1} fill="#27272a" />
+          <pattern id="grid" width={32} height={32} patternUnits="userSpaceOnUse" patternTransform={`translate(${pan.x % (32 * zoom)}, ${pan.y % (32 * zoom)}) scale(${zoom})`}>
+            <path d="M 32 0 L 0 0 0 32" fill="none" stroke={gridStroke} strokeWidth={1} opacity={0.35} />
           </pattern>
           <marker id="arrow" viewBox="0 0 10 10" refX={24} refY={5} markerWidth={6} markerHeight={6} orient="auto">
-            <path d="M 0 0 L 10 5 L 0 10 z" fill="#52525b" />
+            <path d="M 0 0 L 10 5 L 0 10 z" fill={arrowDefault} />
           </marker>
           <marker id="arrow-active" viewBox="0 0 10 10" refX={24} refY={5} markerWidth={6} markerHeight={6} orient="auto">
-            <path d="M 0 0 L 10 5 L 0 10 z" fill="#fff" />
+            <path d="M 0 0 L 10 5 L 0 10 z" fill={strongNeutral} />
           </marker>
           <marker id="arrow-proof" viewBox="0 0 10 10" refX={24} refY={5} markerWidth={6} markerHeight={6} orient="auto">
-            <path d="M 0 0 L 10 5 L 0 10 z" fill="#8b5cf6" />
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#0ea5e9" />
           </marker>
         </defs>
 
@@ -187,7 +220,10 @@ export function GraphCanvas({ nodes, edges, selectedNodeId, onSelectNode, onMove
             ) : null,
           )}
 
-          {/* Edges */}
+          {/* Edges. Relation-type coloring and the pill-badge label overlay are
+              hash-hue based (same `typeColor`/`typeColorFill` used for nodes),
+              not a hardcoded per-relation-name palette -- this stays correct
+              for whatever ontology is loaded, not just one domain's edge names. */}
           {edges.map((edge) => {
             const source = byId.get(edge.source);
             const target = byId.get(edge.target);
@@ -196,21 +232,62 @@ export function GraphCanvas({ nodes, edges, selectedNodeId, onSelectNode, onMove
             const isProof = proofEdgeTypes.has(edge.type);
             const midX = (source.x + target.x) / 2;
             const midY = (source.y + target.y) / 2;
-            const strokeColor = isProof ? '#8b5cf6' : isActive ? '#fff' : '#3f3f46';
+            const relationColor = typeColor(edge.type);
+            const strokeColor = isProof ? '#38bdf8' : isActive ? strongNeutral : relationColor;
             const markerEnd = isProof ? 'url(#arrow-proof)' : isActive ? 'url(#arrow-active)' : 'url(#arrow)';
+            const pillWidth = Math.max(52, edge.type.length * 5.8 + 12);
+            const pillHeight = 15;
             return (
               <g key={edge.id}>
+                {/* Glow underlay for active/proof edges */}
+                {(isProof || isActive) && (
+                  <line
+                    x1={source.x} y1={source.y} x2={target.x} y2={target.y}
+                    stroke={isProof ? '#38bdf8' : strongNeutral}
+                    strokeWidth={isProof ? 4 : 3}
+                    opacity={isProof ? 0.15 : 0.08}
+                    className="pointer-events-none"
+                  />
+                )}
+
                 <line
                   x1={source.x} y1={source.y} x2={target.x} y2={target.y}
                   stroke={strokeColor}
-                  strokeWidth={isActive ? 2 : 1}
-                  opacity={isProof ? 0.9 : isActive ? 0.8 : 0.5}
-                  strokeDasharray={isProof ? '6 3' : undefined}
+                  strokeWidth={isProof ? 1.75 : isActive ? 1.5 : 1}
+                  opacity={isProof ? 1 : isActive ? 0.9 : 0.55}
+                  strokeDasharray={isProof ? '5 3' : isActive ? '3 3' : undefined}
                   markerEnd={markerEnd}
-                />
-                <text x={midX} y={midY - 6} textAnchor="middle" className="fill-zinc-600 text-[9px] pointer-events-none select-none">
-                  {edge.type}
-                </text>
+                >
+                  {(isProof || isActive) && (
+                    <animate attributeName="stroke-dashoffset" values="60;0" dur={isProof ? '2.5s' : '4s'} repeatCount="indefinite" />
+                  )}
+                </line>
+
+                {/* Pill/badge overlay for the relation label -- isolates the text
+                    from the grid/intersecting lines behind it, unlike bare text
+                    floating directly on the canvas. */}
+                <g transform={`translate(${midX}, ${midY})`} className="pointer-events-none">
+                  <rect
+                    x={-pillWidth / 2}
+                    y={-pillHeight / 2}
+                    width={pillWidth}
+                    height={pillHeight}
+                    rx={6}
+                    fill={isProof ? pillFillProof : isActive ? pillFillActive : pillFillDefault}
+                    stroke={isProof ? '#38bdf8' : isActive ? strongNeutral : relationColor}
+                    strokeWidth={1.2}
+                    strokeOpacity={isProof || isActive ? 0.9 : 0.6}
+                  />
+                  <text
+                    y={0}
+                    dominantBaseline="central"
+                    textAnchor="middle"
+                    style={{ fill: isProof ? pillTextProof : isActive ? strongNeutral : relationColor }}
+                    className="text-[8.5px] font-mono font-bold tracking-wider select-none"
+                  >
+                    {edge.type}
+                  </text>
+                </g>
               </g>
             );
           })}
@@ -224,8 +301,10 @@ export function GraphCanvas({ nodes, edges, selectedNodeId, onSelectNode, onMove
             );
             const hasImplicitFact = implicitFactNodeIds.has(node.id);
             const color = showCommunities && node.communityId != null ? communityColor(node.communityId) : typeColor(node.type);
-            const darkColor = showCommunities && node.communityId != null ? communityColorDark(node.communityId) : typeColorDark(node.type);
-            const r = 18;
+            const darkColor = showCommunities && node.communityId != null ? communityColorDark(node.communityId, isLight) : typeColorDark(node.type, isLight);
+            const fillColor = showCommunities && node.communityId != null ? communityColorFill(node.communityId, isLight) : typeColorFill(node.type, isLight);
+            const isHovered = node.id === hoveredId;
+            const r = 20;
             const activation = node.activation ?? 0;
             const glowOpacity = Math.min(activation, 1);
             return (
@@ -234,6 +313,8 @@ export function GraphCanvas({ nodes, edges, selectedNodeId, onSelectNode, onMove
                 transform={`translate(${node.x}, ${node.y})`}
                 onMouseDown={(e) => handleMouseDown(e, node)}
                 onClick={(e) => { e.stopPropagation(); onSelectNode(node.id); }}
+                onMouseEnter={() => setHoveredId(node.id)}
+                onMouseLeave={() => setHoveredId((id) => (id === node.id ? null : id))}
                 style={{ cursor: 'pointer' }}
               >
                 {activation > 0.01 && (
@@ -252,35 +333,62 @@ export function GraphCanvas({ nodes, edges, selectedNodeId, onSelectNode, onMove
                 )}
 
                 {isProofNode && (
-                  <circle r={r + 11} fill="none" stroke="#a78bfa" strokeWidth={1.5} strokeDasharray="4 3" opacity={0.7} className="pointer-events-none" />
+                  <circle r={r + 13} fill="none" stroke="#38bdf8" strokeWidth={1.5} strokeDasharray="4 3" opacity={0.7} className="pointer-events-none" />
                 )}
 
-                {/* UI_PLAN.md §9.3.4: implicit-fact marker, distinct from `derived`
-                    (amber) and proof-path (violet dashed) -- fuchsia dot badge. */}
+                {/* Selection halo: a distinct ring (separate from the activation glow,
+                    derived-fact pulse, and proof-path dashed ring above) at the node's
+                    own type/community color, so "selected" reads clearly at a glance --
+                    kept mounted and cross-fades via opacity rather than conditionally
+                    rendered, for a smooth transition on click. */}
+                <circle
+                  r={r + 6}
+                  fill="none"
+                  stroke={color}
+                  strokeWidth={1.5}
+                  opacity={isSelected ? 0.55 : 0}
+                  className="pointer-events-none transition-opacity duration-200"
+                />
+                {/* Hover ring: same treatment, one step in from the selection halo, only
+                    shown for a non-selected node under the pointer -- the only hover
+                    affordance nodes had before was the cursor changing to a pointer. */}
+                <circle
+                  r={r + 4}
+                  fill="none"
+                  stroke={color}
+                  strokeWidth={1}
+                  opacity={isHovered && !isSelected ? 0.45 : 0}
+                  className="pointer-events-none transition-opacity duration-150"
+                />
+
+                {/* UI_REFACTOR_PLAN.md §4: implicit-fact marker, distinct from `derived`
+                    (amber) -- folded into the sky "structural/explain" role since an
+                    implicit fact is itself a kind of derivation, same as proof-path. */}
                 {hasImplicitFact && (
                   <g transform={`translate(${r - 4}, ${-r + 4})`} className="pointer-events-none">
-                    <circle r={6} fill="#d946ef" stroke="#18181b" strokeWidth={1.5} />
-                    <text y={2.5} textAnchor="middle" className="fill-white text-[7px] font-bold select-none">✦</text>
+                    <circle r={6} fill="#38bdf8" stroke={implicitMarkerRing} strokeWidth={1.5} />
+                    <text y={2.5} textAnchor="middle" className="fill-onaccent text-[7px] font-bold select-none">✦</text>
                   </g>
                 )}
 
                 <circle
                   r={r}
-                  fill={isSelected ? color : '#18181b'}
-                  stroke={isSelected || isLinkSource ? '#fff' : darkColor}
-                  strokeWidth={isSelected ? 0 : isLinkSource ? 2.5 : 2}
-                  opacity={isSelected ? 1 : 0.9}
+                  fill={isSelected ? color : fillColor}
+                  stroke={isSelected || isLinkSource ? strongNeutral : isHovered ? color : darkColor}
+                  strokeWidth={isSelected ? 0 : isLinkSource ? 2.5 : isHovered ? 2 : 1.5}
+                  opacity={isSelected ? 1 : 0.95}
+                  className="transition-colors duration-150"
                 />
 
-                <text y={r + 14} textAnchor="middle" className={`text-[10px] font-medium pointer-events-none select-none ${isSelected ? 'fill-white' : 'fill-zinc-300'}`}>
+                <text y={r + 15} textAnchor="middle" className={`text-[10px] font-semibold pointer-events-none select-none ${isSelected || isHovered ? 'fill-white' : 'fill-zinc-300'}`}>
                   {node.label}
                 </text>
-                <text y={r + 26} textAnchor="middle" className="fill-zinc-600 text-[8px] pointer-events-none select-none">
+                <text y={r + 27} textAnchor="middle" fill={color} opacity={0.8} className="text-[8px] font-mono pointer-events-none select-none">
                   {node.type}
                 </text>
 
                 {activation > 0.01 && (
-                  <text y={4} textAnchor="middle" className="fill-black text-[9px] font-bold pointer-events-none select-none">
+                  <text y={4} textAnchor="middle" className="fill-badgeink text-[9px] font-bold pointer-events-none select-none">
                     {(activation * 100).toFixed(0)}
                   </text>
                 )}
@@ -288,7 +396,7 @@ export function GraphCanvas({ nodes, edges, selectedNodeId, onSelectNode, onMove
                 {node.derived && (
                   <g transform={`translate(0, ${-r - 12})`}>
                     <rect x={-26} y={-7} width={52} height={14} rx={7} fill="#fbbf24" className="pointer-events-none" />
-                    <text y={3} textAnchor="middle" className="fill-black text-[8px] font-bold pointer-events-none select-none">
+                    <text y={3} textAnchor="middle" className="fill-badgeink text-[8px] font-bold pointer-events-none select-none">
                       DERIVED
                     </text>
                   </g>
@@ -310,22 +418,28 @@ export function GraphCanvas({ nodes, edges, selectedNodeId, onSelectNode, onMove
         </div>
       )}
 
-      {/* Canvas controls */}
-      <div className="absolute top-3 right-3 flex flex-col gap-1">
-        <button onClick={() => setZoom(zoom * 1.2)} className="w-7 h-7 bg-zinc-900 border border-zinc-800 rounded flex items-center justify-center text-zinc-400 hover:text-white hover:border-zinc-700 transition-colors" title="Zoom in">
+      {/* Interaction hint, top-left */}
+      <div className="absolute top-3 left-3 z-10 flex items-center gap-2 px-2.5 py-1.5 rounded bg-zinc-900/90 border border-zinc-800/80 text-[10px] text-zinc-400">
+        <Info className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+        <span>Click nodes to select. Hold drag to pan. Zoom with sidebar toolbar or scroll wheel.</span>
+      </div>
+
+      {/* Canvas controls: floating pill, bottom-center, horizontal */}
+      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1 p-1 rounded-lg bg-zinc-900/90 backdrop-blur border border-zinc-800 shadow-lg">
+        <button onClick={() => setZoom(zoom * 1.2)} className="w-7 h-7 rounded flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors" title="Zoom in">
           <ZoomIn className="w-3.5 h-3.5" />
         </button>
-        <button onClick={() => setZoom(zoom / 1.2)} className="w-7 h-7 bg-zinc-900 border border-zinc-800 rounded flex items-center justify-center text-zinc-400 hover:text-white hover:border-zinc-700 transition-colors" title="Zoom out">
+        <button onClick={() => setZoom(zoom / 1.2)} className="w-7 h-7 rounded flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors" title="Zoom out">
           <ZoomOut className="w-3.5 h-3.5" />
         </button>
-        <button onClick={() => { setZoom(1); setPan({ x: 0, y: 0 }); }} className="w-7 h-7 bg-zinc-900 border border-zinc-800 rounded flex items-center justify-center text-zinc-400 hover:text-white hover:border-zinc-700 transition-colors" title="Reset view">
+        <button onClick={() => { setZoom(1); setPan({ x: 0, y: 0 }); }} className="w-7 h-7 rounded flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors" title="Reset view">
           <Maximize2 className="w-3.5 h-3.5" />
         </button>
-        <div className="h-px bg-zinc-800 my-1" />
+        <div className="w-px h-5 bg-zinc-800 mx-0.5" />
         <button
           onClick={toggleHeatmap}
-          className={`w-7 h-7 rounded flex items-center justify-center transition-colors border ${
-            showHeatmap ? 'bg-amber-400/20 border-amber-400/40 text-amber-400' : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:text-white'
+          className={`w-7 h-7 rounded flex items-center justify-center transition-colors ${
+            showHeatmap ? 'bg-amber-400/20 text-amber-400' : 'text-zinc-500 hover:text-white hover:bg-zinc-800'
           }`}
           title="Toggle heatmap"
         >
@@ -333,18 +447,18 @@ export function GraphCanvas({ nodes, edges, selectedNodeId, onSelectNode, onMove
         </button>
         <button
           onClick={toggleProofPath}
-          className={`w-7 h-7 rounded flex items-center justify-center transition-colors border ${
-            showProofPath ? 'bg-violet-400/20 border-violet-400/40 text-violet-400' : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:text-white'
+          className={`w-7 h-7 rounded flex items-center justify-center transition-colors ${
+            showProofPath ? 'bg-sky-400/20 text-sky-400' : 'text-zinc-500 hover:text-white hover:bg-zinc-800'
           }`}
           title="Toggle proof path"
         >
           <Eye className="w-3.5 h-3.5" />
         </button>
-        <div className="h-px bg-zinc-800 my-1" />
+        <div className="w-px h-5 bg-zinc-800 mx-0.5" />
         <button
           onClick={() => void detectCommunities()}
           disabled={detectingCommunities || nodes.length === 0}
-          className="w-7 h-7 rounded flex items-center justify-center transition-colors border bg-zinc-900 border-zinc-800 text-zinc-500 hover:text-white disabled:opacity-40"
+          className="w-7 h-7 rounded flex items-center justify-center transition-colors text-zinc-500 hover:text-white hover:bg-zinc-800 disabled:opacity-40"
           title="Detect communities (Neo4j GDS Louvain)"
         >
           {detectingCommunities ? (
@@ -356,8 +470,8 @@ export function GraphCanvas({ nodes, edges, selectedNodeId, onSelectNode, onMove
         {uniqueCommunities.length > 0 && (
           <button
             onClick={toggleCommunities}
-            className={`w-7 h-7 rounded flex items-center justify-center transition-colors border ${
-              showCommunities ? 'bg-sky-400/20 border-sky-400/40 text-sky-400' : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:text-white'
+            className={`w-7 h-7 rounded flex items-center justify-center transition-colors ${
+              showCommunities ? 'bg-blue-400/20 text-blue-400' : 'text-zinc-500 hover:text-white hover:bg-zinc-800'
             }`}
             title="Toggle color by community"
           >
@@ -366,46 +480,63 @@ export function GraphCanvas({ nodes, edges, selectedNodeId, onSelectNode, onMove
         )}
       </div>
 
-      {/* Zoom indicator */}
-      <div className="absolute bottom-3 right-3 text-[10px] text-zinc-600 font-mono">
-        {(zoom * 100).toFixed(0)}%
-      </div>
-
-      {/* Type / Community legend */}
-      {showCommunities && uniqueCommunities.length > 0 ? (
-        <div className="absolute top-3 left-3 bg-zinc-900/90 border border-zinc-800 rounded p-2 max-w-44">
-          <div className="text-[9px] text-sky-400 uppercase tracking-wider mb-1.5 font-bold flex items-center gap-1">
-            <Boxes className="w-2.5 h-2.5" /> Communities
-          </div>
-          <div className="space-y-1">
-            {uniqueCommunities.map(([id, count]) => (
-              <div key={id} className="flex items-center gap-1.5">
-                <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: communityColor(id) }} />
-                <span className="text-[9px] text-zinc-400 truncate">Community {id} ({count})</span>
+      {/* Type / Community legend + zoom indicator, stacked bottom-right.
+          The legend is collapsible (chevron toggle) so it can be tucked out
+          of the way without losing the zoom%, which always stays visible. */}
+      <div className="absolute bottom-3 right-3 flex flex-col items-end gap-1.5">
+        {showCommunities && uniqueCommunities.length > 0 ? (
+          <div className="bg-zinc-900/90 border border-zinc-800 rounded max-w-44">
+            <button
+              onClick={() => setLegendCollapsed((v) => !v)}
+              className="w-full flex items-center justify-between gap-2 p-2 text-[9px] text-zinc-300 uppercase tracking-wider font-bold"
+            >
+              <span className="flex items-center gap-1">
+                <Boxes className="w-2.5 h-2.5" /> Communities
+              </span>
+              {legendCollapsed ? <ChevronUp className="w-3 h-3 text-zinc-500" /> : <ChevronDown className="w-3 h-3 text-zinc-500" />}
+            </button>
+            {!legendCollapsed && (
+              <div className="space-y-1 px-2 pb-2">
+                {uniqueCommunities.map(([id, count]) => (
+                  <div key={id} className="flex items-center gap-1.5">
+                    <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: communityColor(id) }} />
+                    <span className="text-[9px] text-zinc-400 truncate">Community {id} ({count})</span>
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
-        </div>
-      ) : (
-        uniqueTypes.length > 0 && (
-          <div className="absolute top-3 left-3 bg-zinc-900/90 border border-zinc-800 rounded p-2 max-w-40">
-            <div className="text-[9px] text-zinc-500 uppercase tracking-wider mb-1.5 font-bold">Types</div>
-            <div className="space-y-1">
-              {uniqueTypes.map((t) => (
-                <div key={t} className="flex items-center gap-1.5">
-                  <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: typeColor(t) }} />
-                  <span className="text-[9px] text-zinc-400 truncate">{t}</span>
+        ) : (
+          uniqueTypes.length > 0 && (
+            <div className="bg-zinc-900/90 border border-zinc-800 rounded max-w-40">
+              <button
+                onClick={() => setLegendCollapsed((v) => !v)}
+                className="w-full flex items-center justify-between gap-2 p-2 text-[9px] text-zinc-500 uppercase tracking-wider font-bold"
+              >
+                <span>Types</span>
+                {legendCollapsed ? <ChevronUp className="w-3 h-3 text-zinc-500" /> : <ChevronDown className="w-3 h-3 text-zinc-500" />}
+              </button>
+              {!legendCollapsed && (
+                <div className="space-y-1 px-2 pb-2">
+                  {uniqueTypes.map((t) => (
+                    <div key={t} className="flex items-center gap-1.5">
+                      <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: typeColor(t) }} />
+                      <span className="text-[9px] text-zinc-400 truncate">{t}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
-          </div>
-        )
-      )}
+          )
+        )}
+
+        <div className="text-[10px] text-zinc-600 font-mono">{(zoom * 100).toFixed(0)}%</div>
+      </div>
 
       {/* Implicit-fact legend note, only when relevant */}
       {implicitFactNodeIds.size > 0 && (
         <div className="absolute bottom-3 left-3 bg-zinc-900/90 border border-zinc-800 rounded px-2 py-1.5 flex items-center gap-1.5">
-          <Sparkles className="w-3 h-3 text-fuchsia-400" />
+          <Sparkles className="w-3 h-3 text-sky-400" />
           <span className="text-[9px] text-zinc-400">{implicitFactNodeIds.size} node{implicitFactNodeIds.size === 1 ? '' : 's'} with implicit facts</span>
         </div>
       )}
