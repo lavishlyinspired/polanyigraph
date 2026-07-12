@@ -26,9 +26,20 @@ ConvergedBy = Literal["fixpoint", "max_iterations"]
 # matching without coupling this pure module to GraphDB.
 TypeMatcher = Callable[[str, str], bool]
 
+# edge_type, source_type, target_type -> bool. Default is permissive (no
+# domain/range gate at all), matching the original, dependency-free
+# behavior. Callers with a live ontology (see ontology/schema.py
+# build_domain_range_matcher) can inject the real rdfs:domain/rdfs:range
+# check without coupling this pure module to GraphDB.
+DomainRangeChecker = Callable[[str, str, str], bool]
+
 
 def _exact_match(candidate: str, expected: str) -> bool:
     return candidate == expected
+
+
+def _always_valid(edge_type: str, source_type: str, target_type: str) -> bool:
+    return True
 
 
 @dataclass(frozen=True)
@@ -91,8 +102,16 @@ class DerivedFact:
     # mining exists). Confidence is then a noisy-OR combination across all
     # contributing rules rather than either rule's confidence alone, and
     # this field records which rules contributed so the proof trail stays
-    # honest about it. Empty/single-element for the common single-rule case.
+    # honest about it. Single-element (this fact's own rule) in the common
+    # single-rule case, never empty.
     supporting_rule_ids: tuple[str, ...] = field(default=())
+    # Internal bookkeeping, not for display: the per-(rule, edge) fact ids
+    # that were merged into this one (or just this fact's own id, in the
+    # single-rule case). run_inference/reason() use this to mark EVERY
+    # contributing rule's evaluation as "already derived" in later
+    # iterations, not just the merged fact's own id -- otherwise the same
+    # rules would re-fire and mint a fresh aggregated fact every iteration.
+    contributing_fact_ids: tuple[str, ...] = field(default=())
 
 
 @dataclass(frozen=True)
@@ -172,6 +191,57 @@ def _type_resolution_note(source_type: str, rule_source_type: str, target_type: 
     return "; ".join(notes) if notes else None
 
 
+@dataclass(frozen=True)
+class _Firing:
+    """One rule's would-fire evaluation on one edge, held back from becoming
+    a DerivedFact until the aggregation pass (see run_inference) decides
+    whether it's the only rule that fired on this edge this iteration, or
+    one of several that need to be combined."""
+    rule: Rule
+    source: Node
+    target: Node
+    proof_path: tuple[ProofStep, ...]
+    chain_confidence: float
+    fact_id: str
+
+
+def _aggregate_firings(edge_id: str, firings: list[_Firing], *, iteration: int) -> DerivedFact:
+    """Reduce one-or-more rules firing on the SAME edge this iteration to a
+    single DerivedFact. Single firing: unchanged from the pre-aggregation
+    behavior (same id format, same confidence). Multiple firings: noisy-OR
+    combination (independent corroborating signals -> higher, still-bounded
+    confidence) rather than picking a winner or silently dropping the rest;
+    the highest-confidence firing's rule/proof_path represents the merged
+    fact's primary text, all contributing rules are recorded either way."""
+    primary = max(firings, key=lambda f: f.chain_confidence)
+    contributing_fact_ids = tuple(f.fact_id for f in firings)
+    supporting_rule_ids = tuple(f.rule.id for f in firings)
+
+    if len(firings) == 1:
+        confidence = primary.chain_confidence
+        fact_id = primary.fact_id
+    else:
+        product_of_complements = 1.0
+        for f in firings:
+            product_of_complements *= (1.0 - f.chain_confidence)
+        confidence = 1.0 - product_of_complements
+        fact_id = f"fact-agg-{edge_id}"
+
+    return DerivedFact(
+        id=fact_id,
+        rule_id=primary.rule.id,
+        rule_name=primary.rule.name,
+        source_id=primary.source.id,
+        target_id=primary.target.id,
+        fact=primary.rule.description.replace("{source}", primary.source.label).replace("{target}", primary.target.label),
+        confidence=min(1.0, confidence),
+        iteration=iteration,
+        proof_path=primary.proof_path,
+        supporting_rule_ids=supporting_rule_ids,
+        contributing_fact_ids=contributing_fact_ids,
+    )
+
+
 def run_inference(
     nodes: list[Node],
     edges: list[Edge],
@@ -182,13 +252,22 @@ def run_inference(
     existing_fact_ids: frozenset[str],
     facts_by_target: dict[str, DerivedFact],
     type_matches: TypeMatcher = _exact_match,
+    domain_range_check: DomainRangeChecker = _always_valid,
 ) -> tuple[list[DerivedFact], list[InferenceTraceEntry]]:
     """Returns (new_facts, trace) -- trace covers every (rule, edge) pair whose
     types match, fired or not, so the UI can show what was tried and why it
-    was skipped, not just what fired."""
+    was skipped, not just what fired.
+
+    Two passes: (1) evaluate every (rule, edge) pair exactly as before,
+    logging every trace entry immediately; would-fire evaluations are held
+    as _Firing candidates, keyed by edge.id, instead of becoming a
+    DerivedFact right away. (2) reduce each edge's candidate list to exactly
+    one DerivedFact via _aggregate_firings -- a no-op for the common
+    single-rule-per-edge case, a noisy-OR combination when >1 rule fires on
+    the same edge this iteration."""
     by_id = {n.id: n for n in nodes}
-    new_facts: list[DerivedFact] = []
     trace: list[InferenceTraceEntry] = []
+    candidates: dict[str, list[_Firing]] = {}
 
     for rule in rules:
         for edge in edges:
@@ -235,6 +314,18 @@ def run_inference(
                 )
                 continue
 
+            if not domain_range_check(edge.type, src.type, tgt.type):
+                trace.append(
+                    InferenceTraceEntry(
+                        rule_name=rule.name, edge_type=edge.type,
+                        source_label=src.label, target_label=tgt.label,
+                        source_activation=premise, threshold=rule.threshold,
+                        fired=False, iteration=iteration,
+                        skip_reason=f'ontology domain/range violation: "{edge.type}" does not accept "{src.type}" -> "{tgt.type}" per the loaded schema',
+                    )
+                )
+                continue
+
             step = ProofStep(
                 rule_name=rule.name,
                 edge_type=edge.type,
@@ -248,19 +339,10 @@ def run_inference(
             chain_conf = premise * rule.weight
             for prior_step in proof_path[:-1]:
                 chain_conf *= prior_step.premise_activation
+            chain_conf = min(1.0, chain_conf)
 
-            new_facts.append(
-                DerivedFact(
-                    id=fact_id,
-                    rule_id=rule.id,
-                    rule_name=rule.name,
-                    source_id=src.id,
-                    target_id=tgt.id,
-                    fact=rule.description.replace("{source}", src.label).replace("{target}", tgt.label),
-                    confidence=min(1.0, chain_conf),
-                    iteration=iteration,
-                    proof_path=proof_path,
-                )
+            candidates.setdefault(edge.id, []).append(
+                _Firing(rule=rule, source=src, target=tgt, proof_path=proof_path, chain_confidence=chain_conf, fact_id=fact_id)
             )
             trace.append(
                 InferenceTraceEntry(
@@ -270,6 +352,8 @@ def run_inference(
                     fired=True, iteration=iteration, fact_id=fact_id,
                 )
             )
+
+    new_facts = [_aggregate_firings(edge_id, firings, iteration=iteration) for edge_id, firings in candidates.items()]
     return new_facts, trace
 
 
@@ -297,6 +381,7 @@ def reason(
     max_iterations: int = 10,
     feedback_gain: float = 0.5,
     type_matches: TypeMatcher = _exact_match,
+    domain_range_check: DomainRangeChecker = _always_valid,
 ) -> ReasoningResult:
     """Run the persistent-activation neurosymbolic loop until convergence."""
     activation: dict[str, float] = {}
@@ -319,6 +404,7 @@ def reason(
             existing_fact_ids=frozenset(existing_ids),
             facts_by_target=facts_by_target,
             type_matches=type_matches,
+            domain_range_check=domain_range_check,
         )
         all_trace.extend(trace)
 
@@ -326,6 +412,11 @@ def reason(
         activation = feed_back_activation(activation, new_facts, feedback_gain=feedback_gain)
         for fact in new_facts:
             existing_ids.add(fact.id)
+            # Every rule that contributed to this fact (1 in the common case,
+            # >1 when aggregated) must be marked derived, not just the
+            # merged fact's own id -- otherwise the same rules re-fire next
+            # iteration and mint a fresh aggregated fact every time.
+            existing_ids.update(fact.contributing_fact_ids)
             facts_by_target[fact.target_id] = fact
         all_facts.extend(new_facts)
 

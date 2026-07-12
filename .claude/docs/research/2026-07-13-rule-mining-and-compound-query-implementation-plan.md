@@ -685,3 +685,36 @@ This is now formally part of Feature 4 (§6.8), not a separate item — add `_fi
 - **The broader principle does apply to the core framework**, in three ways: it's already present once (§12.1, the reasoning engine's convergence loop), already present as a recurring design choice (§12.2, human-gated review everywhere), and genuinely missing once (§12.3, no automation loop over the graph's own upkeep — now Feature 7) plus one small addition worth folding into Feature 4 (§12.4).
 - **Files added by this section**: `backend/services/graph_maintenance_loop.py` (new — orchestrates steps 1–4), `.claude/docs/research/GRAPH_LOOP_STATE.md` (new state file, or a `:LoopRun` Neo4j schema if UI-queryable state is preferred — worth a quick decision before building, not assumed here), `backend/agents/graph.py`'s `responder_node` (§12.4's grounding-check addition to Feature 4, not a new file).
 - **Effort**: Feature 7 ≈ 1–1.5 weeks (mostly orchestration of already-built pieces — Features 3/5/6 — plus the scheduled-task wiring); §12.4's addition to Feature 4 ≈ 1–2 days.
+
+---
+
+## 13. Deferred reference design: GNN-augmented salience/weights (R-GCN)
+
+Not scheduled. Recorded here because a detailed, well-reasoned architecture spec was proposed for it and deserves a real home rather than being lost — but it stays gated behind the same condition §11.5 already set for ExpressGNN-style work: Feature 5's bandit proving insufficient, on real production-scale confirm/reject volume, not before.
+
+### 13.1 What's genuinely good in the proposal, worth keeping if this is ever built
+
+- **Augment, don't replace, the spread-activation loop.** The proposal's own closing line — "keep the interpretable spread activation loop... seed it, don't break it" — is the correct design principle, consistent with this entire plan's bias toward determinism wherever possible.
+- **R-GCN as the architecture choice**, correctly reasoned: this project's edges are typed (`edge_type` on every `Edge`), so per-relation-type weight matrices are the right tool if a GNN is ever warranted — better-justified than the earlier, vaguer "GNN embeddings" pitch from the original research-analysis doc.
+- **Concatenation over replacement for the embedding itself**: `[nvidia_1024 || gnn_256]` keeps the existing semantic embedding intact and adds structural signal alongside it, rather than discarding work already done.
+- **Integration point identified precisely**: `spread_activation()`'s `decay * edge.weight * salience.get(edge.target, 1.0)` computation (`engine.py`) as where GNN-derived values would enter — correct, and the same pure-function boundary Features 1/2 above already respected when adding `domain_range_check`.
+
+### 13.2 A real contradiction in the proposal, corrected here
+
+The proposal's own decision table says **"Replace"** for `Node.salience`, `Edge.weight`, and `decay` — directly contradicting its own closing recommendation to "seed it, don't break the loop." These are not the same thing: replacing salience/weight/decay with GNN output keeps the loop's *mechanics* interpretable but makes its *inputs* opaque — a business analyst asking "why did this edge matter" gets "the model's forward pass said so" instead of an inspectable number, the same audit-trail regression flagged earlier in this conversation for the original GNN proposal, just relocated one layer down instead of resolved. **If this is ever built: augment everywhere in that table, never replace** — e.g. `salience = base_salience * (1 + gnn_adjustment)`, clipped to a bounded range, with `base_salience` (today's constant 1.0) always visible as the starting point a reviewer can compare against, not silently discarded.
+
+### 13.3 The "no labeled dataset needed" claim is true but incomplete
+
+The proposal is right that human approval/rejection is a real, usable reward signal, and right that it doesn't require a separately-curated labeled dataset. What it doesn't address: **that signal already has a planned consumer** — Feature 5 (§11.1) builds the exact confirm/reject collection mechanism this proposal would need, feeding a small bandit-style weight update. The signal *existing* and the signal being *sufficient in volume* for GNN training are different claims; nothing in the proposal changes the volume math established earlier in this conversation (a handful of test documents' worth of approvals today, RLHF-style training typically wanting far more). Feature 5 is the right consumer of this signal at today's volume; a GNN becomes worth revisiting only once Feature 5's bandit has been running against real production usage long enough to show it isn't good enough — matching §11.5's existing gate for ExpressGNN, now with this proposal's concrete architecture as the thing to build if that day comes.
+
+### 13.4 Link prediction / rule mining overlap with Feature 3 — related, not redundant
+
+The proposal's third use case (GNN-based link prediction as a rule-mining aid) is not the same thing as Feature 3 (§5), which mines candidate rules by frequency-counting existing `(edge_type, source_type, target_type)` patterns — purely symbolic, no learned embeddings. A trained link predictor could in principle surface candidates a frequency-based miner would miss (patterns based on embedding similarity rather than exact type-pattern repetition). That's a real, distinct capability, not overlap to dismiss — but it inherits the same data-volume gate as the rest of this section, and Feature 3 already covers the lower-cost, higher-confidence version of "which relations deserve becoming a rule" for today's scale.
+
+### 13.5 Infra note, updated from the earlier objection
+
+The original GNN critique in this conversation was partly about GPU-scale training against FB15K-237-sized benchmarks — that objection doesn't fully apply here, since this proposal is scoped to this project's own (much smaller) graphs, where R-GCN training could plausibly run CPU-only. That removes one objection, not all of them: PyTorch + PyTorch Geometric is still a new dependency class this project has consistently avoided (per `MVP_PLAN.md`'s "rebuild natively" convention cited throughout this plan), and a trained model still needs versioning, a training loop, and a fallback path for when it's unavailable — none of which exist today and all of which are real engineering cost, just not GPU-cost specifically.
+
+### 13.6 Bottom line
+
+**Recommendation: document, don't schedule.** Nothing in §13 goes into the checklist. If Feature 5's bandit is running in production and demonstrably underperforming, revisit this section as the starting architecture spec — correct the replace→augment contradiction (§13.2) before building anything, and treat §13.4's link-prediction angle as the more likely first-value use case (it fills a real gap Feature 3 doesn't) rather than starting with salience/weight augmentation (§13.1–13.2), which delivers less obvious value for meaningfully more risk.

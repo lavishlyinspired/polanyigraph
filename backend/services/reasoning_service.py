@@ -63,11 +63,20 @@ def run_reasoning(
     # ("commercial bank") -- see docs/MVP_PLAN.md §12.
     schema = load_schema(graphdb, settings.graphdb_repository)
     type_matches = schema.build_subclass_matcher()
+    # Feature 2 (semantic conditioning at inference, 2026-07-13 plan §4): a
+    # rule can type-match by its OWN declared types yet still produce an
+    # edge the ontology's real rdfs:domain/rdfs:range never allows -- this
+    # is the independent, ontology-level check that catches that case,
+    # fails open (returns True) for any property the loaded ontology
+    # doesn't describe a domain/range for, so it only ever rejects what the
+    # schema itself actually disallows.
+    domain_range_check = schema.build_domain_range_matcher()
     result = run_reasoning_engine(
         nodes, edges, rules, resolved_source_id,
         decay=settings.reason_decay,
         epsilon=settings.reason_epsilon,
         max_iterations=settings.reason_max_iterations,
+        domain_range_check=domain_range_check,
         type_matches=type_matches,
     )
 
