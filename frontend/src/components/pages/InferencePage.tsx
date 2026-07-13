@@ -7,7 +7,7 @@
 // fixed invalid Tailwind utilities (h-8.5, bg-zinc-750 aren't real classes)
 // to bracket syntax / the nearest real shade.
 import { useState } from 'react';
-import { Brain, Zap, Sparkles, RefreshCw, Trash2, Play, Square, Layers, GitFork, ChevronRight, CheckCircle2, Info, ShieldAlert, Terminal, TerminalSquare, TrendingUp } from 'lucide-react';
+import { Brain, Zap, Sparkles, RefreshCw, Trash2, Play, Square, Layers, GitFork, ChevronRight, CheckCircle2, XCircle, Info, ShieldAlert, Terminal, TerminalSquare, TrendingUp } from 'lucide-react';
 import { useGraphStore } from '../../stores/graphStore';
 
 export function InferencePage() {
@@ -16,6 +16,7 @@ export function InferencePage() {
     autoRunning, showHeatmap, showProofPath, selectNode,
     reason, spreadActivationStep, runInferenceStep, feedBackStep, clearActivationStep, clearFactsStep,
     startAutoRun, stopAutoRun, toggleHeatmap, toggleProofPath,
+    confirmDerivedFact, rejectDerivedFact,
   } = useGraphStore();
 
   const [localSourceId, setLocalSourceId] = useState<string>('');
@@ -354,6 +355,35 @@ export function InferencePage() {
                       <span className={`px-1.5 py-0.5 rounded text-[8px] font-mono font-bold uppercase ${f.fedBack ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-400/10 text-amber-400 animate-pulse'}`}>
                         {f.fedBack ? '✓ Fed Back' : '⏳ Pending'}
                       </span>
+                      <span
+                        className={`px-1.5 py-0.5 rounded text-[8px] font-mono font-bold uppercase ${
+                          f.reviewStatus === 'confirmed'
+                            ? 'bg-emerald-500/10 text-emerald-400'
+                            : f.reviewStatus === 'rejected'
+                              ? 'bg-rose-500/10 text-rose-400'
+                              : 'bg-zinc-800 text-zinc-500'
+                        }`}
+                      >
+                        {f.reviewStatus === 'confirmed' ? 'Confirmed' : f.reviewStatus === 'rejected' ? 'Rejected' : 'Unreviewed'}
+                      </span>
+                      {f.reviewStatus === 'pending' && (
+                        <div className="flex items-center gap-1.5 ml-auto">
+                          <button
+                            onClick={() => void confirmDerivedFact(f.id)}
+                            className="flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-mono font-bold uppercase bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-colors"
+                            title="Confirm this derived fact — increases the rule's weight"
+                          >
+                            <CheckCircle2 className="w-3 h-3" /> Confirm
+                          </button>
+                          <button
+                            onClick={() => void rejectDerivedFact(f.id)}
+                            className="flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-mono font-bold uppercase bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition-colors"
+                            title="Reject this derived fact — decreases the rule's weight"
+                          >
+                            <XCircle className="w-3 h-3" /> Reject
+                          </button>
+                        </div>
+                      )}
                     </div>
 
                     {f.proofPath.length > 0 && (

@@ -38,6 +38,7 @@ class DerivedFactResponse(ApiModel):
     rule_name: str
     proof_path: list[ProofStepResponse] = []
     fed_back: bool = False
+    review_status: str = "pending"
 
 
 class ReasonResponse(ApiModel):
@@ -77,7 +78,7 @@ class FactsListResponse(ApiModel):
     facts: list[DerivedFactResponse]
 
 
-def _to_derived_fact_response(f, *, fed_back: bool = False) -> DerivedFactResponse:
+def _to_derived_fact_response(f, *, fed_back: bool = False, review_status: str = "pending") -> DerivedFactResponse:
     return DerivedFactResponse(
         id=f.id, fact=f.fact, confidence=f.confidence, iteration=f.iteration,
         source_id=f.source_id, target_id=f.target_id, rule_name=f.rule_name,
@@ -91,6 +92,7 @@ def _to_derived_fact_response(f, *, fed_back: bool = False) -> DerivedFactRespon
             for step in f.proof_path
         ],
         fed_back=fed_back,
+        review_status=review_status,
     )
 
 
@@ -177,7 +179,25 @@ def feed_back(
 @router.get("/reason/{graph_id}/facts", response_model=FactsListResponse, response_model_by_alias=True)
 def get_facts(graph_id: str, neo4j: Neo4jClient = Depends(get_neo4j)) -> FactsListResponse:
     full = graph_service.get_derived_facts_full(neo4j, graph_id)
-    return FactsListResponse(facts=[_to_derived_fact_response(f, fed_back=f.fed_back) for f in full])
+    return FactsListResponse(facts=[_to_derived_fact_response(f, fed_back=f.fed_back, review_status=f.review_status) for f in full])
+
+
+@router.post("/reason/{graph_id}/facts/{fact_id}/confirm")
+def confirm_derived_fact(graph_id: str, fact_id: str, neo4j: Neo4jClient = Depends(get_neo4j)) -> dict:
+    try:
+        new_weight = reasoning_service.review_derived_fact(neo4j, graph_id=graph_id, fact_id=fact_id, outcome="confirmed")
+    except reasoning_service.UnknownFactError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+    return {"confirmed": True, "ruleWeight": new_weight}
+
+
+@router.post("/reason/{graph_id}/facts/{fact_id}/reject")
+def reject_derived_fact(graph_id: str, fact_id: str, neo4j: Neo4jClient = Depends(get_neo4j)) -> dict:
+    try:
+        new_weight = reasoning_service.review_derived_fact(neo4j, graph_id=graph_id, fact_id=fact_id, outcome="rejected")
+    except reasoning_service.UnknownFactError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+    return {"rejected": True, "ruleWeight": new_weight}
 
 
 @router.post("/reason/{graph_id}/clear-activation")

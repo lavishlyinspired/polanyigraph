@@ -7,10 +7,13 @@ import {
   type AgentIntent,
   type ApiEdge,
   type ApiNode,
+  type CandidateRule,
   type DerivedFact,
   type GraphSummary,
   type ImplicitFact,
   type IngestEvent,
+  type LoopRun,
+  type MaintenanceSchedule,
   type MemoryHit,
   type Preference,
   type QueryResultRow,
@@ -77,6 +80,8 @@ interface GraphState {
   showProofPath: boolean;
   history: IngestEvent[];
   rules: Rule[];
+  candidateRules: CandidateRule[];
+  miningRules: boolean;
   graphs: GraphSummary[];
   autoRunning: boolean;
   chatMessages: ChatMessage[];
@@ -100,6 +105,9 @@ interface GraphState {
   memorySearching: boolean;
   memoryQuery: string;
   preferences: Preference[];
+  maintenanceRuns: LoopRun[];
+  maintenanceSchedule: MaintenanceSchedule | null;
+  maintenanceRunning: boolean;
 
   loadGraph: () => Promise<void>;
   ingest: (text: string) => Promise<void>;
@@ -110,6 +118,8 @@ interface GraphState {
   clearActivationStep: () => Promise<void>;
   clearFactsStep: () => Promise<void>;
   loadReasonFacts: () => Promise<void>;
+  confirmDerivedFact: (factId: string) => Promise<void>;
+  rejectDerivedFact: (factId: string) => Promise<void>;
   runQuery: (query: string) => Promise<void>;
   loadHistory: () => Promise<void>;
   loadRules: () => Promise<void>;
@@ -133,6 +143,10 @@ interface GraphState {
   updateNodeMetadata: (nodeId: string, patch: { salience?: number; properties?: Record<string, string>; note?: string }) => Promise<void>;
   createRule: (rule: { name: string; edgeType: string; sourceType: string; targetType: string; threshold: number; weight?: number; description?: string }) => Promise<void>;
   deleteRule: (ruleId: string) => Promise<void>;
+  mineRules: () => Promise<void>;
+  loadCandidateRules: () => Promise<void>;
+  approveCandidateRule: (candidateId: string) => Promise<void>;
+  rejectCandidateRule: (candidateId: string) => Promise<void>;
   enrich: (text: string) => Promise<void>;
   loadPendingFacts: () => Promise<void>;
   loadApprovedFacts: () => Promise<void>;
@@ -148,6 +162,10 @@ interface GraphState {
   loadPreferences: () => Promise<void>;
   savePreference: (key: string, value: string) => Promise<void>;
   deletePreference: (key: string) => Promise<void>;
+  runGraphMaintenanceNow: () => Promise<void>;
+  loadMaintenanceRuns: () => Promise<void>;
+  loadMaintenanceSchedule: () => Promise<void>;
+  setMaintenanceSchedule: (enabled: boolean, intervalMinutes: number) => Promise<void>;
 }
 
 // Deterministic circular layout: the backend has no notion of position (it's
@@ -190,6 +208,8 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   showProofPath: false,
   history: [],
   rules: [],
+  candidateRules: [],
+  miningRules: false,
   graphs: [],
   autoRunning: false,
   chatMessages: [],
@@ -213,6 +233,9 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   memorySearching: false,
   memoryQuery: '',
   preferences: [],
+  maintenanceRuns: [],
+  maintenanceSchedule: null,
+  maintenanceRunning: false,
 
   loadGraph: async () => {
     set({ loading: true, error: null });
@@ -388,6 +411,28 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     }
   },
 
+  confirmDerivedFact: async (factId: string) => {
+    const { graphId } = get();
+    try {
+      const res = await api.confirmDerivedFact(graphId, factId);
+      toast.success(`Fact confirmed — rule weight now ${res.ruleWeight.toFixed(2)}`);
+      await get().loadReasonFacts();
+    } catch (e) {
+      toast.error(String(e));
+    }
+  },
+
+  rejectDerivedFact: async (factId: string) => {
+    const { graphId } = get();
+    try {
+      const res = await api.rejectDerivedFact(graphId, factId);
+      toast.success(`Fact rejected — rule weight now ${res.ruleWeight.toFixed(2)}`);
+      await get().loadReasonFacts();
+    } catch (e) {
+      toast.error(String(e));
+    }
+  },
+
   startAutoRun: () => {
     if (get().autoRunning) return;
     set({ autoRunning: true, loopIteration: 0 });
@@ -545,6 +590,47 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     }
   },
 
+  mineRules: async () => {
+    set({ miningRules: true });
+    try {
+      const res = await api.mineRules(get().graphId);
+      toast.success(res.candidates.length > 0 ? `Found ${res.candidates.length} suggested rule(s)` : 'No new rule patterns found');
+      set({ candidateRules: res.candidates, miningRules: false });
+    } catch (e) {
+      set({ miningRules: false });
+      toast.error(String(e));
+    }
+  },
+
+  loadCandidateRules: async () => {
+    try {
+      const res = await api.getCandidateRules('pending');
+      set({ candidateRules: res.candidates });
+    } catch (e) {
+      toast.error(String(e));
+    }
+  },
+
+  approveCandidateRule: async (candidateId: string) => {
+    try {
+      await api.approveCandidateRule(candidateId);
+      toast.success('Rule approved');
+      set({ candidateRules: get().candidateRules.filter((c) => c.id !== candidateId) });
+      await get().loadRules();
+    } catch (e) {
+      toast.error(String(e));
+    }
+  },
+
+  rejectCandidateRule: async (candidateId: string) => {
+    try {
+      await api.rejectCandidateRule(candidateId);
+      set({ candidateRules: get().candidateRules.filter((c) => c.id !== candidateId) });
+    } catch (e) {
+      toast.error(String(e));
+    }
+  },
+
   enrich: async (text: string) => {
     set({ enriching: true });
     try {
@@ -681,6 +767,51 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     try {
       await api.deletePreference(key);
       await get().loadPreferences();
+    } catch (e) {
+      toast.error(String(e));
+    }
+  },
+
+  runGraphMaintenanceNow: async () => {
+    const { graphId } = get();
+    set({ maintenanceRunning: true });
+    try {
+      const run = await api.runGraphMaintenance(graphId);
+      toast.success(run.summaryText);
+      set({ maintenanceRunning: false });
+      await get().loadMaintenanceRuns();
+    } catch (e) {
+      set({ maintenanceRunning: false });
+      toast.error(String(e));
+    }
+  },
+
+  loadMaintenanceRuns: async () => {
+    const { graphId } = get();
+    try {
+      const res = await api.getGraphMaintenanceRuns(graphId);
+      set({ maintenanceRuns: res.runs });
+    } catch (e) {
+      toast.error(String(e));
+    }
+  },
+
+  loadMaintenanceSchedule: async () => {
+    const { graphId } = get();
+    try {
+      const schedule = await api.getMaintenanceSchedule(graphId);
+      set({ maintenanceSchedule: schedule });
+    } catch (e) {
+      toast.error(String(e));
+    }
+  },
+
+  setMaintenanceSchedule: async (enabled: boolean, intervalMinutes: number) => {
+    const { graphId } = get();
+    try {
+      const schedule = await api.setMaintenanceSchedule(graphId, enabled, intervalMinutes);
+      set({ maintenanceSchedule: schedule });
+      toast.success(enabled ? `Autonomous maintenance enabled — runs every ${intervalMinutes}m` : 'Autonomous maintenance disabled');
     } catch (e) {
       toast.error(String(e));
     }

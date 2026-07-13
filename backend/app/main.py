@@ -46,7 +46,21 @@ async def lifespan(app: FastAPI):
         skill_graph_service.seed_skills(get_neo4j())
     except Exception:
         pass
+    try:
+        # Feature 7 follow-up: resync the live scheduler from whatever
+        # graphs have maintenance enabled in Neo4j -- OFF by default per
+        # graph (nothing runs unless a human explicitly enabled it via the
+        # UI), so a fresh/never-configured install starts zero jobs.
+        from services import maintenance_scheduler
+        maintenance_scheduler.start(get_neo4j())
+    except Exception:
+        pass
     yield
+    try:
+        from services import maintenance_scheduler
+        maintenance_scheduler.shutdown()
+    except Exception:
+        pass
 
 
 app = FastAPI(title="Neurosymbolic KG (domain-agnostic)", version="0.1.0", lifespan=lifespan)
@@ -112,6 +126,7 @@ from api import agent as agent_routes  # noqa: E402
 from api import chat as chat_routes  # noqa: E402
 from api import enrich as enrich_routes  # noqa: E402
 from api import graph as graph_routes  # noqa: E402
+from api import graph_maintenance as graph_maintenance_routes  # noqa: E402
 from api import graphs as graphs_routes  # noqa: E402
 from api import history as history_routes  # noqa: E402
 from api import ingest as ingest_routes  # noqa: E402
@@ -137,3 +152,4 @@ app.include_router(agent_routes.router)
 app.include_router(skills_routes.router)
 app.include_router(memory_routes.router)
 app.include_router(settings_routes.router)
+app.include_router(graph_maintenance_routes.router)

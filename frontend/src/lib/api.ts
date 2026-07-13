@@ -43,6 +43,7 @@ export interface DerivedFact {
   ruleName: string;
   proofPath: ProofStep[];
   fedBack: boolean;
+  reviewStatus: 'pending' | 'confirmed' | 'rejected';
 }
 
 export interface ProofStep {
@@ -196,6 +197,20 @@ export interface RulesResponse {
   rules: Rule[];
 }
 
+export interface CandidateRule {
+  id: string;
+  edgeType: string;
+  sourceType: string;
+  targetType: string;
+  support: number;
+  confidence: number;
+  status: 'pending' | 'approved' | 'rejected';
+}
+
+export interface CandidateRulesResponse {
+  candidates: CandidateRule[];
+}
+
 export interface GraphSummary {
   graphId: string;
   nodeCount: number;
@@ -310,6 +325,30 @@ export interface Preference {
 
 export interface PreferencesResponse {
   preferences: Preference[];
+}
+
+export interface LoopRun {
+  id: string;
+  graphId: string;
+  minedCandidateIds: string[];
+  reasoningRan: boolean;
+  reasoningIterations: number | null;
+  reasoningNewFacts: number;
+  reasoningConvergedBy: string | null;
+  duplicateCandidateIds: string[];
+  activeRuleWeights: Record<string, number>;
+  summaryText: string;
+}
+
+export interface LoopRunsResponse {
+  runs: LoopRun[];
+}
+
+export interface MaintenanceSchedule {
+  graphId: string;
+  enabled: boolean;
+  intervalMinutes: number;
+  lastRunAt: string | null;
 }
 
 export interface HealthResponse {
@@ -502,6 +541,18 @@ export const api = {
 
   deleteRule: (ruleId: string) => fetch(`${BASE}/rules/${ruleId}`, { method: 'DELETE' }).then(json<{ deleted: boolean }>),
 
+  mineRules: (graphId: string) =>
+    fetch(`${BASE}/rules/mine/${graphId}`, { method: 'POST' }).then(json<CandidateRulesResponse>),
+
+  getCandidateRules: (status: 'pending' | 'approved' | 'rejected' = 'pending') =>
+    fetch(`${BASE}/rules/candidates?status=${status}`).then(json<CandidateRulesResponse>),
+
+  approveCandidateRule: (candidateId: string) =>
+    fetch(`${BASE}/rules/candidates/${candidateId}/approve`, { method: 'POST' }).then(json<{ approved: boolean }>),
+
+  rejectCandidateRule: (candidateId: string) =>
+    fetch(`${BASE}/rules/candidates/${candidateId}/reject`, { method: 'POST' }).then(json<{ rejected: boolean }>),
+
   enrich: (graphId: string, text: string) =>
     fetch(`${BASE}/enrich/${graphId}`, {
       method: 'POST',
@@ -550,6 +601,12 @@ export const api = {
 
   clearFacts: (graphId: string) => fetch(`${BASE}/reason/${graphId}/clear-facts`, { method: 'POST' }).then(json<{ cleared: boolean }>),
 
+  confirmDerivedFact: (graphId: string, factId: string) =>
+    fetch(`${BASE}/reason/${graphId}/facts/${factId}/confirm`, { method: 'POST' }).then(json<{ confirmed: boolean; ruleWeight: number }>),
+
+  rejectDerivedFact: (graphId: string, factId: string) =>
+    fetch(`${BASE}/reason/${graphId}/facts/${factId}/reject`, { method: 'POST' }).then(json<{ rejected: boolean; ruleWeight: number }>),
+
   getSkills: () => fetch(`${BASE}/skills`).then(json<SkillsResponse>),
 
   getSkillContent: (name: string) => fetch(`${BASE}/skills/${name}/content`).then(json<SkillContentResponse>),
@@ -575,4 +632,20 @@ export const api = {
 
   deletePreference: (key: string) =>
     fetch(`${BASE}/memory/preferences/${key}`, { method: 'DELETE' }).then(json<{ deleted: boolean }>),
+
+  runGraphMaintenance: (graphId: string) =>
+    fetch(`${BASE}/graph-maintenance/${graphId}/run`, { method: 'POST' }).then(json<LoopRun>),
+
+  getGraphMaintenanceRuns: (graphId: string) =>
+    fetch(`${BASE}/graph-maintenance/${graphId}/runs`).then(json<LoopRunsResponse>),
+
+  getMaintenanceSchedule: (graphId: string) =>
+    fetch(`${BASE}/graph-maintenance/${graphId}/schedule`).then(json<MaintenanceSchedule>),
+
+  setMaintenanceSchedule: (graphId: string, enabled: boolean, intervalMinutes: number) =>
+    fetch(`${BASE}/graph-maintenance/${graphId}/schedule`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ enabled, intervalMinutes }),
+    }).then(json<MaintenanceSchedule>),
 };

@@ -21,6 +21,7 @@ class VectorHit:
     id: str
     text: str
     score: float
+    type: str | None = None
 
 
 def ensure_indexes(neo4j: Neo4jClient, dimensions: int) -> None:
@@ -76,6 +77,47 @@ def search_entities(neo4j: Neo4jClient, embedder: EmbeddingClient, *, graph_id: 
         k=max(limit * 4, limit), query_vector=query_vector, graph_id=graph_id, limit=limit,
     )
     return [VectorHit(id=row["id"], text=row["text"], score=row["score"]) for row in rows]
+
+
+def find_similar_entities(
+    neo4j: Neo4jClient, *, graph_id: str, entity_id: str, limit: int = 10, min_score: float = 0.5,
+) -> list[VectorHit]:
+    """2026-07-13 plan §11.2 (entity resolution): candidate retrieval over
+    entities already indexed for search_entities -- no new embedding call,
+    reuses summaryEmbedding. Same graph, excludes the entity itself.
+
+    Deliberately NOT filtered by exact type match in Cypher (a prior
+    version was, and live-verifying against a real LLM's extraction found a
+    real gap: the same real company got "stock corporation" from one
+    document's extraction and "corporation" from another's -- different
+    FIBO subtype labels, same real-world entity, so an exact-string type
+    filter silently excluded a genuine duplicate). Callers needing type
+    compatibility should apply an ontology-aware check (e.g.
+    OntologySchema.build_subclass_matcher()) on the returned .type field
+    themselves -- this function returns type, doesn't filter on it.
+
+    min_score is a loose sanity floor (well below any real duplicate-
+    decision threshold), not the actual duplicate cutoff -- see
+    services/entity_resolution_service.py for why: empirically, pure cosine
+    similarity over full summaries doesn't cleanly separate "same entity,
+    different wording" from "different entity, similar summary structure,"
+    so the real precision filter is a deterministic label-token check
+    layered on top of these candidates, not a stricter score here."""
+    rows = neo4j.run(
+        f"""
+        MATCH (e:Entity {{id: $entity_id, graphId: $graph_id}})
+        WHERE e.summaryEmbedding IS NOT NULL
+        CALL db.index.vector.queryNodes('{_ENTITY_INDEX}', $k, e.summaryEmbedding)
+        YIELD node, score
+        WHERE node.graphId = $graph_id AND node.id <> $entity_id AND score >= $min_score
+        RETURN node.id AS id, node.label AS text, node.type AS type, score
+        ORDER BY score DESC
+        LIMIT $limit
+        """,
+        entity_id=entity_id, graph_id=graph_id,
+        k=max(limit * 4, limit), min_score=min_score, limit=limit,
+    )
+    return [VectorHit(id=row["id"], text=row["text"], score=row["score"], type=row["type"]) for row in rows]
 
 
 def search_chat_messages(neo4j: Neo4jClient, embedder: EmbeddingClient, *, graph_id: str, query: str, limit: int = 10) -> list[VectorHit]:

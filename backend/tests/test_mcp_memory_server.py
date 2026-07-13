@@ -53,6 +53,7 @@ async def test_search_memory_finds_real_chat_history():
         text = content[0].text
         assert "Credit Suisse" in text
     finally:
+        neo4j.run("MATCH (s:ChatSession {graphId: $gid})-[:HAS_MESSAGE]->(m:ChatMessage) DETACH DELETE m", gid=graph_id)
         neo4j.run("MATCH (s:ChatSession {graphId: $gid}) DETACH DELETE s", gid=graph_id)
         neo4j.close()
 

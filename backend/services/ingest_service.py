@@ -16,7 +16,7 @@ from extraction.pipeline import ExtractionResult, extract
 from llm.client import LLMClient
 from llm.embedder import EmbeddingClient
 from ontology.loader import load_schema
-from services import graph_service, history_service, summary_service, vector_search_service
+from services import entity_resolution_service, graph_service, history_service, summary_service, vector_search_service
 from services.graph_service import GraphRecord
 from services.ids import edge_id, entity_id
 
@@ -36,6 +36,12 @@ def ingest_text(
     schema = load_schema(graphdb, repository)
     result = extract(text, schema=schema, llm=llm, extra_guidance=extra_guidance)
     event_id = f"{graph_id}:evt-{uuid.uuid4().hex[:12]}"
+    # Real extraction can label the same real-world entity with a different
+    # (but ontology-related) subtype across documents ("stock corporation"
+    # vs "corporation") -- see entity_resolution_service.check_for_duplicate's
+    # docstring for the live-verified gap this closes. Reuses the schema
+    # already loaded above for extraction, no extra GraphDB call.
+    type_matches = schema.build_subclass_matcher()
 
     produced_entity_ids = []
     for entity in result.entities:
@@ -61,6 +67,17 @@ def ingest_text(
         if embedder is not None:
             vector_search_service.index_entity_summary(
                 neo4j, embedder, graph_id=graph_id, entity_id=eid, summary=new_summary,
+            )
+            # 2026-07-13 plan §11.2: cross-document entity resolution --
+            # extraction has no memory of what's already in the graph, so a
+            # name variation ("Acme Corp" vs "Acme Corporation") always
+            # produces a second, separate node otherwise. Flags for human
+            # confirmation, never silently merges (see
+            # entity_resolution_service module docstring for why this
+            # doesn't just use a plain cosine-similarity threshold).
+            entity_resolution_service.check_for_duplicate(
+                neo4j, graph_id=graph_id, entity_id=eid, entity_label=entity.name, entity_type=entity.type,
+                type_matches=type_matches,
             )
 
     for rel in result.relationships:

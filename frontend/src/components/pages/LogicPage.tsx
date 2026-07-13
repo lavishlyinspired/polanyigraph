@@ -15,7 +15,10 @@ const SELECT_CLS = 'w-full bg-zinc-900 border border-zinc-800 rounded-lg text-xs
 const INPUT_CLS = 'w-full bg-zinc-900 border border-zinc-800 rounded-lg text-xs text-white placeholder:text-zinc-700 h-9 px-3 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all';
 
 export function LogicPage() {
-  const { rules, ontologyClasses, ontologyProperties, addNode, createRule, deleteRule } = useGraphStore();
+  const {
+    rules, ontologyClasses, ontologyProperties, addNode, createRule, deleteRule,
+    candidateRules, miningRules, mineRules, loadCandidateRules, approveCandidateRule, rejectCandidateRule,
+  } = useGraphStore();
 
   const [schema, setSchema] = useState<OntologySchemaResponse | null>(null);
   const [loadingSchema, setLoadingSchema] = useState(false);
@@ -44,6 +47,10 @@ export function LogicPage() {
       .catch((e) => setSchemaError(String(e)))
       .finally(() => setLoadingSchema(false));
   }, []);
+
+  useEffect(() => {
+    void loadCandidateRules();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleAddRule = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -398,6 +405,74 @@ export function LogicPage() {
                 <div className="col-span-2 text-center py-10 rounded-xl border border-dashed border-zinc-800 text-zinc-600">
                   <Cpu className="w-8 h-8 mx-auto mb-2 text-zinc-800" />
                   <p className="text-[11px] font-mono">No rules deployed in active session memory.</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="text-xs font-bold text-zinc-400 uppercase tracking-wider font-mono flex items-center gap-1.5">
+                <Sliders className="w-4 h-4 text-amber-400" /> Suggested Rules ({candidateRules.length})
+              </div>
+              <button
+                onClick={() => void mineRules()}
+                disabled={miningRules}
+                className="h-8 px-3 bg-zinc-900 border border-zinc-800 hover:border-amber-500/40 hover:text-amber-400 text-zinc-400 text-[10px] font-mono font-bold uppercase tracking-wider rounded-lg flex items-center gap-1.5 disabled:opacity-40 transition-colors"
+              >
+                <GitBranch className="w-3.5 h-3.5" /> {miningRules ? 'Mining…' : 'Mine Graph'}
+              </button>
+            </div>
+
+            <p className="text-[10px] text-zinc-500 leading-relaxed font-mono">
+              Scans the active graph's real edges for (edge type, source type, target type) patterns that repeat often
+              and consistently enough to deserve becoming a watchable rule -- the mined confidence becomes the rule's
+              starting weight. Combos already covered by an existing rule are never suggested.
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {candidateRules.map((candidate) => (
+                <div key={candidate.id} className="p-4 rounded-xl border border-amber-500/20 bg-amber-500/[0.03] group relative hover:border-amber-500/40 transition-all">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0 space-y-1.5">
+                      <div className="text-[10px] font-mono text-zinc-500 flex items-center gap-1.5 flex-wrap">
+                        <span className="text-emerald-400 font-semibold">{candidate.sourceType}</span>
+                        <ChevronRight className="w-3 h-3 text-zinc-700 shrink-0" />
+                        <span className="text-sky-400 font-bold">{candidate.edgeType}</span>
+                        <ChevronRight className="w-3 h-3 text-zinc-700 shrink-0" />
+                        <span className="text-sky-400 font-semibold">{candidate.targetType}</span>
+                      </div>
+                      <div className="text-[10px] font-mono text-zinc-500 flex items-center gap-2 pt-1">
+                        <span>
+                          Support: <strong className="text-zinc-300 font-bold">{candidate.support}</strong>
+                        </span>
+                        <span>·</span>
+                        <span>
+                          Confidence: <strong className="text-amber-400 font-bold">{(candidate.confidence * 100).toFixed(0)}%</strong>
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        onClick={() => void approveCandidateRule(candidate.id)}
+                        className="h-7 px-2.5 bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 text-emerald-400 text-[9px] font-mono font-bold uppercase tracking-wider rounded-lg transition-colors"
+                      >
+                        Approve
+                      </button>
+                      <button
+                        onClick={() => void rejectCandidateRule(candidate.id)}
+                        className="h-7 px-2.5 bg-zinc-900 border border-zinc-800 hover:border-rose-500/40 hover:text-rose-400 text-zinc-500 text-[9px] font-mono font-bold uppercase tracking-wider rounded-lg transition-colors"
+                      >
+                        Reject
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {candidateRules.length === 0 && (
+                <div className="col-span-2 text-center py-10 rounded-xl border border-dashed border-zinc-800 text-zinc-600">
+                  <Sliders className="w-8 h-8 mx-auto mb-2 text-zinc-800" />
+                  <p className="text-[11px] font-mono">No suggested rules yet -- mine the active graph to find repeating patterns.</p>
                 </div>
               )}
             </div>

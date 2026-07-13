@@ -221,6 +221,7 @@ def get_graph(neo4j: Neo4jClient, graph_id: str) -> GraphRecord:
                coalesce(e.note, '') AS note,
                coalesce(e.summary, '') AS summary,
                e.communityId AS communityId
+        ORDER BY e.id
         """,
         graph_id=graph_id,
     )
@@ -338,6 +339,7 @@ class DerivedFactRecord:
     confidence: float
     iteration: int
     fed_back: bool
+    review_status: str = "pending"
     proof_path: tuple[ReasoningProofStep, ...] = field(default=())
 
 
@@ -352,6 +354,7 @@ def get_derived_facts_full(neo4j: Neo4jClient, graph_id: str) -> list[DerivedFac
                f.sourceId AS sourceId, f.targetId AS targetId, f.fact AS fact,
                f.confidence AS confidence, f.iteration AS iteration,
                coalesce(f.fedBack, false) AS fedBack,
+               coalesce(f.reviewStatus, 'pending') AS reviewStatus,
                coalesce(f.proofPathJson, '[]') AS proofPathJson
         ORDER BY f.iteration, f.id
         """,
@@ -373,10 +376,29 @@ def get_derived_facts_full(neo4j: Neo4jClient, graph_id: str) -> list[DerivedFac
                 id=row["id"], rule_id=row["ruleId"], rule_name=row["ruleName"],
                 source_id=row["sourceId"], target_id=row["targetId"], fact=row["fact"],
                 confidence=row["confidence"], iteration=row["iteration"],
-                fed_back=row["fedBack"], proof_path=proof_path,
+                fed_back=row["fedBack"], review_status=row["reviewStatus"], proof_path=proof_path,
             )
         )
     return records
+
+
+def get_derived_fact_rule_id(neo4j: Neo4jClient, *, graph_id: str, fact_id: str) -> str | None:
+    rows = neo4j.run(
+        "MATCH (f:DerivedFact {id: $fact_id, graphId: $graph_id}) RETURN f.ruleId AS ruleId",
+        fact_id=fact_id, graph_id=graph_id,
+    )
+    return rows[0]["ruleId"] if rows else None
+
+
+def set_derived_fact_review_status(neo4j: Neo4jClient, *, graph_id: str, fact_id: str, status: str) -> None:
+    """2026-07-13 plan §11.1: marks a :DerivedFact as reviewed (confirmed/
+    rejected) so it isn't re-surfaced for review -- same Human Gate pattern
+    as enrichment's :ImplicitFact status and Feature 3's :CandidateRule
+    status."""
+    neo4j.run(
+        "MATCH (f:DerivedFact {id: $fact_id, graphId: $graph_id}) SET f.reviewStatus = $status",
+        fact_id=fact_id, graph_id=graph_id, status=status,
+    )
 
 
 def mark_facts_fed_back(neo4j: Neo4jClient, *, graph_id: str, fact_ids: list[str]) -> None:

@@ -39,6 +39,7 @@ def client_and_graph():
     neo4j.run("MATCH (e:Entity {graphId: $gid}) DETACH DELETE e", gid=graph_id)
     neo4j.run("MATCH (f:DerivedFact {graphId: $gid}) DETACH DELETE f", gid=graph_id)
     neo4j.run("MATCH (r:Rule {id: $rid}) DETACH DELETE r", rid=rule_id)
+    neo4j.run("MATCH (o:RuleReviewOutcome {ruleId: $rid}) DETACH DELETE o", rid=rule_id)
     neo4j.close()
 
 
@@ -93,4 +94,42 @@ def test_spread_404s_on_empty_graph(client_and_graph):
 def test_infer_404s_on_empty_graph(client_and_graph):
     client, _ = client_and_graph
     resp = client.post("/reason/no-such-graph-xyz/infer")
+    assert resp.status_code == 404
+
+
+def test_confirm_derived_fact_updates_rule_weight_and_review_status(client_and_graph):
+    """2026-07-13 plan §11.1: confirming a derived fact via the REST API
+    updates its producing rule's weight and marks the fact reviewed."""
+    client, graph_id = client_and_graph
+    client.post(f"/reason/{graph_id}/spread", json={"sourceId": "A"})
+    fact_id = client.post(f"/reason/{graph_id}/infer").json()["facts"][0]["id"]
+
+    resp = client.post(f"/reason/{graph_id}/facts/{fact_id}/confirm")
+
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["confirmed"] is True
+    assert body["ruleWeight"] == pytest.approx(1.0)  # 1 confirmed / 1 total
+    facts = client.get(f"/reason/{graph_id}/facts").json()["facts"]
+    assert facts[0]["reviewStatus"] == "confirmed"
+
+
+def test_reject_derived_fact_updates_rule_weight_and_review_status(client_and_graph):
+    client, graph_id = client_and_graph
+    client.post(f"/reason/{graph_id}/spread", json={"sourceId": "A"})
+    fact_id = client.post(f"/reason/{graph_id}/infer").json()["facts"][0]["id"]
+
+    resp = client.post(f"/reason/{graph_id}/facts/{fact_id}/reject")
+
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["rejected"] is True
+    assert body["ruleWeight"] == pytest.approx(0.0)  # 0 confirmed / 1 total
+    facts = client.get(f"/reason/{graph_id}/facts").json()["facts"]
+    assert facts[0]["reviewStatus"] == "rejected"
+
+
+def test_confirm_unknown_fact_returns_404(client_and_graph):
+    client, graph_id = client_and_graph
+    resp = client.post(f"/reason/{graph_id}/facts/no-such-fact-xyz/confirm")
     assert resp.status_code == 404

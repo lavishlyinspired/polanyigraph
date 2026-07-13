@@ -52,6 +52,7 @@ def test_search_memory_finds_real_seeded_chat_history():
         assert body["hits"][0]["kind"] == "chat_message"
         assert "Credit Suisse" in body["hits"][0]["text"]
     finally:
+        neo4j.run("MATCH (s:ChatSession {id: $session_id})-[:HAS_MESSAGE]->(m:ChatMessage) DETACH DELETE m", session_id=session_id)
         neo4j.run("MATCH (s:ChatSession {id: $session_id}) DETACH DELETE s", session_id=session_id)
         neo4j.close()
 

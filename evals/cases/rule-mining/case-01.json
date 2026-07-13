@@ -1,0 +1,25 @@
+{
+  "id": "case-01-repeating-pattern",
+  "skill": "rule-mining",
+  "input": {
+    "context": {
+      "entities": [
+        { "id": "org0", "label": "Org 0", "type": "organization" },
+        { "id": "org1", "label": "Org 1", "type": "organization" },
+        { "id": "org2", "label": "Org 2", "type": "organization" },
+        { "id": "target_org", "label": "Target Org", "type": "organization" }
+      ],
+      "edges": [
+        { "id": "e0", "source": "org0", "target": "target_org", "type": "EVAL_PARTNERS_WITH" },
+        { "id": "e1", "source": "org1", "target": "target_org", "type": "EVAL_PARTNERS_WITH" },
+        { "id": "e2", "source": "org2", "target": "target_org", "type": "EVAL_PARTNERS_WITH" }
+      ],
+      "min_support": 3,
+      "min_confidence": 0.3
+    }
+  },
+  "assertions": [
+    { "type": "min_item_count", "value": 1 },
+    { "type": "contains_text", "text": "EVAL_PARTNERS_WITH" }
+  ]
+}

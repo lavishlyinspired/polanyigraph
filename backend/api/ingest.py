@@ -16,7 +16,7 @@ from db.graphdb_client import GraphDBClient
 from db.neo4j_client import Neo4jClient
 from llm.client import LLMClient
 from llm.embedder import EmbeddingClient
-from services import edgar_service, memory_config_service
+from services import edgar_service, entity_resolution_service, memory_config_service
 from services.ingest_service import ingest_text
 
 router = APIRouter(tags=["ingest"])
@@ -119,3 +119,45 @@ def ingest(
         ],
         dropped=result.dropped,
     )
+
+
+class DuplicateCandidateResponse(ApiModel):
+    id: str
+    new_entity_id: str
+    new_entity_label: str
+    existing_entity_id: str
+    existing_entity_label: str
+    similarity: float
+    status: str
+
+
+class DuplicateCandidatesResponse(ApiModel):
+    candidates: list[DuplicateCandidateResponse]
+
+
+def _to_duplicate_response(c: dict) -> DuplicateCandidateResponse:
+    return DuplicateCandidateResponse(
+        id=c["id"], new_entity_id=c["newEntityId"], new_entity_label=c["newEntityLabel"],
+        existing_entity_id=c["existingEntityId"], existing_entity_label=c["existingEntityLabel"],
+        similarity=c["similarity"], status=c["status"],
+    )
+
+
+@router.get("/ingest/{graph_id}/duplicates", response_model=DuplicateCandidatesResponse, response_model_by_alias=True)
+def get_duplicate_candidates(
+    graph_id: str, status: str = "pending", neo4j: Neo4jClient = Depends(get_neo4j),
+) -> DuplicateCandidatesResponse:
+    candidates = entity_resolution_service.list_candidates(neo4j, graph_id=graph_id, status=status)
+    return DuplicateCandidatesResponse(candidates=[_to_duplicate_response(c) for c in candidates])
+
+
+@router.post("/ingest/duplicates/{candidate_id}/confirm")
+def confirm_duplicate_candidate(candidate_id: str, neo4j: Neo4jClient = Depends(get_neo4j)) -> dict[str, bool]:
+    entity_resolution_service.confirm_duplicate(neo4j, candidate_id)
+    return {"confirmed": True}
+
+
+@router.post("/ingest/duplicates/{candidate_id}/reject")
+def reject_duplicate_candidate(candidate_id: str, neo4j: Neo4jClient = Depends(get_neo4j)) -> dict[str, bool]:
+    entity_resolution_service.reject_duplicate(neo4j, candidate_id)
+    return {"rejected": True}

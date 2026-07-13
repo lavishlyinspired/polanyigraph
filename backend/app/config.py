@@ -80,6 +80,13 @@ class Settings(BaseSettings):
     reason_activation_floor: float = Field(default=0.01)
     reason_feedback_gain: float = Field(default=0.5)
 
+    # 2026-07-13 plan §6: compound-query answering (router dispatches to
+    # multiple specialist nodes in parallel, combiner synthesizes one reply).
+    # Off by default -- with this False, the single-intent path is provably
+    # identical to pre-Feature-4 behavior (LLM never told compound is an
+    # option). Flip only in a dev/staging config first.
+    enable_compound_queries: bool = Field(default=False)
+
     # --- Provisioned-but-unwired credentials -----------------------------------
     # These services have real credentials in .env but no code path reads them
     # (rebuild-natively-in-Neo4j convention -- see PLAN.md §20). Read here only

@@ -43,6 +43,7 @@ def neo4j():
     yield client, graph_id
     client.run("MATCH (e:Entity {graphId: $gid}) DETACH DELETE e", gid=graph_id)
     client.run("MATCH (f:DerivedFact {graphId: $gid}) DETACH DELETE f", gid=graph_id)
+    client.run("MATCH (s:ChatSession {graphId: $gid})-[:HAS_MESSAGE]->(m:ChatMessage) DETACH DELETE m", gid=graph_id)
     client.run("MATCH (s:ChatSession {graphId: $gid}) DETACH DELETE s", gid=graph_id)
     client.close()
 

@@ -40,9 +40,23 @@ def embedder():
 
 
 @pytest.fixture
-def graph_id():
+def graph_id(neo4j):
     gid = f"test-{uuid.uuid4().hex[:8]}"
     yield gid
+    # Real bug found 2026-07-13: this fixture never cleaned up, unlike every
+    # other test fixture in this codebase -- leaked Entity/ChatSession/
+    # ChatMessage nodes with real summaryEmbedding vectors accumulated in
+    # the shared dev Neo4j across every session's test runs, degrading the
+    # ANN vector index's ability to find genuinely fresh nodes (confirmed:
+    # 54 leaked entities found, all scoring identically in queryNodes,
+    # crowding out real results).
+    neo4j.run("MATCH (e:Entity {graphId: $gid}) DETACH DELETE e", gid=gid)
+    # DETACH DELETE on ChatSession alone orphans its ChatMessage children
+    # (confirmed live: this exact mistake, made once cleaning up the leaked
+    # pollution this bug caused, left 680 orphaned ChatMessage nodes behind)
+    # -- delete the messages first, then the session.
+    neo4j.run("MATCH (s:ChatSession {graphId: $gid})-[:HAS_MESSAGE]->(m:ChatMessage) DETACH DELETE m", gid=gid)
+    neo4j.run("MATCH (s:ChatSession {graphId: $gid}) DETACH DELETE s", gid=gid)
 
 
 def test_ensure_indexes_is_idempotent(neo4j):

@@ -107,6 +107,7 @@ def test_agent_endpoint_recall_intent_searches_real_chat_history(client_and_grap
         assert len(body["memoryHits"]) == 1
         assert "Credit Suisse" in body["memoryHits"][0]
     finally:
+        neo4j.run("MATCH (s:ChatSession {graphId: $gid})-[:HAS_MESSAGE]->(m:ChatMessage) DETACH DELETE m", gid=graph_id)
         neo4j.run("MATCH (s:ChatSession {graphId: $gid}) DETACH DELETE s", gid=graph_id)
         neo4j.close()
         graphdb.close()

@@ -25,6 +25,7 @@ def neo4j():
         pytest.skip("Neo4j not reachable")
     graph_id = f"test-{uuid.uuid4().hex[:8]}"
     yield client, graph_id
+    client.run("MATCH (s:ChatSession {graphId: $gid})-[:HAS_MESSAGE]->(m:ChatMessage) DETACH DELETE m", gid=graph_id)
     client.run("MATCH (s:ChatSession {graphId: $gid}) DETACH DELETE s", gid=graph_id)
     client.close()
 
@@ -69,6 +70,7 @@ def test_sessions_are_scoped_per_graph(neo4j):
         messages = chat_history_service.get_recent_messages(client, graph_id=graph_id, session_id="s1")
         assert [m.content for m in messages] == ["mine"]
     finally:
+        client.run("MATCH (s:ChatSession {graphId: $gid})-[:HAS_MESSAGE]->(m:ChatMessage) DETACH DELETE m", gid=other_graph_id)
         client.run("MATCH (s:ChatSession {graphId: $gid}) DETACH DELETE s", gid=other_graph_id)
 
 

@@ -16,7 +16,7 @@ from reasoning.engine import feed_back_activation as feed_back_activation_engine
 from reasoning.engine import reason as run_reasoning_engine
 from reasoning.engine import run_inference as run_inference_engine
 from reasoning.engine import spread_activation as spread_activation_engine
-from services import graph_service
+from services import graph_service, rules_store
 from services.rules_store import load_all_rules
 
 
@@ -26,6 +26,27 @@ class EmptyGraphError(Exception):
 
 class UnknownSourceError(Exception):
     """Raised when source_id doesn't reference a real entity in this graph."""
+
+
+class UnknownFactError(Exception):
+    """Raised when fact_id doesn't reference a real :DerivedFact in this graph."""
+
+
+def review_derived_fact(neo4j: Neo4jClient, *, graph_id: str, fact_id: str, outcome: str) -> float:
+    """2026-07-13 plan §11.1: a human confirms or rejects a specific derived
+    fact -- updates the producing rule's weight via a rolling average
+    (rules_store.update_rule_weight), same reward-signal mechanism as the
+    skill graph's record_usage, and marks the fact reviewed so it isn't
+    re-surfaced. reasoning/engine.py needs no change at all: it already
+    reads whatever load_all_rules() returns, so a weight that moved from
+    review outcomes is indistinguishable to the engine from one a human
+    hand-set. Returns the rule's new weight."""
+    rule_id = graph_service.get_derived_fact_rule_id(neo4j, graph_id=graph_id, fact_id=fact_id)
+    if rule_id is None:
+        raise UnknownFactError(f"No derived fact '{fact_id}' in graph '{graph_id}'.")
+    new_weight = rules_store.update_rule_weight(neo4j, rule_id, outcome=outcome)
+    graph_service.set_derived_fact_review_status(neo4j, graph_id=graph_id, fact_id=fact_id, status=outcome)
+    return new_weight
 
 
 def _pick_source(nodes) -> str | None:

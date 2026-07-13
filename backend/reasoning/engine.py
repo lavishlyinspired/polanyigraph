@@ -11,6 +11,19 @@ Corrects the prototype's cosmetic loop:
 
 Domain-agnostic: nodes carry a ``type`` string that comes from the loaded
 ontology; rules reference those type strings. No domain is hardcoded.
+
+2026-07-13 plan §12.1: this module's ``reason()`` (spread -> infer -> feed
+back -> check convergence -> repeat, capped at ``max_iterations``) is this
+project's own instance of the "Loop Engineering" source's ``/goal``
+primitive -- "keeps going until a condition you wrote is actually true, and
+after every turn a separate check decides whether you are done, so the
+agent that wrote the code isn't the one grading it." The convergence check
+here (``delta < epsilon`` and no new facts) is plain deterministic Python,
+not even a second model call -- a stricter version of the source's own
+pattern (which uses a small model to grade), consistent with this whole
+codebase's bias toward determinism wherever possible. Not adopted from that
+source -- built independently, for fixpoint correctness -- but the same
+shape.
 """
 
 from __future__ import annotations

@@ -21,7 +21,7 @@ from db.graphdb_client import GraphDBClient
 from db.neo4j_client import Neo4jClient
 from ontology.loader import load_schema
 from reasoning.rules_repo import load_rules
-from services import rules_store
+from services import rule_mining_service, rules_store
 
 router = APIRouter(tags=["rules"])
 
@@ -52,25 +52,34 @@ class CreateRuleRequest(ApiModel):
     description: str = "{source} -> {target}"
 
 
+def _to_rule_response(r, *, source: str) -> RuleResponse:
+    return RuleResponse(
+        id=r.id, name=r.name, edge_type=r.edge_type, source_type=r.source_type,
+        target_type=r.target_type, threshold=r.threshold, weight=r.weight,
+        description=r.description, source=source,
+    )
+
+
 @router.get("/rules", response_model=RulesResponse, response_model_by_alias=True)
 def get_rules(neo4j: Neo4jClient = Depends(get_neo4j)) -> RulesResponse:
-    seed = [
-        RuleResponse(
-            id=r.id, name=r.name, edge_type=r.edge_type, source_type=r.source_type,
-            target_type=r.target_type, threshold=r.threshold, weight=r.weight,
-            description=r.description, source="seed",
-        )
-        for r in load_rules()
+    seed_by_id = {r.id: r for r in load_rules()}
+    custom_by_id = {r.id: r for r in rules_store.list_custom_rules(neo4j)}
+    # A Neo4j-stored rule with the same id as a seed rule is a weight
+    # OVERRIDE (2026-07-13 plan §11.1's rule review), not a second distinct
+    # rule -- show it once, tagged "seed" (that's still what it structurally
+    # is), using the current (possibly-reviewed) values. See
+    # rules_store.load_all_rules for why reasoning itself needs this same
+    # dedup, not just this display.
+    responses = [
+        _to_rule_response(custom_by_id.get(rid, r), source="seed")
+        for rid, r in seed_by_id.items()
     ]
-    custom = [
-        RuleResponse(
-            id=r.id, name=r.name, edge_type=r.edge_type, source_type=r.source_type,
-            target_type=r.target_type, threshold=r.threshold, weight=r.weight,
-            description=r.description, source="custom",
-        )
-        for r in rules_store.list_custom_rules(neo4j)
+    responses += [
+        _to_rule_response(r, source="custom")
+        for rid, r in custom_by_id.items()
+        if rid not in seed_by_id
     ]
-    return RulesResponse(rules=seed + custom)
+    return RulesResponse(rules=responses)
 
 
 @router.post("/rules", response_model=RuleResponse, response_model_by_alias=True)
@@ -111,3 +120,54 @@ def delete_rule(rule_id: str, neo4j: Neo4jClient = Depends(get_neo4j)) -> dict[s
     if not deleted:
         raise HTTPException(status_code=404, detail=f"Rule '{rule_id}' not found.")
     return {"deleted": True}
+
+
+class CandidateRuleResponse(ApiModel):
+    id: str
+    edge_type: str
+    source_type: str
+    target_type: str
+    support: int
+    confidence: float
+    status: str
+
+
+class CandidateRulesResponse(ApiModel):
+    candidates: list[CandidateRuleResponse]
+
+
+def _to_candidate_response(c) -> CandidateRuleResponse:
+    return CandidateRuleResponse(
+        id=c.id, edge_type=c.edge_type, source_type=c.source_type, target_type=c.target_type,
+        support=c.support, confidence=c.confidence, status=c.status,
+    )
+
+
+@router.post("/rules/mine/{graph_id}", response_model=CandidateRulesResponse, response_model_by_alias=True)
+def mine_rules(graph_id: str, neo4j: Neo4jClient = Depends(get_neo4j)) -> CandidateRulesResponse:
+    candidates = rule_mining_service.mine_candidates(neo4j, graph_id)
+    return CandidateRulesResponse(candidates=[_to_candidate_response(c) for c in candidates])
+
+
+@router.get("/rules/candidates", response_model=CandidateRulesResponse, response_model_by_alias=True)
+def get_candidates(status: str = "pending", neo4j: Neo4jClient = Depends(get_neo4j)) -> CandidateRulesResponse:
+    candidates = rule_mining_service.list_candidates(neo4j, status=status)
+    return CandidateRulesResponse(candidates=[_to_candidate_response(c) for c in candidates])
+
+
+@router.post("/rules/candidates/{candidate_id}/approve")
+def approve_candidate_rule(candidate_id: str, neo4j: Neo4jClient = Depends(get_neo4j)) -> dict[str, bool]:
+    try:
+        rule_mining_service.approve_candidate(neo4j, candidate_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    return {"approved": True}
+
+
+@router.post("/rules/candidates/{candidate_id}/reject")
+def reject_candidate_rule(candidate_id: str, neo4j: Neo4jClient = Depends(get_neo4j)) -> dict[str, bool]:
+    try:
+        rule_mining_service.reject_candidate(neo4j, candidate_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    return {"rejected": True}

@@ -36,6 +36,7 @@ from services import (  # noqa: E402
     ingest_service,
     memory_service,
     reasoning_service,
+    rule_mining_service,
 )
 from services.path_engine import find_path  # noqa: E402
 from services.query_engine import execute_query  # noqa: E402
@@ -239,6 +240,40 @@ def _run_memory_recall(case: dict) -> EvalOutput:
         _cleanup_graph(neo4j, graph_id)
 
 
+def _run_rule_mining(case: dict) -> EvalOutput:
+    """Not one of the 6 backend/skills/ runtime skills -- rule mining is
+    deterministic Python over a real graph's real edges (2026-07-13 plan
+    §5), no LLM call, so the case seeds entities/edges directly rather than
+    via ingest_service. Reuses _cleanup_graph unmodified: :CandidateRule
+    nodes carry graphId too (services/rule_mining_service.py), so the same
+    generic `MATCH (n {graphId: ...})` sweep removes them along with the
+    seeded entities."""
+    ctx = case["input"]["context"]
+    graph_id = ctx.get("graph_id") or f"eval-rule-mining-{uuid.uuid4().hex[:8]}"
+    neo4j = get_neo4j()
+    try:
+        for e in ctx.get("entities", []):
+            graph_service.upsert_entity(
+                neo4j, graph_id=graph_id, entity_id=e["id"], label=e["label"], type_=e["type"],
+                source_doc="eval", extraction_confidence=1.0,
+            )
+        for edge in ctx.get("edges", []):
+            graph_service.upsert_relationship(
+                neo4j, graph_id=graph_id, edge_id=edge["id"], source_id=edge["source"],
+                target_id=edge["target"], type_=edge["type"], weight=1.0,
+            )
+        candidates = rule_mining_service.mine_candidates(
+            neo4j, graph_id,
+            min_support=ctx.get("min_support", 3), min_confidence=ctx.get("min_confidence", 0.6),
+        )
+        return EvalOutput(
+            items=[f"{c.edge_type} (support={c.support}, confidence={c.confidence:.2f})" for c in candidates],
+            raw={"candidate_ids": [c.id for c in candidates]},
+        )
+    finally:
+        _cleanup_graph(neo4j, graph_id)
+
+
 _RUNNERS = {
     "kg-extraction": _run_kg_extraction,
     "polanyi-enrichment": _run_polanyi_enrichment,
@@ -246,6 +281,7 @@ _RUNNERS = {
     "neurosymbolic-reasoning": _run_neurosymbolic_reasoning,
     "kg-visualization": _run_kg_visualization,
     "memory-recall": _run_memory_recall,
+    "rule-mining": _run_rule_mining,
 }
 
 

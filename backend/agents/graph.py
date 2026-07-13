@@ -27,33 +27,55 @@ responder based on intent, where the LLM call that actually needs the
 guidance lives. memory-recall loads in addition whenever the message itself
 looks temporal, regardless of primary intent.
 
-Skill graph (PLAN.md §18/§2.9.14): every skill load above goes through
-ResilientSkillDiscovery instead of agents/skill_store.py directly -- same
-filesystem content, but the router additionally calls find_relevant_skills()
-for observability (state["discovered_skills"]), and every node that loads a
-skill calls record_usage() after acting on it, so the graph's Skill.confidence
-is a real rolling average of outcomes, not a static number. _SKILL_BY_INTENT
-stays the actual (deterministic, tested) selector -- discovery augments it,
-doesn't replace it, per the "quick match first, deep search as a fallback"
-design in §2.9.14's own system-prompt sketch. The discovery query itself is
-built by _discovery_query(intent, text), not raw state["text"] alone: routed
-text is often bare document content ("Acme Corp issued preferred stock.")
-sharing no vocabulary with skill descriptions ("Use when extracting
-entities..."), which would make the Lucene full-text match return nothing --
-folding in an intent-derived phrase guarantees a match while the real text
-still contributes to ranking among matches.
+Compound-query answering (2026-07-13 plan §6, behind
+settings.enable_compound_queries, default off): the router can list more
+than one capability ("reason,recall") when the flag is on; route_by_intent
+then fans out via LangGraph's Send to each eligible specialist in parallel
+(cross-checked against Stage A discovery via _is_eligible, not trusted
+blindly), each writes an additive entry into partial_answers (an
+Annotated[dict, operator.or_]-reduced field -- required, not decorative, or
+two parallel writes in the same superstep raise LangGraph's
+InvalidUpdateError), combiner_node joins them deterministically, and
+responder_node's "compound" branch synthesizes one reply. With the flag off,
+router_node truncates to a single intent unconditionally -- provably
+identical to pre-Feature-4 behavior, not just "probably fine." The Send/
+reducer/join mechanics were verified against the installed langgraph version
+via a throwaway spike (plan §6.9) before any of this was wired into the real
+graph.
+
+Skill graph (PLAN.md §18/§2.9.14, extended by 2026-07-13 plan §2 Stage A):
+every skill load above goes through ResilientSkillDiscovery instead of
+agents/skill_store.py directly -- same filesystem content, but the router
+additionally calls find_relevant_skills() every turn, and every node that
+loads a skill calls record_usage() after acting on it, so the graph's
+Skill.confidence is a real rolling average of outcomes, not a static number.
+responder_node's skill choice now goes through _select_skill(): discovery's
+top match wins when it clears a confidence floor (_SKILL_SELECTION_MIN_SCORE),
+_SKILL_BY_INTENT is the fallback for everything else (Neo4j down, low-
+confidence match, or no match at all) -- the same defensive pattern already
+used for intent itself just above. The discovery query itself is built by
+_discovery_query(intent, text), not raw state["text"] alone: routed text is
+often bare document content ("Acme Corp issued preferred stock.") sharing no
+vocabulary with skill descriptions ("Use when extracting entities..."), which
+would make the Lucene full-text match return nothing -- folding in an
+intent-derived phrase guarantees a match while the real text still
+contributes to ranking among matches.
 """
 
 from __future__ import annotations
 
+import re
+
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import END, START, StateGraph
+from langgraph.types import Send
 
 from agents.skill_discovery import ResilientSkillDiscovery
 from agents.state import AgentState
 from app.config import Settings
 from db.graphdb_client import GraphDBClient
 from db.neo4j_client import Neo4jClient
+from enrichment.heuristics.base import HEURISTIC_TYPES
 from llm.client import LLMClient
 from llm.embedder import EmbeddingClient
 from services import enrichment_service, graph_service, ingest_service, memory_config_service, memory_service, reasoning_service
@@ -89,6 +111,21 @@ Respond with ONLY one word: extract, enrich, query, reason, visualize, or recall
 
 _VALID_INTENTS = {"extract", "enrich", "query", "reason", "visualize", "recall"}
 
+# 2026-07-13 plan §6: only appended to _ROUTER_SYSTEM when
+# settings.enable_compound_queries -- with the flag off, the LLM is never
+# told compound is an option, so router_node's output is provably identical
+# to pre-Feature-4 behavior (single word, never a comma-list).
+_COMPOUND_ADDENDUM = """
+If the message clearly needs MORE THAN ONE of the above capabilities together \
+to fully answer, respond with a comma-separated list instead of one word, e.g. \
+"reason,recall". Only do this when genuinely necessary -- most messages need \
+exactly one capability, and single-word answers remain correct for those.
+
+Compound examples:
+"Is Acme Bank's ownership chain compliant, and have we flagged this pattern before?" -> reason,recall
+"Query the current ownership edges and also check reasoning for anything derivable." -> query,reason
+"""
+
 _RESPONDER_SYSTEM = """You are a knowledge-graph analyst assistant. Summarize, in 1-3 \
 sentences, what just happened during ingestion and reasoning over a real document -- \
 using ONLY the real entities, relationships, and facts listed below. Do not invent \
@@ -101,6 +138,119 @@ _SKILL_BY_INTENT = {
     "visualize": "kg-visualization",
     "recall": "memory-recall",
 }
+
+# 2026-07-13 plan §6.4: structural 1:1 map from a compound-eligible intent to
+# its specialist node. Deliberately excludes "extract" (extraction can't be
+# one of several parallel Send branches -- reasoning/querying/etc. over a
+# graph "extract" hasn't written to yet would race it; router_node collapses
+# any intents list containing "extract" back to single-intent before this is
+# ever consulted) and "visualize" (no specialist node of its own -- reads the
+# final graph state directly inside responder_node).
+_NODE_BY_INTENT = {"reason": "reasoner", "recall": "memory_agent", "query": "querier", "enrich": "enricher"}
+
+
+def _is_eligible(intent: str, raw_text_discovered_skills: list[str]) -> bool:
+    """2026-07-13 plan §6.4: cross-checks a compound-listed SECONDARY intent
+    against discovery run on the RAW turn text (route_by_intent -- not
+    _discovery_query's intent-phrase-boosted version, which would make an
+    intent's own mapped skill win its own query almost tautologically,
+    defeating the point of an independent check) -- only dispatches if its
+    corresponding skill genuinely showed up as relevant to the actual text,
+    not just because the router LLM listed the word. The PRIMARY intent
+    (intents[0]) is exempt from this check in route_by_intent -- trusted
+    exactly as much as the existing single-intent path already trusts the
+    router's own classification, never gated further. Stage C's ontology-
+    type gate is deliberately not part of this check (skipped this round --
+    see 2026-07-13 checklist: no real entity-type-restricted skill exists
+    yet to gate on)."""
+    skill_name = _SKILL_BY_INTENT.get(intent)
+    return skill_name is not None and skill_name in raw_text_discovered_skills
+
+
+def combiner_node(state: AgentState) -> dict:
+    """2026-07-13 plan §5.7: deterministic join of parallel specialist
+    output, no LLM call -- module-level (not a build_graph closure) since it
+    only ever reads state["partial_answers"], needing none of build_graph's
+    captured neo4j/llm/discovery/settings -- fully testable in isolation
+    with a fabricated partial_answers dict, per the plan's own test spec."""
+    sections = []
+    for name in ("reasoner", "querier", "enricher", "memory_agent"):
+        pa = state["partial_answers"].get(name)
+        if pa:
+            sections.append(f"[{name}, confidence={pa['confidence']:.2f}] {pa['summary']}")
+    return {"combined_answer": "\n".join(sections) or "(no sub-answers produced)"}
+
+
+def _find_ungrounded_claims(reply: str, grounding_text: str) -> list[str]:
+    """2026-07-13 plan §12.4 maker/checker split, generalized (follow-up
+    request) from just the "compound" intent to every responder_node reply:
+    the model that synthesized `reply` is not the one that checks whether
+    it over-claimed. Deterministic first (only escalates to a second LLM
+    call if this actually finds something -- see responder_node).
+    `grounding_text` is whatever real data the caller built `reply` from --
+    responder_node passes its own `user` prompt, which already holds the
+    real query results / derived facts / entities / memory hits / combined
+    sub-answers for every intent, so this one check works everywhere with
+    no per-intent plumbing.
+
+    Flags sentences that introduce a specific factual token -- a multi-word
+    proper-noun phrase or a number -- that never appears anywhere in
+    grounding_text. Deliberately NOT a raw keyword-overlap-ratio check:
+    calibrated against a real live-captured compound reply before writing
+    this, and plain word overlap flagged genuinely grounded paraphrase
+    sentences ("However, I couldn't find...") just as readily as fabricated
+    ones -- natural connective language dilutes overlap either way. A novel
+    specific token is a much lower-false-positive signal of invention, not
+    paraphrase (verified zero false positives against that same real reply,
+    and correctly caught two novel tokens in a deliberately fabricated one).
+
+    Known limitation, accepted as a reasonable precision/recall tradeoff:
+    single-word proper nouns (e.g. a lone invented city name) aren't caught
+    by the multi-word-phrase pattern -- catching *some* signal to trigger a
+    bounded retry matters more here than exhaustive detection, and a
+    single-word regex reintroduces the sentence-initial-capitalization
+    false-positive problem this was calibrated to avoid."""
+    grounding_lower = grounding_text.lower()
+    sentences = [s.strip() for s in re.split(r"(?<=[.!?])\s+", reply) if s.strip()]
+    ungrounded = []
+    for sentence in sentences:
+        # Sentence-initial capitalization is a grammar artifact, not
+        # evidence of a proper noun -- lower just that first character
+        # before matching.
+        adjusted = (sentence[0].lower() + sentence[1:]) if sentence else sentence
+        proper_noun_phrases = re.findall(r"\b[A-Z][a-zA-Z]*(?:\s+[A-Z][a-zA-Z]*)+\b", adjusted)
+        numbers = re.findall(r"\b\d[\d,.]{2,}\b", adjusted)
+        novel = [t for t in proper_noun_phrases + numbers if t.lower() not in grounding_lower]
+        if novel:
+            ungrounded.append(sentence)
+    return ungrounded
+
+# 2026-07-13 plan §2 Stage A: minimum Lucene full-text score (not a
+# normalized 0-1 confidence -- observed real scores range roughly 0.3-1.5)
+# for discovery's top match to override _SKILL_BY_INTENT. Calibrated against
+# live-observed scores in tests/test_agent_graph.py's Stage A tests, not
+# picked blindly.
+_SKILL_SELECTION_MIN_SCORE = 0.35
+
+
+def _select_skill(intent: str, discovered_names: list[str], discovered_scores: list[float]) -> str | None:
+    """2026-07-13 plan §2 Stage A: discovery becomes the actual selector,
+    not just observability (PLAN.md §18.4 item 3's original scope) --
+    _SKILL_BY_INTENT is demoted to a fallback for when discovery returns
+    nothing or its top match scores below the confidence floor, mirroring
+    the exact defensive pattern the router already uses for intent itself
+    (`if intent not in _VALID_INTENTS: intent = "extract"` below).
+
+    Deliberately falls back to `_SKILL_BY_INTENT.get(intent)` -- which is
+    None for "extract"/"reason", intents the map never covered -- rather
+    than the plan sketch's `"kg-extraction"` default: preserves this
+    function's exact prior no-op behavior for those intents (responder_node
+    loaded no guidance for them before this change either), while still
+    letting a confident discovery match apply even there. Never a
+    regression versus pre-Stage-A behavior, only ever a strict addition."""
+    if discovered_names and discovered_scores and discovered_scores[0] >= _SKILL_SELECTION_MIN_SCORE:
+        return discovered_names[0]
+    return _SKILL_BY_INTENT.get(intent)
 
 # find_relevant_skills is a Lucene full-text match against skill
 # *descriptions* (e.g. kg-extraction's: "Use when extracting entities and
@@ -144,19 +294,63 @@ def build_graph(neo4j: Neo4jClient, graphdb: GraphDBClient, llm: LLMClient, sett
     discovery = ResilientSkillDiscovery(neo4j)
 
     def router_node(state: AgentState) -> dict:
-        raw = llm.complete_json(system=_ROUTER_SYSTEM, user=state["text"])
-        intent = raw.strip().lower()
-        if intent not in _VALID_INTENTS:
-            intent = "extract"  # safe, most-tested default
-        # PLAN.md §18.4 item 3: real find_relevant_skills call every turn,
-        # independent of (and never gating) the deterministic intent->skill
-        # lookup below -- degrades to filesystem keyword matching if Neo4j
-        # is down (ResilientSkillDiscovery), never blocks routing.
-        discovered = discovery.find_skills(_discovery_query(intent, state["text"]), limit=3)
-        return {"intent": intent, "discovered_skills": [d.name for d in discovered]}
+        system = _ROUTER_SYSTEM + (_COMPOUND_ADDENDUM if settings.enable_compound_queries else "")
+        raw = llm.complete_json(system=system, user=state["text"])
+        parts = [p.strip().lower() for p in raw.strip().split(",")]
+        intents = [p for p in parts if p in _VALID_INTENTS] or ["extract"]  # safe, most-tested default
+        if not settings.enable_compound_queries or "extract" in intents:
+            # Flag off: never fan out, full stop -- this is the regression-
+            # safety guarantee, not just "probably fine" (a base-prompt LLM
+            # free-associating a stray comma would otherwise silently enable
+            # compound behavior even with the flag off). "extract" present:
+            # collapse to single-intent regardless of the flag -- extraction
+            # structurally can't be one of several parallel branches (see
+            # _NODE_BY_INTENT's docstring).
+            intents = intents[:1]
+        primary_intent = intents[0]
+        # 2026-07-13 plan §2 Stage A: find_relevant_skills' ranked output now
+        # actually drives responder_node's skill selection (_select_skill),
+        # not just observability -- degrades to filesystem keyword matching
+        # if Neo4j is down (ResilientSkillDiscovery), never blocks routing.
+        # Wider limit for a compound turn: a secondary intent's skill needs a
+        # fair shot at appearing in the ranked list _is_eligible checks
+        # against, not to be starved by a cutoff sized for the single-intent
+        # case.
+        discovery_limit = 3 if len(intents) == 1 else 6
+        discovered = discovery.find_skills(_discovery_query(primary_intent, state["text"]), limit=discovery_limit)
+        return {
+            "intent": primary_intent if len(intents) == 1 else "compound",
+            "intents": intents,
+            "discovered_skills": [d.name for d in discovered],
+            "discovered_skill_scores": [d.score for d in discovered],
+            "partial_answers": {},
+        }
 
-    def route_by_intent(state: AgentState) -> str:
-        return state["intent"]
+    def route_by_intent(state: AgentState):
+        if len(state["intents"]) > 1:
+            primary, secondary = state["intents"][0], state["intents"][1:]
+            eligible = [primary] if primary in _NODE_BY_INTENT else []
+            secondary_candidates = [i for i in secondary if i in _NODE_BY_INTENT]
+            if secondary_candidates:
+                # Deliberately the RAW text, no _discovery_query intent-phrase
+                # boost: a phrase-boosted query would make an intent's own
+                # mapped skill win its own query almost tautologically (see
+                # Stage A's empirical findings), which defeats the point of
+                # cross-checking a SECONDARY intent -- this needs a signal
+                # independent of "the router already said so." Raw-text
+                # relevance is exactly that independent signal (verified
+                # empirically before writing this: a genuinely relevant
+                # secondary intent's skill does surface this way; an
+                # unrelated one legitimately doesn't).
+                raw_discovered = discovery.find_skills(state["text"], limit=6)
+                raw_names = [d.name for d in raw_discovered]
+                eligible += [i for i in secondary_candidates if _is_eligible(i, raw_names)]
+            if eligible:
+                return [Send(_NODE_BY_INTENT[i], state) for i in eligible]
+            # Nothing survived (rare -- the primary intent is exempt from
+            # this check) -- fall back to the primary intent's ordinary
+            # single-path routing rather than dispatching zero branches.
+        return state["intents"][0]
 
     def extractor_node(state: AgentState) -> dict:
         # PLAN.md §13.2: Discovery -> Activation -> Execution, for real --
@@ -187,8 +381,16 @@ def build_graph(neo4j: Neo4jClient, graphdb: GraphDBClient, llm: LLMClient, sett
         except (reasoning_service.EmptyGraphError, reasoning_service.UnknownSourceError):
             # Nothing was extracted (or nothing reasonable to reason from) --
             # a normal outcome for non-domain text, not an error.
-            return {"facts_derived": 0, "fact_texts": []}
-        return {"facts_derived": len(result.facts), "fact_texts": [f.fact for f in result.facts]}
+            update = {"facts_derived": 0, "fact_texts": []}
+            if len(state["intents"]) > 1:
+                update["partial_answers"] = {"reasoner": {"summary": "no new facts derived", "confidence": 0.0}}
+            return update
+        fact_texts = [f.fact for f in result.facts]
+        update = {"facts_derived": len(result.facts), "fact_texts": fact_texts}
+        if len(state["intents"]) > 1:
+            conf = (sum(f.confidence for f in result.facts) / len(result.facts)) if result.facts else 0.0
+            update["partial_answers"] = {"reasoner": {"summary": "; ".join(fact_texts[:5]) or "no new facts derived", "confidence": conf}}
+        return update
 
     def enricher_node(state: AgentState) -> dict:
         record = graph_service.get_graph(neo4j, state["graph_id"])
@@ -198,35 +400,64 @@ def build_graph(neo4j: Neo4jClient, graphdb: GraphDBClient, llm: LLMClient, sett
         enrichment_service.save_pending_facts(
             neo4j, graph_id=state["graph_id"], source_doc=state["text"], candidates=candidates,
         )
-        return {"enrichment_fact_texts": [c.text for c in candidates]}
+        candidate_texts = [c.text for c in candidates]
+        update = {"enrichment_fact_texts": candidate_texts}
+        if len(state["intents"]) > 1:
+            heuristics_with_hits = len({c.heuristic_type for c in candidates})
+            update["partial_answers"] = {"enricher": {
+                "summary": "; ".join(candidate_texts[:5]) or "no implicit facts found",
+                "confidence": heuristics_with_hits / len(HEURISTIC_TYPES),
+            }}
+        return update
 
     def querier_node(state: AgentState) -> dict:
         triples = graph_service.load_triples(neo4j, state["graph_id"])
         result = execute_query(state["text"], triples)
         if result.error:
-            return {"query_results": [], "query_error": result.error}
-        return {
-            "query_results": [f'{r.subject} {r.predicate}("{r.object}")' for r in result.results],
-            "query_error": "",
-        }
+            update = {"query_results": [], "query_error": result.error}
+            if len(state["intents"]) > 1:
+                update["partial_answers"] = {"querier": {"summary": f"query error: {result.error}", "confidence": 0.0}}
+            return update
+        query_results = [f'{r.subject} {r.predicate}("{r.object}")' for r in result.results]
+        update = {"query_results": query_results, "query_error": ""}
+        if len(state["intents"]) > 1:
+            update["partial_answers"] = {"querier": {
+                "summary": "; ".join(query_results[:5]) or "no query results",
+                "confidence": 1.0 if query_results else 0.0,
+            }}
+        return update
 
     def memory_agent_node(state: AgentState) -> dict:
         words = [w.strip("?.,!\"'") for w in state["text"].split()]
         terms = [w for w in words if len(w) > 3 and w.lower() not in _RECALL_STOPWORDS] or [state["text"]]
         seen_ids: set[str] = set()
         hits = []
+        terms_with_hits = 0
         for term in terms:
-            for hit in memory_service.search_memory(neo4j, graph_id=state["graph_id"], query=term, embedder=embedder, settings=settings):
+            term_hits = memory_service.search_memory(neo4j, graph_id=state["graph_id"], query=term, embedder=embedder, settings=settings)
+            if term_hits:
+                terms_with_hits += 1
+            for hit in term_hits:
                 if hit.id not in seen_ids:
                     seen_ids.add(hit.id)
                     hits.append(hit)
-        return {"memory_hits": [f"[{h.kind}] {h.text}" for h in hits[:10]]}
+        memory_hits = [f"[{h.kind}] {h.text}" for h in hits[:10]]
+        update = {"memory_hits": memory_hits}
+        if len(state["intents"]) > 1:
+            update["partial_answers"] = {"memory_agent": {
+                "summary": "; ".join(memory_hits[:5]) or "no matching memory found",
+                "confidence": (terms_with_hits / len(terms)) if terms else 0.0,
+            }}
+        return update
+
+    def _next_after_specialist(state: AgentState) -> str:
+        return "combiner" if len(state["intents"]) > 1 else "responder"
 
     def responder_node(state: AgentState) -> dict:
         intent = state["intent"]
         guidance_parts = []
         loaded_skills = []
-        skill_name = _SKILL_BY_INTENT.get(intent)
+        skill_name = _select_skill(intent, state["discovered_skills"], state["discovered_skill_scores"])
         if skill_name:
             guidance_parts.append(discovery.load_skill(skill_name))
             loaded_skills.append(skill_name)
@@ -254,6 +485,11 @@ def build_graph(neo4j: Neo4jClient, graphdb: GraphDBClient, llm: LLMClient, sett
                 f"The user wants to visualize/see an overview of the real graph "
                 f"({len(record.nodes)} entities, {len(record.edges)} relationships):\n{entities_text}"
             )
+        elif intent == "compound":
+            user = (
+                f"Sub-answers from multiple specialists for: {state['text']}\n\n{state['combined_answer']}\n\n"
+                "Synthesize one coherent answer, and note which specialist each part of your answer relies on."
+            )
         else:  # extract or reason -- grounded in the real current graph state
             record = graph_service.get_graph(neo4j, state["graph_id"])
             entities_text = "\n".join(f"- {n.label}" for n in record.nodes) or "(none)"
@@ -266,6 +502,24 @@ def build_graph(neo4j: Neo4jClient, graphdb: GraphDBClient, llm: LLMClient, sett
 
         try:
             reply = llm.complete_json(system=system, user=user)
+            # 2026-07-13 plan §12.4 maker/checker split, generalized from
+            # just the "compound" branch to EVERY responder reply (follow-up
+            # request: apply the same Generate-Review-Act discipline to the
+            # whole orchestrator, not one branch). The model that
+            # synthesized `reply` isn't the one that checks it -- and `user`
+            # already holds the real data this reply must be grounded in for
+            # every intent (query results, derived facts, real entities,
+            # memory hits, or combined sub-answers for compound), so the
+            # same check generalizes with no new plumbing. Bounded to
+            # exactly one retry, not an open-ended loop -- if the retry
+            # still doesn't pass, its output is used as-is rather than
+            # looping (this project's existing bias toward bounded,
+            # deterministic control flow).
+            if _find_ungrounded_claims(reply, user):
+                reply = llm.complete_json(
+                    system=system + "\n\nYour previous answer included claims not supported by the real data provided above. Only state what that data actually supports.",
+                    user=user,
+                )
         except Exception:
             for name in loaded_skills:
                 discovery.record_usage(name, session_id=state["graph_id"], success=False)
@@ -281,6 +535,7 @@ def build_graph(neo4j: Neo4jClient, graphdb: GraphDBClient, llm: LLMClient, sett
     workflow.add_node("enricher", enricher_node)
     workflow.add_node("querier", querier_node)
     workflow.add_node("memory_agent", memory_agent_node)
+    workflow.add_node("combiner", combiner_node)
     workflow.add_node("responder", responder_node)
 
     workflow.add_edge(START, "router")
@@ -292,11 +547,17 @@ def build_graph(neo4j: Neo4jClient, graphdb: GraphDBClient, llm: LLMClient, sett
         "visualize": "responder",
         "recall": "memory_agent",
     })
+    # extractor keeps its unconditional edge to reasoner -- extraction was
+    # never part of the compound set (see _NODE_BY_INTENT's docstring), so
+    # this path is always single-intent and len(intents) == 1 here.
     workflow.add_edge("extractor", "reasoner")
-    workflow.add_edge("reasoner", "responder")
-    workflow.add_edge("enricher", "responder")
-    workflow.add_edge("querier", "responder")
-    workflow.add_edge("memory_agent", "responder")
+    # 2026-07-13 plan §5.6: each specialist's next hop depends on whether
+    # this turn is compound (len(intents) > 1 -> combiner, a real join point
+    # LangGraph waits at for every dispatched Send branch to finish) or
+    # single-intent (-> responder, unchanged from pre-Feature-4 behavior).
+    for node in ("reasoner", "querier", "enricher", "memory_agent"):
+        workflow.add_conditional_edges(node, _next_after_specialist, {"combiner": "combiner", "responder": "responder"})
+    workflow.add_edge("combiner", "responder")
     workflow.add_edge("responder", END)
 
     return workflow.compile(checkpointer=InMemorySaver())

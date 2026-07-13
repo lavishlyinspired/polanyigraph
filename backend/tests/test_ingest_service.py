@@ -16,7 +16,7 @@ from app.config import get_settings
 from app.dependencies import get_embedder
 from db.graphdb_client import GraphDBClient
 from db.neo4j_client import Neo4jClient
-from services import graph_service, history_service
+from services import entity_resolution_service, graph_service, history_service, vector_search_service
 from services.ingest_service import ingest_text
 
 
@@ -42,6 +42,7 @@ def services():
     yield neo4j, graphdb, settings, graph_id
     neo4j.run("MATCH (e:Entity {graphId: $gid}) DETACH DELETE e", gid=graph_id)
     neo4j.run("MATCH (h:IngestEvent {graphId: $gid}) DETACH DELETE h", gid=graph_id)
+    neo4j.run("MATCH (d:DuplicateCandidate {graphId: $gid}) DETACH DELETE d", gid=graph_id)
     neo4j.close()
     graphdb.close()
 
@@ -205,3 +206,53 @@ def test_ingest_indexes_entity_summary_embedding_when_embedder_given(services):
     )
     assert rows[0]["embedding"] is not None
     assert len(rows[0]["embedding"]) == embedder.dimensions
+
+
+def test_ingest_flags_a_cross_document_duplicate_entity(services):
+    """2026-07-13 plan §11.2, wired end-to-end: document 1 extracts "Acme
+    Corp"; document 2 extracts "Acme Corporation" (a name variation for the
+    same real company, deliberately a different entity_id since ids are
+    deterministic slugs of the extracted name -- see ingest_service.py's
+    module docstring) -- flagged as a likely duplicate, not silently created
+    as an unrelated second entity."""
+    neo4j, graphdb, settings, graph_id = services
+    embedder = get_embedder()
+    try:
+        embedder.verify()
+    except Exception:
+        pytest.skip("Embedding endpoint not reachable")
+
+    payload_1 = json.dumps({
+        "entities": [{"name": "Acme Corp", "type": "organization", "confidence": 0.9}],
+        "relationships": [],
+    })
+    payload_2 = json.dumps({
+        "entities": [{"name": "Acme Corporation", "type": "organization", "confidence": 0.9}],
+        "relationships": [],
+    })
+
+    class SummaryAwareFakeLLM:
+        def __init__(self, extraction_payload: str) -> None:
+            self._extraction_payload = extraction_payload
+
+        def complete_json(self, *, system: str, user: str, temperature: float = 0.0) -> str:
+            if "Existing summary" in user:
+                marker = "New source text mentioning this entity:\n"
+                start = user.index(marker) + len(marker)
+                end = user.index("\n\nWrite one updated summary")
+                return user[start:end]
+            return self._extraction_payload
+
+    ingest_text(
+        neo4j=neo4j, graphdb=graphdb, llm=SummaryAwareFakeLLM(payload_1), graph_id=graph_id,
+        text="Acme Corp is a company that issued preferred stock in a recent SEC filing.",
+        source_doc="d1", repository=settings.graphdb_repository, embedder=embedder,
+    )
+    ingest_text(
+        neo4j=neo4j, graphdb=graphdb, llm=SummaryAwareFakeLLM(payload_2), graph_id=graph_id,
+        text="Acme Corporation issued a new class of preferred stock according to a recent filing.",
+        source_doc="d2", repository=settings.graphdb_repository, embedder=embedder,
+    )
+
+    pending = entity_resolution_service.list_candidates(neo4j, graph_id=graph_id, status="pending")
+    assert any(c["newEntityLabel"] == "Acme Corporation" and c["existingEntityLabel"] == "Acme Corp" for c in pending)
