@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Neurosymbolic KG — Sinch-Inspired Redesign Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Host+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    /* ── Exact Sinch Tokens (extracted from live sinch.com) ── */
+    :root {
+      --sinch-blue: #1860F0;        /* rgb(24, 96, 240) - primary CTA */
+      --sinch-blue-accent: #2977FF; /* rgb(41, 119, 255) - text-highlight, outline borders */
+      --sinch-blue-soft: #EBF1FF;
+      --sinch-body: #4B575E;        /* rgb(75, 87, 94) - ALL body text */
+      --sinch-heading: #000000;     /* rgb(0, 0, 0) - H1, H3 */
+      --sinch-caption: #AEB7BD;     /* rgb(174, 183, 189) - section captions */
+      --sinch-bg-light: #F7F9FA;    /* rgb(247, 249, 250) - bg-light-subtle */
+      --sinch-bg-white: #FFFFFF;
+      --sinch-card-bg: #F0F3F5;     /* rgb(240, 243, 245) - card backgrounds */
+      --sinch-sand: #F5F3F0;        /* rgb(245, 243, 240) - quote cards */
+      --sinch-border: #DCE2E5;      /* rgb(220, 226, 229) - header border */
+      --sinch-announcement: #D3D9DE;/* rgb(211, 217, 222) - announcement bar */
+      --sinch-dark-bg: #14181C;     /* rgb(20, 24, 28) - dark EBC section */
+      --sinch-dark-bg2: #1A2126;    /* rgb(26, 33, 38) - dark globe section */
+      --sinch-dark-text: #AEB7BD;   /* rgb(174, 183, 189) - dark section text */
+      --sinch-success: #2ECC71;
+      --sinch-error: #E74C3C;
+      --sinch-amber: #F59E0B;
+      --font-body: 'Host Grotesk', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    html, body { height: 100%; font-family: var(--font-body); background: var(--sinch-bg-white); color: var(--sinch-body); -webkit-font-smoothing: antialiased; }
+
+    /* ── Announcement Bar (exact sinch.com) ── */
+    .announcement {
+      background: var(--sinch-announcement);
+      padding: 8px 16px;
+      text-align: center;
+      font-size: 16px;
+      color: var(--sinch-body);
+      border-bottom: 1px solid var(--sinch-border);
+    }
+    .announcement strong { color: #000; }
+    .announcement a { color: var(--sinch-body); text-decoration: underline; font-weight: 400; }
+
+    /* ── Header (exact sinch.com: white bg, border-bottom) ── */
+    .header {
+      height: 53px;
+      background: var(--sinch-bg-white);
+      border-bottom: 1.111px solid var(--sinch-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      flex-shrink: 0;
+      z-index: 20;
+    }
+    .header-left { display: flex; align-items: center; gap: 20px; }
+    .header-right { display: flex; align-items: center; gap: 10px; }
+    .logo-group { display: flex; align-items: center; gap: 10px; }
+    .logo-icon {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: var(--sinch-blue);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .logo-icon svg { width: 18px; height: 18px; color: white; }
+    .logo-text { font-size: 15px; font-weight: 700; color: #000; letter-spacing: -0.02em; }
+    .logo-sub { font-size: 11px; color: var(--sinch-caption); font-family: var(--font-mono); margin-left: 4px; }
+    .divider-v { width: 1px; height: 20px; background: var(--sinch-border); }
+
+    /* ── Nav links (exact sinch.com: 14px, weight 600, body color) ── */
+    .nav-link {
+      font-size: 14px; font-weight: 600; color: var(--sinch-body);
+      text-decoration: none; cursor: pointer; background: none; border: none;
+      font-family: var(--font-body); transition: color 0.2s;
+    }
+    .nav-link:hover { color: #000; }
+
+    /* ── Buttons (exact sinch.com values) ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      border-radius: 16px;
+      font-family: var(--font-body);
+      font-weight: 600;
+      border: none; cursor: pointer;
+      transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+      white-space: nowrap; text-decoration: none;
+    }
+    .btn:active { transform: scale(0.97); }
+
+    /* Primary: exact sinch.com .btn-secondary */
+    .btn-primary {
+      background: var(--sinch-blue); color: #fff;
+      padding: 10px 24px; font-size: 16px;
+      border: 1.111px solid var(--sinch-blue);
+    }
+    .btn-primary:hover { background: #2977FF; border-color: #2977FF; box-shadow: 0 4px 16px rgba(24,96,240,0.3); }
+
+    /* Outline: exact sinch.com .btn-outline-secondary */
+    .btn-outline {
+      background: transparent; color: #000;
+      padding: 10px 24px; font-size: 16px;
+      border: 1.111px solid var(--sinch-blue-accent);
+    }
+    .btn-outline:hover { background: var(--sinch-blue-soft); }
+
+    .btn-sm { padding: 6px 14px; font-size: 13px; }
+    .btn-xs { padding: 4px 10px; font-size: 11px; border-radius: 12px; }
+
+    /* ── Badge / Pill ── */
+    .badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 12px; border-radius: 9999px;
+      font-size: 11px; font-weight: 600;
+    }
+    .badge-blue { background: var(--sinch-blue-soft); color: var(--sinch-blue); }
+    .badge-amber { background: #FEF3C7; color: #D97706; }
+    .badge-dot { width: 6px; height: 6px; border-radius: 50%; }
+    .badge-dot.green { background: var(--sinch-success); }
+    .badge-dot.amber { background: var(--sinch-amber); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    /* ── App Layout ── */
+    .app { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    .body-area { flex: 1; display: flex; overflow: hidden; }
+    .main-content { flex: 1; display: flex; overflow: hidden; }
+
+    /* ── Left Nav ── */
+    .left-nav {
+      width: 72px; background: var(--sinch-bg-white);
+      border-right: 1px solid var(--sinch-border);
+      display: flex; flex-direction: column;
+      align-items: center; padding: 16px 0;
+      justify-content: space-between; flex-shrink: 0; z-index: 30;
+    }
+    .nav-items { display: flex; flex-direction: column; gap: 6px; width: 100%; align-items: center; }
+    .nav-item {
+      width: 52px; height: 52px; border-radius: 12px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.2s ease;
+      border: 1px solid transparent; position: relative;
+      background: none; color: var(--sinch-caption); font-family: var(--font-body);
+    }
+    .nav-item:hover { background: var(--sinch-bg-light); color: var(--sinch-body); }
+    .nav-item.active { background: var(--sinch-blue-soft); color: var(--sinch-blue); border-color: rgba(24,96,240,0.12); }
+    .nav-item.active::before {
+      content: ''; position: absolute; left: -1px; top: 10px; bottom: 10px;
+      width: 3px; background: var(--sinch-blue); border-radius: 0 3px 3px 0;
+    }
+    .nav-item svg { width: 18px; height: 18px; }
+    .nav-item span { font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 3px; }
+    .nav-bottom { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .nav-divider { width: 32px; height: 1px; background: var(--sinch-border); }
+
+    /* ── Canvas ── */
+    .canvas-area { flex: 1; position: relative; overflow: hidden; background: var(--sinch-bg-light); }
+    .canvas-grid {
+      width: 100%; height: 100%;
+      background-image: radial-gradient(circle, #DCE2E5 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+    .graph-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .graph-node { cursor: pointer; transition: all 0.2s ease; }
+    .graph-node:hover { filter: brightness(1.1); }
+    .graph-edge { stroke: #DCE2E5; stroke-width: 1.5; }
+
+    /* ── Canvas Controls ── */
+    .canvas-controls { position: absolute; bottom: 16px; left: 16px; display: flex; gap: 6px; }
+    .canvas-btn {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: var(--sinch-bg-white); border: 1px solid var(--sinch-border);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .canvas-btn:hover { border-color: var(--sinch-blue); color: var(--sinch-blue); }
+
+    /* ── Node Inspector Card ── */
+    .inspector-card {
+      position: absolute; top: 16px; right: 16px; width: 300px;
+      background: var(--sinch-bg-white); border-radius: 16px;
+      border: 1px solid var(--sinch-border);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+      padding: 20px; z-index: 10;
+    }
+    .inspector-header {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      padding-bottom: 12px; margin-bottom: 12px;
+      border-bottom: 1px solid var(--sinch-border);
+    }
+    .inspector-title { font-size: 14px; font-weight: 600; color: #000; }
+    .inspector-type { font-size: 11px; color: var(--sinch-caption); font-family: var(--font-mono); margin-top: 2px; }
+    .inspector-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 7px 0; font-size: 12px; color: var(--sinch-body);
+    }
+    .inspector-row .val { font-family: var(--font-mono); font-weight: 500; color: #000; }
+    .inspector-row .val.amber { color: var(--sinch-amber); }
+    .inspector-row .val.blue { color: var(--sinch-blue); }
+    .progress-bar { width: 64px; height: 6px; border-radius: 9999px; background: #E9ECEF; overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 9999px; background: var(--sinch-amber); }
+    .inspector-quote {
+      margin-top: 12px; padding: 10px 12px;
+      background: var(--sinch-bg-light); border: 1px solid var(--sinch-border);
+      border-radius: 8px; font-size: 11px; color: var(--sinch-body);
+      font-style: italic; line-height: 1.5; max-height: 64px; overflow-y: auto;
+    }
+
+    /* ── Right Sidebar ── */
+    .sidebar {
+      width: 400px; display: flex;
+      border-left: 1px solid var(--sinch-border);
+      background: var(--sinch-bg-white); flex-shrink: 0; overflow: hidden;
+    }
+    .sidebar-rail {
+      width: 60px; background: var(--sinch-bg-light);
+      border-right: 1px solid var(--sinch-border);
+      display: flex; flex-direction: column;
+      align-items: center; padding: 16px 0; justify-content: space-between;
+    }
+    .rail-tabs { display: flex; flex-direction: column; gap: 16px; align-items: center; }
+    .rail-tab {
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      cursor: pointer; padding: 6px 0; width: 100%;
+      background: none; border: none; color: var(--sinch-caption);
+      font-family: var(--font-body); position: relative; transition: color 0.2s;
+    }
+    .rail-tab:hover { color: var(--sinch-body); }
+    .rail-tab.active { color: var(--sinch-blue); }
+    .rail-tab.active::after {
+      content: ''; position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+      width: 3px; height: 20px; background: var(--sinch-blue); border-radius: 3px 0 0 3px;
+    }
+    .rail-tab svg { width: 16px; height: 16px; }
+    .rail-tab span { font-size: 9px; font-weight: 600; }
+
+    .sidebar-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .sidebar-header {
+      height: 48px; border-bottom: 1px solid var(--sinch-border);
+      padding: 0 16px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+    }
+    .sidebar-title {
+      font-size: 12px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.06em; color: #000;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .sidebar-title svg { width: 14px; height: 14px; color: var(--sinch-blue); }
+    .sidebar-sub { font-size: 10px; color: var(--sinch-caption); font-family: var(--font-mono); }
+    .sidebar-body { flex: 1; overflow-y: auto; padding: 16px; }
+
+    /* ── Panel Elements ── */
+    .panel-section { margin-bottom: 20px; }
+    .panel-label {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--sinch-caption);
+      margin-bottom: 8px; display: flex; align-items: center; gap: 5px;
+    }
+    .panel-label svg { width: 11px; height: 11px; }
+
+    .input {
+      width: 100%; padding: 10px 16px;
+      border-radius: 16px; border: 1.111px solid #DEE2E6;
+      background: var(--sinch-bg-light);
+      font-family: var(--font-body); font-size: 13px; color: var(--sinch-body);
+      transition: all 0.2s ease; outline: none; resize: none;
+    }
+    .input::placeholder { color: var(--sinch-caption); }
+    .input:focus { border-color: var(--sinch-blue); box-shadow: 0 0 0 3px rgba(24,96,240,0.1); }
+
+    .hint-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .hint-chip {
+      padding: 5px 12px; border-radius: 9999px;
+      border: 1px solid #DEE2E6; font-size: 11px; color: var(--sinch-body);
+      background: var(--sinch-bg-white); cursor: pointer;
+      transition: all 0.15s ease; font-family: var(--font-body);
+    }
+    .hint-chip:hover { border-color: var(--sinch-blue); color: var(--sinch-blue); background: var(--sinch-blue-soft); }
+
+    .info-card {
+      background: var(--sinch-blue-soft); border: 1px solid rgba(24,96,240,0.12);
+      border-radius: 12px; padding: 12px 14px;
+      font-size: 11px; color: var(--sinch-body); line-height: 1.5;
+      display: flex; gap: 8px; align-items: flex-start;
+    }
+    .info-card svg { width: 14px; height: 14px; color: var(--sinch-blue); flex-shrink: 0; margin-top: 1px; }
+    .info-card strong { color: var(--sinch-blue); }
+
+    .triple-row {
+      display: flex; gap: 8px; padding: 10px 12px;
+      border-radius: 12px; border: 1px solid var(--sinch-border);
+      background: var(--sinch-bg-white); font-size: 12px; align-items: center;
+      margin-bottom: 6px; transition: all 0.15s ease;
+    }
+    .triple-row:hover { border-color: var(--sinch-blue); background: var(--sinch-blue-soft); }
+    .triple-subject { color: var(--sinch-blue); font-weight: 600; }
+    .triple-predicate { color: var(--sinch-caption); font-style: italic; font-size: 11px; }
+    .triple-object { color: #000; font-weight: 500; }
+
+    .h-divider { height: 1px; background: var(--sinch-border); margin: 14px 0; }
+
+    /* ── Legend ── */
+    .legend { display: flex; flex-wrap: wrap; gap: 10px; }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--sinch-body); }
+    .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+    /* ── Status Footer ── */
+    .footer {
+      height: 28px; background: var(--sinch-bg-white);
+      border-top: 1px solid var(--sinch-border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 16px; flex-shrink: 0;
+      font-size: 10px; color: var(--sinch-caption); font-family: var(--font-mono);
+    }
+    .footer-left, .footer-right { display: flex; align-items: center; gap: 12px; }
+    .footer-item { display: flex; align-items: center; gap: 4px; }
+    .footer-dot { width: 5px; height: 5px; border-radius: 50%; }
+    .footer-dot.online { background: var(--sinch-success); }
+    .footer-sep { width: 1px; height: 12px; background: var(--sinch-border); }
+
+    /* ── Theme Toggle ── */
+    .theme-toggle {
+      display: flex; align-items: center; gap: 6px;
+      padding: 5px 12px; border-radius: 9999px;
+      background: var(--sinch-bg-light); border: 1px solid var(--sinch-border);
+      font-size: 12px; color: var(--sinch-body);
+      cursor: pointer; transition: all 0.2s ease; font-family: var(--font-body);
+    }
+    .theme-toggle:hover { border-color: var(--sinch-blue); color: var(--sinch-blue); }
+
+    /* ── Dark Mode ── */
+    html.dark { background: #09090B; color: #D4D4D8; }
+    html.dark .announcement { background: #1E1E22; color: #A1A1AA; border-color: #27272A; }
+    html.dark .announcement strong { color: #FAFAFA; }
+    html.dark .header { background: #09090B; border-color: #27272A; }
+    html.dark .logo-text { color: #FAFAFA; }
+    html.dark .nav-link { color: #A1A1AA; }
+    html.dark .nav-link:hover { color: #FAFAFA; }
+    html.dark .left-nav { background: #09090B; border-color: #27272A; }
+    html.dark .nav-item { color: #71717A; }
+    html.dark .nav-item:hover { background: #18181B; color: #D4D4D8; }
+    html.dark .nav-item.active { background: rgba(24,96,240,0.12); color: var(--sinch-blue); }
+    html.dark .canvas-area { background: #09090B; }
+    html.dark .canvas-grid { background-image: radial-gradient(circle, #27272A 1px, transparent 1px); }
+    html.dark .graph-edge { stroke: #27272A; }
+    html.dark .sidebar { background: #09090B; border-color: #27272A; }
+    html.dark .sidebar-rail { background: #0F0F12; border-color: #27272A; }
+    html.dark .sidebar-header { border-color: #27272A; }
+    html.dark .sidebar-title { color: #FAFAFA; }
+    html.dark .input { background: #18181B; border-color: #3F3F46; color: #E4E4E7; }
+    html.dark .input::placeholder { color: #71717A; }
+    html.dark .inspector-card { background: #18181B; border-color: #27272A; box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+    html.dark .inspector-title { color: #FAFAFA; }
+    html.dark .inspector-row { color: #A1A1AA; }
+    html.dark .inspector-row .val { color: #E4E4E7; }
+    html.dark .inspector-quote { background: #0F0F12; border-color: #27272A; color: #71717A; }
+    html.dark .canvas-btn { background: #18181B; border-color: #27272A; }
+    html.dark .triple-row { background: #18181B; border-color: #27272A; }
+    html.dark .triple-row:hover { border-color: var(--sinch-blue); }
+    html.dark .triple-object { color: #E4E4E7; }
+    html.dark .footer { background: #09090B; border-color: #27272A; }
+    html.dark .footer-sep { background: #27272A; }
+    html.dark .theme-toggle { background: #18181B; border-color: #27272A; color: #A1A1AA; }
+    html.dark .info-card { background: rgba(24,96,240,0.08); border-color: rgba(24,96,240,0.15); }
+    html.dark .hint-chip { background: #18181B; border-color: #3F3F46; color: #A1A1AA; }
+    html.dark .legend-dot { border: 1.5px solid rgba(255,255,255,0.3); }
+
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #DCE2E5; border-radius: 10px; }
+    html.dark ::-webkit-scrollbar-thumb { background: #3F3F46; }
+  </style>
+</head>
+<body>
+  <div class="app">
+
+    <!-- Announcement Bar -->
+    <div class="announcement">
+      <strong>The AI Production Paradox</strong>: 74% of enterprises have rolled back a live AI agent. Pilot purgatory was just the warning.&nbsp;
+      <a href="#">See the full research.</a>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+      <div class="header-left">
+        <div class="logo-group">
+          <div class="logo-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          </div>
+          <span class="logo-text">Neurosymbolic KG</span>
+          <span class="logo-sub">ontology: fibo</span>
+        </div>
+        <div class="divider-v"></div>
+        <button class="nav-link" style="font-size:13px;font-weight:500;display:flex;align-items:center;gap:6px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+          default
+        </button>
+      </div>
+      <div class="header-right">
+        <span class="badge badge-amber">
+          <span class="badge-dot amber"></span>
+          AUTO-RUN ACTIVE
+        </span>
+        <span class="badge badge-blue">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          3 Pending
+        </span>
+        <button class="btn btn-primary btn-sm">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Run Neurosymbolic Loop
+        </button>
+        <div class="divider-v"></div>
+        <button class="theme-toggle" onclick="document.documentElement.classList.toggle('dark')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          Theme
+        </button>
+      </div>
+    </header>
+
+    <!-- Body -->
+    <div class="body-area">
+
+      <!-- Left Navigation -->
+      <nav class="left-nav">
+        <div class="nav-items">
+          <button class="nav-item active" title="Canvas">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            <span>Canvas</span>
+          </button>
+          <button class="nav-item" title="Documents">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            <span>Docs</span>
+          </button>
+          <button class="nav-item" title="Logic Lab">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/></svg>
+            <span>Logic</span>
+          </button>
+          <button class="nav-item" title="Inference">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><circle cx="12" cy="12" r="10"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <span>Infer</span>
+          </button>
+          <button class="nav-item" title="Query Lab">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+            <span>Query</span>
+          </button>
+        </div>
+        <div class="nav-bottom">
+          <div class="nav-divider"></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:5px">
+            <span class="badge-dot green" style="width:7px;height:7px"></span>
+            <span style="font-size:7px;font-weight:700;letter-spacing:0.1em;color:var(--sinch-caption);font-family:var(--font-mono)">SYS</span>
+          </div>
+        </div>
+      </nav>
+
+      <!-- Main Content -->
+      <div class="main-content">
+
+        <!-- Canvas Area -->
+        <div class="canvas-area">
+          <div class="canvas-grid"></div>
+
+          <!-- Mock SVG Graph -->
+          <svg class="graph-svg" viewBox="0 0 800 500">
+            <line class="graph-edge" x1="200" y1="180" x2="340" y2="140" />
+            <line class="graph-edge" x1="340" y1="140" x2="460" y2="200" />
+            <line class="graph-edge" x1="200" y1="180" x2="280" y2="300" />
+            <line class="graph-edge" x1="280" y1="300" x2="460" y2="200" />
+            <line class="graph-edge" x1="460" y1="200" x2="580" y2="160" />
+            <line class="graph-edge" x1="460" y1="200" x2="520" y2="320" />
+            <line class="graph-edge" x1="340" y1="140" x2="420" y2="60" />
+            <line class="graph-edge" x1="280" y1="300" x2="200" y2="380" />
+            <line class="graph-edge" x1="580" y1="160" x2="660" y2="220" />
+            <line class="graph-edge" x1="520" y1="320" x2="620" y2="380" />
+            <g class="graph-node" transform="translate(200,180)"><circle r="18" fill="#EBF5FF" stroke="#1860F0" stroke-width="2"/><text text-anchor="middle" dy="3" font-size="8" font-family="Host Grotesk" font-weight="600" fill="#1860F0">ORG</text></g>
+            <g class="graph-node" transform="translate(340,140)"><circle r="22" fill="#FFF7ED" stroke="#F59E0B" stroke-width="2"/><text text-anchor="middle" dy="3" font-size="8" font-family="Host Grotesk" font-weight="600" fill="#D97706">PERSON</text></g>
+            <g class="graph-node" transform="translate(460,200)"><circle r="20" fill="#ECFDF5" stroke="#059669" stroke-width="2"/><text text-anchor="middle" dy="3" font-size="8" font-family="Host Grotesk" font-weight="600" fill="#059669">CONTRACT</text></g>
+            <g class="graph-node" transform="translate(280,300)"><circle r="15" fill="#F0F9FF" stroke="#0284C7" stroke-width="2"/><text text-anchor="middle" dy="3" font-size="8" font-family="Host Grotesk" font-weight="600" fill="#0284C7">FIL</text></g>
+            <g class="graph-node" transform="translate(420,60)"><circle r="14" fill="#FDF2F8" stroke="#DB2777" stroke-width="2"/><text text-anchor="middle" dy="3" font-size="7" font-family="Host Grotesk" font-weight="600" fill="#DB2777">DATE</text></g>
+            <g class="graph-node" transform="translate(580,160)"><circle r="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="2"/><text text-anchor="middle" dy="3" font-size="8" font-family="Host Grotesk" font-weight="600" fill="#2563EB">AMT</text></g>
+            <g class="graph-node" transform="translate(520,320)"><circle r="17" fill="#FEF3C7" stroke="#D97706" stroke-width="2"/><text text-anchor="middle" dy="3" font-size="7" font-family="Host Grotesk" font-weight="600" fill="#B45309">OBLIG</text></g>
+            <g class="graph-node" transform="translate(200,380)"><circle r="13" fill="#F5F3FF" stroke="#7C3AED" stroke-width="2"/><text text-anchor="middle" dy="3" font-size="7" font-family="Host Grotesk" font-weight="600" fill="#7C3AED">RULE</text></g>
+            <g class="graph-node" transform="translate(660,220)"><circle r="14" fill="#ECFDF5" stroke="#10B981" stroke-width="2"/><text text-anchor="middle" dy="3" font-size="7" font-family="Host Grotesk" font-weight="600" fill="#059669">DERIV</text></g>
+            <g class="graph-node" transform="translate(620,380)"><circle r="12" fill="#F0FDFA" stroke="#14B8A6" stroke-width="2"/><text text-anchor="middle" dy="3" font-size="6" font-family="Host Grotesk" font-weight="600" fill="#0D9488">AXIOM</text></g>
+          </svg>
+
+          <!-- Node Inspector Card -->
+          <div class="inspector-card">
+            <div class="inspector-header">
+              <div>
+                <div class="inspector-title">JPMorgan Chase & Co.</div>
+                <div class="inspector-type">Organization</div>
+              </div>
+              <button style="background:none;border:none;color:var(--sinch-caption);cursor:pointer;padding:4px">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+            <div class="inspector-row">
+              <span>Activation Level</span>
+              <div style="display:flex;align-items:center;gap:8px">
+                <span class="val amber">0.87</span>
+                <div class="progress-bar"><div class="progress-fill" style="width:87%"></div></div>
+              </div>
+            </div>
+            <div class="inspector-row">
+              <span>Salience Multiplier</span>
+              <span class="val">1.20</span>
+            </div>
+            <div class="inspector-row">
+              <span>Proof Path Hops</span>
+              <span class="val blue" style="display:flex;align-items:center;gap:4px">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 01-9 9"/></svg>
+                3 steps
+              </span>
+            </div>
+            <div class="inspector-quote">
+              "The issuer is a global financial services firm engaged in investment banking, financial services for consumers and small businesses..."
+            </div>
+          </div>
+
+          <!-- Canvas Controls -->
+          <div class="canvas-controls">
+            <button class="canvas-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg></button>
+            <button class="canvas-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg></button>
+            <button class="canvas-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg></button>
+          </div>
+
+          <!-- Legend -->
+          <div style="position:absolute;bottom:16px;right:16px;background:var(--sinch-bg-white);border:1px solid var(--sinch-border);border-radius:12px;padding:10px 14px;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
+            <div class="legend">
+              <div class="legend-item"><div class="legend-dot" style="background:#1860F0"></div> Org</div>
+              <div class="legend-item"><div class="legend-dot" style="background:#F59E0B"></div> Person</div>
+              <div class="legend-item"><div class="legend-dot" style="background:#059669"></div> Contract</div>
+              <div class="legend-item"><div class="legend-dot" style="background:#0284C7"></div> Filing</div>
+              <div class="legend-item"><div class="legend-dot" style="background:#DB2777"></div> Date</div>
+              <div class="legend-item"><div class="legend-dot" style="background:#7C3AED"></div> Derived</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Sidebar -->
+        <aside class="sidebar">
+          <div class="sidebar-rail">
+            <div class="rail-tabs">
+              <button class="rail-tab active">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                <span>Build</span>
+              </button>
+              <button class="rail-tab">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                <span>Reason</span>
+              </button>
+              <button class="rail-tab">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <span>Query</span>
+              </button>
+              <button class="rail-tab">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 110 20 10 10 0 010-20z"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <span>Agent</span>
+              </button>
+              <button class="rail-tab">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+                <span>Tools</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="sidebar-content">
+            <div class="sidebar-header">
+              <div class="sidebar-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                Build &amp; Curate
+              </div>
+              <div class="sidebar-sub">Ingest, Construct, Enrich</div>
+            </div>
+
+            <div class="sidebar-body">
+              <div class="info-card" style="margin-bottom:16px">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                <div>Paste any document text below. The LLM extracts <strong>entities</strong> and <strong>relationships</strong>, then stores them in the knowledge graph.</div>
+              </div>
+
+              <div class="panel-section">
+                <div class="panel-label">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                  Paste a document
+                </div>
+                <div class="hint-chips">
+                  <button class="hint-chip">SEC Filing</button>
+                  <button class="hint-chip">Press Release</button>
+                  <button class="hint-chip">Contract</button>
+                  <button class="hint-chip">News Article</button>
+                </div>
+              </div>
+
+              <div class="panel-section">
+                <textarea class="input" placeholder="Paste a document — SEC filing, press release, contract, article, or any structured text." rows="4"></textarea>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+                  <span style="font-size:10px;color:var(--sinch-caption);font-family:var(--font-mono)">0 words</span>
+                  <button class="btn btn-primary btn-xs" style="opacity:0.5;pointer-events:none">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                    Ingest
+                  </button>
+                </div>
+              </div>
+
+              <div class="h-divider"></div>
+
+              <div class="panel-section">
+                <div class="panel-label">Recent Triples</div>
+                <div class="triple-row">
+                  <span class="triple-subject">JPMorgan</span>
+                  <span class="triple-predicate">acquired</span>
+                  <span class="triple-object">First Republic Bank</span>
+                </div>
+                <div class="triple-row">
+                  <span class="triple-subject">Jamie Dimon</span>
+                  <span class="triple-predicate">ceo_of</span>
+                  <span class="triple-object">JPMorgan Chase</span>
+                </div>
+                <div class="triple-row">
+                  <span class="triple-subject">Q3 2025 Filing</span>
+                  <span class="triple-predicate">reports_revenue</span>
+                  <span class="triple-object">$42.6B</span>
+                </div>
+                <div class="triple-row">
+                  <span class="triple-subject">Contract #847</span>
+                  <span class="triple-predicate">obligation</span>
+                  <span class="triple-object">Deliver API by Q4</span>
+                </div>
+              </div>
+
+              <div class="h-divider"></div>
+
+              <div class="panel-section">
+                <div class="panel-label">Graph Summary</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                  <div style="padding:12px;border-radius:12px;border:1px solid var(--sinch-border);background:var(--sinch-bg-white)">
+                    <div style="font-size:20px;font-weight:700;color:#000">142</div>
+                    <div style="font-size:10px;color:var(--sinch-caption);margin-top:2px">Nodes</div>
+                  </div>
+                  <div style="padding:12px;border-radius:12px;border:1px solid var(--sinch-border);background:var(--sinch-bg-white)">
+                    <div style="font-size:20px;font-weight:700;color:#000">287</div>
+                    <div style="font-size:10px;color:var(--sinch-caption);margin-top:2px">Edges</div>
+                  </div>
+                  <div style="padding:12px;border-radius:12px;border:1px solid var(--sinch-border);background:var(--sinch-bg-white)">
+                    <div style="font-size:20px;font-weight:700;color:var(--sinch-blue)">12</div>
+                    <div style="font-size:10px;color:var(--sinch-caption);margin-top:2px">Rules</div>
+                  </div>
+                  <div style="padding:12px;border-radius:12px;border:1px solid var(--sinch-border);background:var(--sinch-bg-white)">
+                    <div style="font-size:20px;font-weight:700;color:var(--sinch-amber)">5</div>
+                    <div style="font-size:10px;color:var(--sinch-caption);margin-top:2px">Derived Facts</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+
+    <!-- Status Footer -->
+    <footer class="footer">
+      <div class="footer-left">
+        <div class="footer-item">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+          <span>142 nodes · 287 edges</span>
+        </div>
+        <div class="footer-item">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/></svg>
+          <span>12 rules</span>
+        </div>
+        <div class="footer-item" style="color:var(--sinch-amber)">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--sinch-amber)" stroke-width="2"><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><circle cx="12" cy="12" r="10"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span>5 facts</span>
+        </div>
+      </div>
+      <div class="footer-right">
+        <div class="footer-item"><span class="footer-dot online"></span><span>neo4j: online</span></div>
+        <div class="footer-sep"></div>
+        <div class="footer-item"><span class="footer-dot online"></span><span>graphdb: online</span></div>
+        <div class="footer-sep"></div>
+        <span style="color:#DCE2E5">powered by gpt-4o</span>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>

@@ -26,3 +26,12 @@ backend/data/**/*.owl.cache
 
 # Eval run output (generated, PLAN.md §14)
 evals/results/*.json
+
+# Logs and process IDs
+.backend.log
+.backend.pid
+.frontend.log
+.frontend.pid
+
+# Firecrawl scrape output
+.firecrawl/
