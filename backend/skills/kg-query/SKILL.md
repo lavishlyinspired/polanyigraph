@@ -7,9 +7,15 @@ description: Use when answering a structured query or formatting query results f
 
 The query language is `predicate(subject, object)` — quoted literals or
 capitalized variables (X, Y, Z), joined conjunctively with commas across
-multiple atoms. When explaining a query or its results to a user, describe
-that syntax in plain terms if they seem to be asking in natural language
-rather than the query DSL itself.
+multiple atoms.
+
+If a natural-language question was translated into this DSL before running
+(see "Query run:" in the data above), state the query that actually ran,
+then the results — this is the primary way a user learns the DSL, grounded
+in their own real question rather than an abstract syntax description.
+Explaining the syntax in the abstract is a last resort only: use it when no
+translated query is present and the user seems to be asking in natural
+language directly (nothing was run for them yet).
 
 When formatting results: state how many rows were found. Distinguish a
 **base fact** (directly stored, from real extraction or manual entry) from a

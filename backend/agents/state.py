@@ -25,6 +25,11 @@ class AgentState(TypedDict):
     enrichment_fact_texts: list[str]
     query_results: list[str]
     query_error: str
+    # Set by querier_node (PLAN: plans/nl-query-translation.md Slice 2) only
+    # when state["text"] wasn't already valid DSL and translate_to_dsl() ran
+    # -- empty when the skip-if-DSL path was taken, so callers can tell
+    # "the DSL the user typed" from "the DSL we inferred for them".
+    translated_query: str
     # Set by the memory_agent node when intent == "recall".
     memory_hits: list[str]
     # Set by the analyst node when intent == "analyze" (PLAN: plans/

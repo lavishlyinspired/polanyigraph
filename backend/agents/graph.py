@@ -78,7 +78,18 @@ from db.neo4j_client import Neo4jClient
 from enrichment.heuristics.base import HEURISTIC_TYPES
 from llm.client import LLMClient
 from llm.embedder import EmbeddingClient
-from services import analytics_service, enrichment_service, graph_service, ingest_service, memory_config_service, memory_service, reasoning_service
+from ontology.loader import load_schema
+from services import (
+    analytics_service,
+    chat_history_service,
+    enrichment_service,
+    graph_service,
+    ingest_service,
+    memory_config_service,
+    memory_service,
+    nl_query_service,
+    reasoning_service,
+)
 from services.query_engine import execute_query
 
 _ROUTER_SYSTEM = """You are a routing classifier for a knowledge graph agent. Classify the \
@@ -420,14 +431,41 @@ def build_graph(neo4j: Neo4jClient, graphdb: GraphDBClient, llm: LLMClient, sett
 
     def querier_node(state: AgentState) -> dict:
         triples = graph_service.load_triples(neo4j, state["graph_id"])
-        result = execute_query(state["text"], triples)
+        query_text = state["text"]
+        translated_query = ""
+
+        if not nl_query_service.is_dsl_syntax(query_text):
+            schema = load_schema(graphdb, settings.graphdb_repository)
+            predicates = sorted({t.predicate for t in triples})
+            entity_labels = sorted({t.subject for t in triples} | {t.object for t in triples})
+            fewshot = nl_query_service.get_fewshot_examples(neo4j, settings.graphdb_repository)
+            # Scoped by graph_id, not a separate chat-session id: this
+            # LangGraph flow doesn't persist its own turns to
+            # chat_history_service today (services/chat_service.py's /chat
+            # endpoint is the parallel mechanism that does) -- reads
+            # whatever history is seeded under graph_id directly.
+            history = chat_history_service.get_recent_messages(neo4j, graph_id=state["graph_id"], session_id=state["graph_id"])
+            translated = nl_query_service.translate_to_dsl(
+                query_text, schema=schema, predicates=predicates, entity_labels=entity_labels,
+                fewshot=fewshot, history=history, llm=llm,
+            )
+            if translated == nl_query_service.NL_QUERY_OUT_OF_SCOPE:
+                error = "I couldn't map that question to anything in this graph."
+                update = {"query_results": [], "query_error": error, "translated_query": ""}
+                if len(state["intents"]) > 1:
+                    update["partial_answers"] = {"querier": {"summary": f"query error: {error}", "confidence": 0.0}}
+                return update
+            query_text = translated
+            translated_query = translated
+
+        result = execute_query(query_text, triples)
         if result.error:
-            update = {"query_results": [], "query_error": result.error}
+            update = {"query_results": [], "query_error": result.error, "translated_query": translated_query}
             if len(state["intents"]) > 1:
                 update["partial_answers"] = {"querier": {"summary": f"query error: {result.error}", "confidence": 0.0}}
             return update
         query_results = [f'{r.subject} {r.predicate}("{r.object}")' for r in result.results]
-        update = {"query_results": query_results, "query_error": ""}
+        update = {"query_results": query_results, "query_error": "", "translated_query": translated_query}
         if len(state["intents"]) > 1:
             update["partial_answers"] = {"querier": {
                 "summary": "; ".join(query_results[:5]) or "no query results",
@@ -497,7 +535,12 @@ def build_graph(neo4j: Neo4jClient, graphdb: GraphDBClient, llm: LLMClient, sett
         if intent == "query":
             results_text = "\n".join(state["query_results"]) or "(no results)"
             error_text = f"\nError: {state['query_error']}" if state["query_error"] else ""
-            user = f"Query: {state['text']}\nResults:\n{results_text}{error_text}"
+            # PLAN: plans/nl-query-translation.md Slice 5. Included directly in
+            # `user` (not a separate field) so _find_ungrounded_claims -- which
+            # checks `reply` against this same `user` string -- doesn't flag a
+            # stated query as an unsupported claim; no extra plumbing needed.
+            translated_line = f"Query run: {state['translated_query']}\n" if state["translated_query"] else ""
+            user = f"{translated_line}Query: {state['text']}\nResults:\n{results_text}{error_text}"
         elif intent == "enrich":
             facts_text = "\n".join(f"- {f}" for f in state["enrichment_fact_texts"]) or "(none found)"
             user = f"Implicit facts found by the 11 Polanyi heuristics:\n{facts_text}"
