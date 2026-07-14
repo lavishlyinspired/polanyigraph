@@ -208,6 +208,82 @@ def test_ingest_indexes_entity_summary_embedding_when_embedder_given(services):
     assert len(rows[0]["embedding"]) == embedder.dimensions
 
 
+_PAYLOAD_WITH_A_NOISY_VALUE_LEAF = json.dumps({
+    "entities": [
+        {"name": "HDFC Bank", "type": "organization", "confidence": 0.9},
+        {"name": "8.45%", "type": "rate of return", "confidence": 0.85},
+    ],
+    # "has amount" is a real FIBO property (domain-unrestricted) -- extract()
+    # drops any relation label not in the loaded ontology's property list.
+    "relationships": [
+        {"source": "HDFC Bank", "relation": "has amount", "target": "8.45%", "confidence": 0.8},
+    ],
+})
+
+
+def test_ingest_inlines_a_value_role_leaf_entity_as_a_property_instead_of_a_node(services):
+    """PLAN Phase 3 (.claude/docs/research/2026-07-14-semantic-materialization
+    -engine-design.md): the real, live-verified noise problem this closes --
+    a percentage that's the target of exactly one relationship and nothing
+    else must not become its own :Entity node."""
+    neo4j, graphdb, settings, graph_id = services
+    llm = FakeLLM(_PAYLOAD_WITH_A_NOISY_VALUE_LEAF)
+
+    record, result = ingest_text(
+        neo4j=neo4j, graphdb=graphdb, llm=llm,
+        graph_id=graph_id, text="HDFC Bank reports a rate of 8.45%.",
+        source_doc="test-doc-1", repository=settings.graphdb_repository,
+    )
+
+    assert len(record.nodes) == 1
+    hub = record.nodes[0]
+    assert hub.label == "HDFC Bank"
+    assert hub.properties["has amount"] == "8.45%"
+    assert record.edges == []
+    assert result.dropped == []
+
+
+def test_ingest_still_creates_a_node_for_a_value_role_entity_referenced_twice(services):
+    """Fanout > 1 -- inlining would silently drop information about every
+    relationship but one, so this stays a node exactly like today."""
+    neo4j, graphdb, settings, graph_id = services
+    payload = json.dumps({
+        "entities": [
+            {"name": "HDFC Bank", "type": "organization", "confidence": 0.9},
+            {"name": "ICICI Bank", "type": "organization", "confidence": 0.9},
+            {"name": "8.45%", "type": "rate of return", "confidence": 0.85},
+        ],
+        "relationships": [
+            {"source": "HDFC Bank", "relation": "has amount", "target": "8.45%", "confidence": 0.8},
+            {"source": "ICICI Bank", "relation": "has amount", "target": "8.45%", "confidence": 0.8},
+        ],
+    })
+    llm = FakeLLM(payload)
+
+    record, _ = ingest_text(
+        neo4j=neo4j, graphdb=graphdb, llm=llm, graph_id=graph_id,
+        text="Both banks report 8.45%.", source_doc="d1", repository=settings.graphdb_repository,
+    )
+
+    assert len(record.nodes) == 3
+    assert len(record.edges) == 2
+
+
+def test_ingest_still_creates_nodes_for_organization_typed_entities(services):
+    """Regression guard: Actor-role entities are completely unaffected --
+    same contract as test_ingest_writes_real_entities_with_provenance."""
+    neo4j, graphdb, settings, graph_id = services
+    llm = FakeLLM(_PAYLOAD)
+
+    record, _ = ingest_text(
+        neo4j=neo4j, graphdb=graphdb, llm=llm, graph_id=graph_id,
+        text="Acme Corp issued preferred stock.", source_doc="d1", repository=settings.graphdb_repository,
+    )
+
+    assert len(record.nodes) == 2
+    assert len(record.edges) == 1
+
+
 def test_ingest_flags_a_cross_document_duplicate_entity(services):
     """2026-07-13 plan §11.2, wired end-to-end: document 1 extracts "Acme
     Corp"; document 2 extracts "Acme Corporation" (a name variation for the

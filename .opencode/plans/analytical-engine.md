@@ -519,5 +519,41 @@ After all slices:
 4. Manual: ask the agent an analytics question ("what are the most central entities in this graph?") → confirm it routes through the new `analyze` intent and narrates real scores
 5. Manual: open `AnalyticsPage.tsx`, run an algorithm, confirm results render; toggle `showCentrality` on the graph canvas and confirm node coloring updates
 
+## Follow-up: Analytics Role Mapping (Phase 1, added 2026-07-14) ✅ DONE
+
+Live testing of the shipped analytics engine against the real FIBO-backed
+"default" graph surfaced a genuine noise problem: date/percentage entities
+(`8-45`, `5-basis-points`, `august-5-2026`, ...) were dominating
+`degree_centrality`'s "most central entity" ranking purely by co-occurring
+with every fact that cites a rate or a date — not because they're actually
+central subject matter.
+
+Fix: a small universal role taxonomy (Actor/Event/Value/Temporal/Metadata),
+mapped per-ontology-repository onto a handful of real "anchor" ontology
+classes. Any class that IS-A an anchor (reflexively or transitively, via the
+existing `OntologySchema.build_subclass_matcher()`) inherits its role;
+Value/Temporal-role node scores are multiplied by 0.0 (a score-level
+multiplier, not a graph-structure change, so betweenness-style algorithms
+still route through those nodes correctly). Scoped to `category ==
+"centrality"` algorithms only. Fails open: an unmapped repository, or a node
+type with no matching anchor, is left unweighted (matches current
+behavior) — confirmed for the FIBO repository with just two anchors
+(`quantity value` → Value, `time instant` → Temporal), which covers every
+noisy entity type found via live analytics runs without enumerating FIBO's
+2000+ classes individually.
+
+- [x] `backend/analytics/roles.py` — `AnalyticsRole`, `DEFAULT_ROLE_WEIGHT`, `ROLE_ANCHORS_BY_REPOSITORY`, `build_role_resolver`, `resolver_for_repository`, `apply_role_weights`, `apply_role_weights_if_centrality`
+- [x] `services/analytics_service.run_default_analysis` — optional `graphdb`/`repository` kwargs, backward-compatible (omitting them keeps prior unweighted behavior)
+- [x] `agents/graph.py`'s `analyst_node` wired to pass `graphdb`/`settings.graphdb_repository` through
+- [x] `api/analytics.py`'s `POST /analytics/run` and `POST /analytics/persist` — role-weight centrality results via injected `GraphDBClient`/`Settings`
+- [x] Unit tests (`test_analytics_roles.py`, 17 tests) + integration tests (`test_analytics_service.py`, `test_api_analytics.py`, `test_agent_graph_analyze.py`) proving the fix end-to-end through service, agent, and HTTP API layers
+- [x] Manual mutation testing (6 representative mutants: score arithmetic, guard inversions, argument-order swap, `.get()` default values) — all killed
+- [x] Live-verified against the real running "default" graph via `curl`: `5-basis-points`, `8-45`, `august-5-2026`, `july-7-2026`, `july-10-2026` all now score `0.0`; `hdfc-bank` (0.32), `credit-suisse`/`switzerland`/`ubs-group` (0.08) rank at the top instead
+
+Phase 2 (design doc for a Semantic Materialization Engine — the deeper
+question of why these entities become graph nodes at all rather than
+properties) and Phase 3 (implementing that engine) are tracked separately,
+not part of this plan.
+
 ---
 *Delete this file when the plan is complete. If `plans/` is empty, delete the directory.*

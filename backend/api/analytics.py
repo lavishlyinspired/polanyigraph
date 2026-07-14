@@ -10,10 +10,14 @@ from fastapi import APIRouter, Depends, HTTPException
 from analytics.projection import EmptyGraphError, NamedProjection
 from analytics.registry import default_registry
 from analytics.result import AlgorithmResult
+from analytics.roles import apply_role_weights_if_centrality
 from analytics.store import Neo4jGraphStore
-from app.dependencies import get_neo4j
+from app.config import Settings, get_settings
+from app.dependencies import get_graphdb, get_neo4j
 from app.schemas import ApiModel
+from db.graphdb_client import GraphDBClient
 from db.neo4j_client import Neo4jClient
+from ontology.loader import load_schema
 
 router = APIRouter(tags=["analytics"])
 
@@ -124,21 +128,46 @@ def list_algorithms() -> AlgorithmsListResponse:
     )
 
 
+def _role_weighted_scores(
+    scores: dict[str, float], graph, category: str, graphdb: GraphDBClient, settings: Settings
+) -> dict[str, float]:
+    """Analytics Role Mapping (PLAN Phase 1, agreed 2026-07-14): suppresses
+    noisy Value/Temporal-role entities (dates, percentages, ...) out of
+    centrality-category rankings. Only loads the ontology schema (a live
+    SPARQL call) when the algorithm is actually centrality-category, so
+    community/pathfinding/similarity/classification runs never pay for it."""
+    if category != "centrality":
+        return scores
+    schema = load_schema(graphdb, settings.graphdb_repository)
+    return apply_role_weights_if_centrality(scores, graph, category, schema)
+
+
 @router.post("/analytics/run", response_model=AlgorithmResultResponse, response_model_by_alias=True)
-def run_algorithm(request: RunAlgorithmRequest) -> AlgorithmResultResponse:
+def run_algorithm(
+    request: RunAlgorithmRequest,
+    graphdb: GraphDBClient = Depends(get_graphdb),
+    settings: Settings = Depends(get_settings),
+) -> AlgorithmResultResponse:
     projection = _get_projection_or_404(request.projection)
     spec = _get_algorithm_spec_or_400(request.algorithm)
 
     scores = spec.func(projection.graph)
+    scores = _role_weighted_scores(scores, projection.graph, spec.category, graphdb, settings)
     return AlgorithmResultResponse(algorithm=spec.name, projection=request.projection, node_scores=scores, suggested_chart=spec.chart_type)
 
 
 @router.post("/analytics/persist", response_model=PersistResponse, response_model_by_alias=True)
-def persist_algorithm_result(request: PersistRequest, neo4j: Neo4jClient = Depends(get_neo4j)) -> PersistResponse:
+def persist_algorithm_result(
+    request: PersistRequest,
+    neo4j: Neo4jClient = Depends(get_neo4j),
+    graphdb: GraphDBClient = Depends(get_graphdb),
+    settings: Settings = Depends(get_settings),
+) -> PersistResponse:
     projection = _get_projection_or_404(request.projection)
     spec = _get_algorithm_spec_or_400(request.algorithm)
 
     scores = spec.func(projection.graph)
+    scores = _role_weighted_scores(scores, projection.graph, spec.category, graphdb, settings)
     result = AlgorithmResult(algorithm=spec.name, projection=projection, node_scores=scores)
     result.persist(Neo4jGraphStore(neo4j), request.property_name)
 

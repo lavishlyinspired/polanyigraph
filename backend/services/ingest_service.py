@@ -10,11 +10,21 @@ from __future__ import annotations
 
 import uuid
 
+from analytics.roles import resolver_for_repository
 from db.graphdb_client import GraphDBClient
 from db.neo4j_client import Neo4jClient
 from extraction.pipeline import ExtractionResult, extract
 from llm.client import LLMClient
 from llm.embedder import EmbeddingClient
+from materialization.client import Neo4jGraphClient
+from materialization.commands import StorageCommand
+from materialization.policy import (
+    MaterializationDecision,
+    MaterializationPolicy,
+    compute_fanout,
+    find_introducing_relationship,
+    plan_materialization,
+)
 from ontology.loader import load_schema
 from services import entity_resolution_service, graph_service, history_service, summary_service, vector_search_service
 from services.graph_service import GraphRecord
@@ -43,8 +53,29 @@ def ingest_text(
     # already loaded above for extraction, no extra GraphDB call.
     type_matches = schema.build_subclass_matcher()
 
+    # PLAN Phase 3 (.claude/docs/research/2026-07-14-semantic-materialization
+    # -engine-design.md): decide, per entity, whether it becomes a node (as
+    # every extracted entity did before this) or is inlined as a property on
+    # the one other entity it's related to -- fixes the real, live-verified
+    # noise problem where a percentage or a date dominated centrality
+    # rankings purely by co-occurring with every fact that cites one. Reuses
+    # Phase 1's ontology-anchor role resolver unchanged.
+    resolve_role = resolver_for_repository(schema)
+    fanout = compute_fanout(result.relationships)
+    decisions: dict[str, MaterializationDecision] = {}
+    for entity in result.entities:
+        entity_fanout = fanout.get(entity.name, 0)
+        introducing = (
+            find_introducing_relationship(entity.name, result.relationships)
+            if entity_fanout == 1 else None
+        )
+        decisions[entity.name] = plan_materialization(entity, resolve_role(entity.type), entity_fanout, introducing)
+    graph_client = Neo4jGraphClient(neo4j, graph_id=graph_id)
+
     produced_entity_ids = []
     for entity in result.entities:
+        if decisions[entity.name].policy == MaterializationPolicy.PROPERTY:
+            continue  # inlined onto the owning entity below, once relationships are processed
         eid = entity_id(graph_id, entity.name)
         graph_service.upsert_entity(
             neo4j,
@@ -81,6 +112,24 @@ def ingest_text(
             )
 
     for rel in result.relationships:
+        target_decision = decisions[rel.target]
+        source_decision = decisions[rel.source]
+        if target_decision.policy == MaterializationPolicy.PROPERTY and target_decision.attach_to_entity_name == rel.source:
+            graph_client.execute(StorageCommand(
+                operation="SET_PROPERTY",
+                subject_id=entity_id(graph_id, rel.source),
+                key=target_decision.property_key,
+                value=rel.target,
+            ))
+            continue
+        if source_decision.policy == MaterializationPolicy.PROPERTY and source_decision.attach_to_entity_name == rel.target:
+            graph_client.execute(StorageCommand(
+                operation="SET_PROPERTY",
+                subject_id=entity_id(graph_id, rel.target),
+                key=source_decision.property_key,
+                value=rel.source,
+            ))
+            continue
         graph_service.upsert_relationship(
             neo4j,
             graph_id=graph_id,

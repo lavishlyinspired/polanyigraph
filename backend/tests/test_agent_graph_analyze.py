@@ -79,6 +79,31 @@ def test_analyze_intent_runs_the_real_analytics_engine(services):
     assert "kg-analytics" in responder_calls[0]["system"].lower() or "centrality" in responder_calls[0]["system"].lower()
 
 
+def test_analyze_intent_role_weights_a_noisy_value_entity_out_of_the_ranking(services):
+    """End-to-end Analytics Role Mapping fix (PLAN Phase 1, agreed
+    2026-07-14): a "rate of return"-typed entity -- a real FIBO subclass of
+    quantity value -- must rank last (score 0.0) instead of dominating
+    degree_centrality purely by co-occurring with every fact that cites a
+    rate, the exact noise pattern found via live browser testing."""
+    neo4j, graphdb, settings, graph_id = services
+    from services import graph_service
+
+    graph_service.upsert_entity(neo4j, graph_id=graph_id, entity_id="hub", label="Hub Corp", type_="organization", source_doc="d", extraction_confidence=1.0)
+    graph_service.upsert_entity(neo4j, graph_id=graph_id, entity_id="rate", label="8.45%", type_="rate of return", source_doc="d", extraction_confidence=1.0)
+    graph_service.upsert_relationship(neo4j, graph_id=graph_id, edge_id="e1", source_id="hub", target_id="rate", type_="reports", weight=1.0)
+
+    llm = FakeLLM(_PAYLOAD, route="analyze", reply="Hub Corp is the most central entity.")
+    agent = build_graph(neo4j, graphdb, llm, settings)
+
+    result = agent.invoke(
+        _initial_state(graph_id, "What are the most central entities in this graph?"),
+        config={"configurable": {"thread_id": f"{graph_id}:default"}},
+    )
+
+    assert result["analytics_summary"][0].startswith("Hub Corp")
+    assert "8.45%: 0.000" in result["analytics_summary"]
+
+
 def test_analyze_intent_on_an_empty_graph_does_not_crash(services):
     neo4j, graphdb, settings, graph_id = services
 

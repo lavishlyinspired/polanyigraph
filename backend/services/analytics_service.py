@@ -11,13 +11,31 @@ from __future__ import annotations
 
 from analytics.projection import build_graph
 from analytics.registry import default_registry
+from analytics.roles import apply_role_weights_if_centrality
+from db.graphdb_client import GraphDBClient
 from db.neo4j_client import Neo4jClient
+from ontology.loader import load_schema
 from services import graph_service
 
 
-def run_default_analysis(neo4j: Neo4jClient, graph_id: str, algorithm: str = "degree_centrality") -> dict[str, float]:
+def run_default_analysis(
+    neo4j: Neo4jClient,
+    graph_id: str,
+    algorithm: str = "degree_centrality",
+    *,
+    graphdb: GraphDBClient | None = None,
+    repository: str | None = None,
+) -> dict[str, float]:
     """Returns {} for an empty graph or an unknown algorithm -- callers treat
-    that the same way querier_node treats an empty result set, not an error."""
+    that the same way querier_node treats an empty result set, not an error.
+
+    graphdb/repository are optional (Analytics Role Mapping, PLAN Phase 1):
+    when given, centrality-category results are weighted to suppress noisy
+    Value/Temporal-role entities (dates, percentages, ...) from dominating
+    rankings purely by co-occurrence. Omitting them keeps prior behavior
+    unchanged -- role weighting requires a live SPARQL call to load the
+    ontology schema, so callers that don't have GraphDB handy aren't forced
+    to pay for it."""
     record = graph_service.get_graph(neo4j, graph_id)
     if not record.nodes:
         return {}
@@ -25,4 +43,8 @@ def run_default_analysis(neo4j: Neo4jClient, graph_id: str, algorithm: str = "de
     if spec is None:
         return {}
     graph = build_graph(record.nodes, record.edges)
-    return spec.func(graph)
+    scores = spec.func(graph)
+    if graphdb is not None and repository is not None and spec.category == "centrality":
+        schema = load_schema(graphdb, repository)
+        scores = apply_role_weights_if_centrality(scores, graph, spec.category, schema)
+    return scores

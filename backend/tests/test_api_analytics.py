@@ -95,6 +95,30 @@ def test_run_unknown_algorithm_returns_400(client_and_graph):
     assert resp.status_code == 400
 
 
+def test_run_degree_centrality_role_weights_a_noisy_value_entity_to_zero(client_and_graph):
+    """The exact live-UI bug this Phase 1 fix addresses (2026-07-14): running
+    degree_centrality from the Analytics page must no longer rank a "rate of
+    return"-typed entity (a real FIBO subclass of quantity value) above real
+    actors purely by co-occurrence."""
+    client, graph_id = client_and_graph
+    from db.neo4j_client import Neo4jClient
+    from app.config import get_settings
+    from services import graph_service
+
+    neo4j = Neo4jClient(get_settings())
+    graph_service.upsert_entity(neo4j, graph_id=graph_id, entity_id="rate", label="8.45%", type_="rate of return", source_doc="d", extraction_confidence=1.0)
+    graph_service.upsert_relationship(neo4j, graph_id=graph_id, edge_id="e3", source_id="h", target_id="rate", type_="reports", weight=1.0)
+    neo4j.close()
+
+    client.post(f"/analytics/projections/{graph_id}", json={"name": "p-roles"})
+    resp = client.post("/analytics/run", json={"projection": "p-roles", "algorithm": "degree_centrality"})
+
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["nodeScores"]["rate"] == 0.0
+    assert body["nodeScores"]["h"] > 0.0
+
+
 def test_run_pagerank_via_registry_dispatch(client_and_graph):
     """Verifies registry-based dispatch reaches pagerank end-to-end; pagerank's
     own ranking correctness (direction-sensitive) is covered by the unit test

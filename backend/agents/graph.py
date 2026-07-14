@@ -478,7 +478,10 @@ def build_graph(neo4j: Neo4jClient, graphdb: GraphDBClient, llm: LLMClient, sett
         # simplest, always-available metric. NL selection of a specific
         # algorithm from the user's phrasing is a real future extension,
         # not required by this slice's acceptance criteria.
-        scores = analytics_service.run_default_analysis(neo4j, state["graph_id"], algorithm="degree_centrality")
+        scores = analytics_service.run_default_analysis(
+            neo4j, state["graph_id"], algorithm="degree_centrality",
+            graphdb=graphdb, repository=settings.graphdb_repository,
+        )
         record = graph_service.get_graph(neo4j, state["graph_id"])
         labels_by_id = {n.id: n.label for n in record.nodes}
         ranked = sorted(scores.items(), key=lambda item: -item[1])
