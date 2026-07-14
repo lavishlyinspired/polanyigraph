@@ -78,11 +78,11 @@ from db.neo4j_client import Neo4jClient
 from enrichment.heuristics.base import HEURISTIC_TYPES
 from llm.client import LLMClient
 from llm.embedder import EmbeddingClient
-from services import enrichment_service, graph_service, ingest_service, memory_config_service, memory_service, reasoning_service
+from services import analytics_service, enrichment_service, graph_service, ingest_service, memory_config_service, memory_service, reasoning_service
 from services.query_engine import execute_query
 
 _ROUTER_SYSTEM = """You are a routing classifier for a knowledge graph agent. Classify the \
-user's message as exactly one of: extract, enrich, query, reason, visualize, recall.
+user's message as exactly one of: extract, enrich, query, reason, visualize, recall, analyze.
 
 - extract: the message IS a document or passage of real-world text (a sentence, paragraph, \
 filing excerpt) to add to the knowledge graph. This is the default for any plain declarative \
@@ -95,6 +95,10 @@ graph's EXISTING content (e.g. "what's implied by...", "enrich the graph").
 - recall: the user asks what THEY (or the assistant) said/asked before, in a prior turn or \
 session -- about the conversation itself, not about graph content (e.g. "what did I ask about \
 before?", "what did we discuss earlier?").
+- analyze: the user asks a computed-metric question about the graph's structure -- which \
+entities are most central/important/influential, how connected the graph is, or similar graph \
+analytics questions. Distinct from visualize (a prose overview), reason (deriving new facts), \
+and query (looking up existing facts by predicate).
 
 Examples:
 "Deutsche Bank AG issued a bond." -> extract
@@ -106,10 +110,12 @@ regulates("FINMA", X) -> query
 "Show me an overview of the graph." -> visualize
 "What did I ask about before?" -> recall
 "What did we discuss earlier in this conversation?" -> recall
+"Which entities are most central or influential in this graph?" -> analyze
+"How connected is this graph overall?" -> analyze
 
-Respond with ONLY one word: extract, enrich, query, reason, visualize, or recall."""
+Respond with ONLY one word: extract, enrich, query, reason, visualize, recall, or analyze."""
 
-_VALID_INTENTS = {"extract", "enrich", "query", "reason", "visualize", "recall"}
+_VALID_INTENTS = {"extract", "enrich", "query", "reason", "visualize", "recall", "analyze"}
 
 # 2026-07-13 plan §6: only appended to _ROUTER_SYSTEM when
 # settings.enable_compound_queries -- with the flag off, the LLM is never
@@ -137,6 +143,7 @@ _SKILL_BY_INTENT = {
     "reason": "neurosymbolic-reasoning",
     "visualize": "kg-visualization",
     "recall": "memory-recall",
+    "analyze": "kg-analytics",
 }
 
 # 2026-07-13 plan §6.4: structural 1:1 map from a compound-eligible intent to
@@ -146,7 +153,7 @@ _SKILL_BY_INTENT = {
 # any intents list containing "extract" back to single-intent before this is
 # ever consulted) and "visualize" (no specialist node of its own -- reads the
 # final graph state directly inside responder_node).
-_NODE_BY_INTENT = {"reason": "reasoner", "recall": "memory_agent", "query": "querier", "enrich": "enricher"}
+_NODE_BY_INTENT = {"reason": "reasoner", "recall": "memory_agent", "query": "querier", "enrich": "enricher", "analyze": "analyst"}
 
 
 def _is_eligible(intent: str, raw_text_discovered_skills: list[str]) -> bool:
@@ -268,6 +275,7 @@ _DISCOVERY_PHRASE_BY_INTENT = {
     "reason": "explaining neurosymbolic reasoning results, spread activation, derived facts, proof paths",
     "visualize": "visualize, export, or get a visual overview of the knowledge graph",
     "recall": "a question that references prior conversation, a point in time, or how a fact has changed, temporal historical recall",
+    "analyze": "computed graph analytics, centrality, most important or influential entities, graph connectivity metrics",
 }
 
 
@@ -427,6 +435,24 @@ def build_graph(neo4j: Neo4jClient, graphdb: GraphDBClient, llm: LLMClient, sett
             }}
         return update
 
+    def analyst_node(state: AgentState) -> dict:
+        # v1 scope (PLAN Slice 9): always runs degree_centrality -- the
+        # simplest, always-available metric. NL selection of a specific
+        # algorithm from the user's phrasing is a real future extension,
+        # not required by this slice's acceptance criteria.
+        scores = analytics_service.run_default_analysis(neo4j, state["graph_id"], algorithm="degree_centrality")
+        record = graph_service.get_graph(neo4j, state["graph_id"])
+        labels_by_id = {n.id: n.label for n in record.nodes}
+        ranked = sorted(scores.items(), key=lambda item: -item[1])
+        analytics_summary = [f"{labels_by_id.get(node_id, node_id)}: {score:.3f}" for node_id, score in ranked]
+        update = {"analytics_summary": analytics_summary}
+        if len(state["intents"]) > 1:
+            update["partial_answers"] = {"analyst": {
+                "summary": "; ".join(analytics_summary[:5]) or "no analytics results",
+                "confidence": 1.0 if analytics_summary else 0.0,
+            }}
+        return update
+
     def memory_agent_node(state: AgentState) -> dict:
         words = [w.strip("?.,!\"'") for w in state["text"].split()]
         terms = [w for w in words if len(w) > 3 and w.lower() not in _RECALL_STOPWORDS] or [state["text"]]
@@ -478,6 +504,9 @@ def build_graph(neo4j: Neo4jClient, graphdb: GraphDBClient, llm: LLMClient, sett
         elif intent == "recall":
             hits_text = "\n".join(f"- {h}" for h in state["memory_hits"]) or "(no matching memory found)"
             user = f"Memory search for: {state['text']}\nMatches:\n{hits_text}"
+        elif intent == "analyze":
+            scores_text = "\n".join(f"- {line}" for line in state["analytics_summary"]) or "(empty graph, nothing to analyze)"
+            user = f"Degree centrality scores for the real graph, highest first:\n{scores_text}"
         elif intent == "visualize":
             record = graph_service.get_graph(neo4j, state["graph_id"])
             entities_text = "\n".join(f"- {n.label} ({n.type})" for n in record.nodes) or "(empty graph)"
@@ -535,6 +564,7 @@ def build_graph(neo4j: Neo4jClient, graphdb: GraphDBClient, llm: LLMClient, sett
     workflow.add_node("enricher", enricher_node)
     workflow.add_node("querier", querier_node)
     workflow.add_node("memory_agent", memory_agent_node)
+    workflow.add_node("analyst", analyst_node)
     workflow.add_node("combiner", combiner_node)
     workflow.add_node("responder", responder_node)
 
@@ -546,6 +576,7 @@ def build_graph(neo4j: Neo4jClient, graphdb: GraphDBClient, llm: LLMClient, sett
         "reason": "reasoner",
         "visualize": "responder",
         "recall": "memory_agent",
+        "analyze": "analyst",
     })
     # extractor keeps its unconditional edge to reasoner -- extraction was
     # never part of the compound set (see _NODE_BY_INTENT's docstring), so
@@ -555,7 +586,7 @@ def build_graph(neo4j: Neo4jClient, graphdb: GraphDBClient, llm: LLMClient, sett
     # this turn is compound (len(intents) > 1 -> combiner, a real join point
     # LangGraph waits at for every dispatched Send branch to finish) or
     # single-intent (-> responder, unchanged from pre-Feature-4 behavior).
-    for node in ("reasoner", "querier", "enricher", "memory_agent"):
+    for node in ("reasoner", "querier", "enricher", "memory_agent", "analyst"):
         workflow.add_conditional_edges(node, _next_after_specialist, {"combiner": "combiner", "responder": "responder"})
     workflow.add_edge("combiner", "responder")
     workflow.add_edge("responder", END)

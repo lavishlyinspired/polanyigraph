@@ -1,26 +1,28 @@
-"""Community detection via Neo4j GDS Louvain (PLAN.md §20.4 item 5).
+"""Community detection via the networkx-based analytics engine (PLAN.md
+§20.4 item 5; migrated off Neo4j GDS per plans/analytical-engine.md Slice 3).
 
-Deferred in the original §20 decision record as "lowest priority, most
-speculative value for this product's single-analyst usage pattern" -- built
-now on explicit direction, using the real GDS plugin (confirmed installed:
-`gds.version()`), not a hand-rolled clustering approximation.
-
-Projects the graph_id-scoped :Entity/:RELATES subgraph into an in-memory GDS
-graph via a Cypher projection, runs Louvain, writes `communityId` back onto
-each :Entity, then drops the projection (GDS graphs are memory-resident and
-must be explicitly released). `gds.graph.project.cypher` is deprecated in
-favor of the newer Cypher-projection-as-aggregation-function form as of this
-GDS version, but is still functional -- confirmed live against the real
-Neo4j Desktop + GDS install this project targets; revisit if a future GDS
-version removes it.
+Originally ran Neo4j GDS Louvain via `gds.graph.project.cypher` +
+`gds.louvain.write`. Migrated because that call path hard-depended on the
+GDS plugin being installed and separately confirmed live (`gds.version()`),
+and because `gds.graph.project.cypher` itself emits a live deprecation
+warning on every call ("replaced by gds.graph.project Cypher projection as
+an aggregation function") -- both a real deployment risk and a ticking
+upstream-removal risk. Louvain now runs in-process via
+analytics.algorithms.community.louvain_communities (networkx) against a
+plain in-memory projection; only the write-back target is unchanged
+(:Entity.communityId), so detect_communities/get_communities/CommunityMember
+and every caller of them keep their exact same contract.
 """
 
 from __future__ import annotations
 
-import uuid
 from dataclasses import dataclass
 
+from analytics.algorithms.community import louvain_communities
+from analytics.projection import NamedProjection, build_graph
+from analytics.store import Neo4jGraphStore
 from db.neo4j_client import Neo4jClient
+from services import graph_service
 
 
 @dataclass(frozen=True)
@@ -36,26 +38,11 @@ def detect_communities(neo4j: Neo4jClient, graph_id: str) -> list[CommunityMembe
     if not neo4j.run("MATCH (e:Entity {graphId: $graph_id}) RETURN e LIMIT 1", graph_id=graph_id):
         return []
 
-    projection_name = f"community-{uuid.uuid4().hex[:12]}"
-    neo4j.run(
-        """
-        CALL gds.graph.project.cypher(
-          $projection_name,
-          'MATCH (e:Entity {graphId: $graph_id}) RETURN id(e) AS id',
-          'MATCH (s:Entity {graphId: $graph_id})-[r:RELATES {graphId: $graph_id}]->(t:Entity {graphId: $graph_id}) RETURN id(s) AS source, id(t) AS target',
-          {parameters: {graph_id: $graph_id}}
-        )
-        """,
-        projection_name=projection_name,
-        graph_id=graph_id,
-    )
-    try:
-        neo4j.run(
-            "CALL gds.louvain.write($projection_name, {writeProperty: 'communityId'})",
-            projection_name=projection_name,
-        )
-    finally:
-        neo4j.run("CALL gds.graph.drop($projection_name)", projection_name=projection_name)
+    record = graph_service.get_graph(neo4j, graph_id)
+    projection = NamedProjection(name=f"community-{graph_id}", graph_id=graph_id, graph=build_graph(record.nodes, record.edges))
+    community_ids = louvain_communities(projection.graph)
+
+    Neo4jGraphStore(neo4j).write_scores(projection, "communityId", community_ids)
 
     return get_communities(neo4j, graph_id)
 

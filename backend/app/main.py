@@ -123,6 +123,7 @@ def health() -> HealthResponse:
 
 
 from api import agent as agent_routes  # noqa: E402
+from api import analytics as analytics_routes  # noqa: E402
 from api import chat as chat_routes  # noqa: E402
 from api import enrich as enrich_routes  # noqa: E402
 from api import graph as graph_routes  # noqa: E402
@@ -153,3 +154,4 @@ app.include_router(skills_routes.router)
 app.include_router(memory_routes.router)
 app.include_router(settings_routes.router)
 app.include_router(graph_maintenance_routes.router)
+app.include_router(analytics_routes.router)

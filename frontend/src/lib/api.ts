@@ -14,6 +14,7 @@ export interface ApiNode {
   properties?: Record<string, string>;
   note?: string;
   communityId?: number | null;
+  centralityScore?: number | null;
 }
 
 export interface ApiEdge {
@@ -264,6 +265,45 @@ export interface CommunityMember {
 
 export interface CommunitiesResponse {
   members: CommunityMember[];
+}
+
+// Analytics engine (plans/analytical-engine.md): named graph projections + a
+// NetworkX-based algorithm registry, with an optional write-back to Neo4j.
+export interface AnalyticsProjection {
+  name: string;
+  graphId: string;
+  nodeCount: number;
+  edgeCount: number;
+}
+
+export interface AnalyticsProjectionsResponse {
+  projections: AnalyticsProjection[];
+}
+
+export interface AlgorithmInfo {
+  name: string;
+  category: string;
+  params: Record<string, unknown>;
+}
+
+export interface AlgorithmsListResponse {
+  algorithms: AlgorithmInfo[];
+}
+
+export type SuggestedChart = 'bar' | 'table' | 'distribution' | null;
+
+export interface AlgorithmResultResponse {
+  algorithm: string;
+  projection: string;
+  nodeScores: Record<string, number>;
+  suggestedChart: SuggestedChart;
+}
+
+export interface PersistResponse {
+  projection: string;
+  algorithm: string;
+  propertyName: string;
+  nodeCount: number;
 }
 
 // LangGraph agent (MVP_PLAN.md Phase 6, PLAN.md §8): one message in, the
@@ -648,4 +688,32 @@ export const api = {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ enabled, intervalMinutes }),
     }).then(json<MaintenanceSchedule>),
+
+  createProjection: (graphId: string, name?: string) =>
+    fetch(`${BASE}/analytics/projections/${graphId}`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ name: name ?? null }),
+    }).then(json<AnalyticsProjection>),
+
+  listProjections: () => fetch(`${BASE}/analytics/projections`).then(json<AnalyticsProjectionsResponse>),
+
+  dropProjection: (name: string) =>
+    fetch(`${BASE}/analytics/projections/${name}`, { method: 'DELETE' }).then(json<{ dropped: boolean }>),
+
+  listAlgorithms: () => fetch(`${BASE}/analytics/algorithms`).then(json<AlgorithmsListResponse>),
+
+  runAlgorithm: (projection: string, algorithm: string) =>
+    fetch(`${BASE}/analytics/run`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ projection, algorithm }),
+    }).then(json<AlgorithmResultResponse>),
+
+  persistAlgorithmResult: (projection: string, algorithm: string, propertyName: string) =>
+    fetch(`${BASE}/analytics/persist`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ projection, algorithm, propertyName }),
+    }).then(json<PersistResponse>),
 };

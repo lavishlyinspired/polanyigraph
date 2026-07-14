@@ -5,7 +5,7 @@ import type { ApiEdge } from '../lib/api';
 import type { LayoutNode } from '../stores/graphStore';
 import { useGraphStore } from '../stores/graphStore';
 import { useThemeStore } from '../stores/themeStore';
-import { ZoomIn, ZoomOut, Maximize2, Layers, Eye, GitBranch, X, Boxes, Sparkles, ChevronDown, ChevronUp, Info } from 'lucide-react';
+import { ZoomIn, ZoomOut, Maximize2, Layers, Eye, GitBranch, X, Boxes, Sparkles, ChevronDown, ChevronUp, Info, BarChart3 } from 'lucide-react';
 
 interface GraphCanvasProps {
   nodes: LayoutNode[];
@@ -57,6 +57,26 @@ function communityColorFill(communityId: number, isLight: boolean): string {
   return `hsl(${hashHue(String(communityId))}, 45%, ${isLight ? 92 : 8}%)`;
 }
 
+// plans/analytical-engine.md Slice 9: same hash-hue-function shape as
+// community coloring, but centralityScore is continuous (not a discrete id
+// to hash) -- interpolates hue from blue (low) to red (high) instead.
+function centralityHue(score: number): number {
+  const t = Math.min(Math.max(score, 0), 1);
+  return 220 - t * 220;
+}
+
+function centralityColor(score: number): string {
+  return `hsl(${centralityHue(score)}, 55%, 55%)`;
+}
+
+function centralityColorDark(score: number, isLight: boolean): string {
+  return `hsl(${centralityHue(score)}, 30%, ${isLight ? 78 : 18}%)`;
+}
+
+function centralityColorFill(score: number, isLight: boolean): string {
+  return `hsl(${centralityHue(score)}, 45%, ${isLight ? 92 : 8}%)`;
+}
+
 function activationGlow(activation: number): string {
   if (activation <= 0.01) return 'transparent';
   const t = Math.min(activation, 1);
@@ -75,6 +95,7 @@ export function GraphCanvas({ nodes, edges, selectedNodeId, onSelectNode, onMove
     zoom, pan, setZoom, setPan, showHeatmap, showProofPath, toggleHeatmap, toggleProofPath,
     linkMode, linkSourceId, setLinkMode, handleCanvasNodeClick,
     pendingFacts, approvedFacts, showCommunities, detectingCommunities, detectCommunities, toggleCommunities,
+    showCentrality, toggleCentrality,
   } = useGraphStore();
   const isLight = useThemeStore((s) => s.theme === 'light');
   // Neutral canvas tones aren't Tailwind classes (raw SVG attributes), so they
@@ -300,9 +321,11 @@ export function GraphCanvas({ nodes, edges, selectedNodeId, onSelectNode, onMove
               (e) => proofEdgeTypes.has(e.type) && (e.source === node.id || e.target === node.id),
             );
             const hasImplicitFact = implicitFactNodeIds.has(node.id);
-            const color = showCommunities && node.communityId != null ? communityColor(node.communityId) : typeColor(node.type);
-            const darkColor = showCommunities && node.communityId != null ? communityColorDark(node.communityId, isLight) : typeColorDark(node.type, isLight);
-            const fillColor = showCommunities && node.communityId != null ? communityColorFill(node.communityId, isLight) : typeColorFill(node.type, isLight);
+            const hasCentrality = showCentrality && node.centralityScore != null;
+            const hasCommunity = showCommunities && node.communityId != null;
+            const color = hasCentrality ? centralityColor(node.centralityScore!) : hasCommunity ? communityColor(node.communityId!) : typeColor(node.type);
+            const darkColor = hasCentrality ? centralityColorDark(node.centralityScore!, isLight) : hasCommunity ? communityColorDark(node.communityId!, isLight) : typeColorDark(node.type, isLight);
+            const fillColor = hasCentrality ? centralityColorFill(node.centralityScore!, isLight) : hasCommunity ? communityColorFill(node.communityId!, isLight) : typeColorFill(node.type, isLight);
             const isHovered = node.id === hoveredId;
             const r = 20;
             const activation = node.activation ?? 0;
@@ -470,7 +493,7 @@ export function GraphCanvas({ nodes, edges, selectedNodeId, onSelectNode, onMove
           onClick={() => void detectCommunities()}
           disabled={detectingCommunities || nodes.length === 0}
           className="w-7 h-7 rounded flex items-center justify-center transition-colors text-zinc-500 hover:text-white hover:bg-zinc-800 disabled:opacity-40"
-          title="Detect communities (Neo4j GDS Louvain)"
+          title="Detect communities (Louvain)"
         >
           {detectingCommunities ? (
             <div className="w-3 h-3 border-2 border-zinc-400 border-t-transparent rounded-full animate-spin" />
@@ -487,6 +510,17 @@ export function GraphCanvas({ nodes, edges, selectedNodeId, onSelectNode, onMove
             title="Toggle color by community"
           >
             <GitBranch className="w-3.5 h-3.5 rotate-90" />
+          </button>
+        )}
+        {nodes.some((n) => n.centralityScore != null) && (
+          <button
+            onClick={toggleCentrality}
+            className={`w-7 h-7 rounded flex items-center justify-center transition-colors ${
+              showCentrality ? 'bg-violet-400/20 text-violet-400' : 'text-zinc-500 hover:text-white hover:bg-zinc-800'
+            }`}
+            title="Toggle color by centrality score"
+          >
+            <BarChart3 className="w-3.5 h-3.5" />
           </button>
         )}
       </div>

@@ -97,6 +97,7 @@ interface GraphState {
   enriching: boolean;
   showCommunities: boolean;
   detectingCommunities: boolean;
+  showCentrality: boolean;
   skills: SkillItem[];
   skillsLoading: boolean;
   selectedSkillContent: string | null;
@@ -154,6 +155,7 @@ interface GraphState {
   rejectFact: (factId: string) => Promise<void>;
   detectCommunities: () => Promise<void>;
   toggleCommunities: () => void;
+  toggleCentrality: () => void;
   loadSkills: () => Promise<void>;
   loadSkillContent: (name: string) => Promise<void>;
   activateSkill: (name: string) => Promise<void>;
@@ -225,6 +227,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   enriching: false,
   showCommunities: false,
   detectingCommunities: false,
+  showCentrality: false,
   skills: [],
   skillsLoading: false,
   selectedSkillContent: null,
@@ -302,7 +305,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     set({
       graphId, nodes: [], edges: [], facts: [], trace: [], loopStep: 'idle', loopIteration: 0,
       selectedNodeId: null, convergedBy: null, iterations: 0, history: [], chatMessages: [],
-      pendingFacts: [], approvedFacts: [], showCommunities: false, agentMessages: [],
+      pendingFacts: [], approvedFacts: [], showCommunities: false, showCentrality: false, agentMessages: [],
     });
     await Promise.all([get().loadGraph(), get().loadHistory(), get().loadPendingFacts(), get().loadApprovedFacts(), get().loadReasonFacts()]);
   },
@@ -695,6 +698,8 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   },
 
   toggleCommunities: () => set({ showCommunities: !get().showCommunities }),
+
+  toggleCentrality: () => set({ showCentrality: !get().showCentrality }),
 
   loadSkills: async () => {
     set({ skillsLoading: true });

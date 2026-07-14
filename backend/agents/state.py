@@ -27,6 +27,11 @@ class AgentState(TypedDict):
     query_error: str
     # Set by the memory_agent node when intent == "recall".
     memory_hits: list[str]
+    # Set by the analyst node when intent == "analyze" (PLAN: plans/
+    # analytical-engine.md Slice 9): one "label: score" line per node,
+    # highest score first -- same simplified-text-for-the-LLM convention as
+    # query_results/fact_texts, not the raw AlgorithmResult object.
+    analytics_summary: list[str]
     # Set by the router node (PLAN.md §18/§2.9.14, extended by 2026-07-13
     # plan §2 Stage A): real find_relevant_skills results for this turn's
     # text, most-relevant first. discovered_skill_scores is the parallel,

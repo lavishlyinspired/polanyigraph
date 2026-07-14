@@ -6,9 +6,9 @@
 // Tailwind utilities the mock used (`w-13`/`h-13` and `scale-102` aren't
 // real Tailwind classes -- this project's tailwind.config.js has no custom
 // spacing/scale extension, so they silently no-op) to bracket syntax.
-import { Network, FileText, Cpu, Brain, Terminal } from 'lucide-react';
+import { Network, FileText, Cpu, Brain, Terminal, BarChart3 } from 'lucide-react';
 
-export type PageType = 'workspace' | 'documents' | 'logic' | 'inference' | 'query';
+export type PageType = 'workspace' | 'documents' | 'logic' | 'inference' | 'query' | 'analytics';
 
 interface LeftNavigationProps {
   activePage: PageType;
@@ -29,6 +29,7 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'logic', label: 'Logic Lab', subLabel: 'FIBO Schema', icon: Cpu, accent: 'text-sky-400 bg-sky-500/10 border-sky-500/20' },
   { id: 'inference', label: 'Inference Lab', subLabel: 'NS-Solver', icon: Brain, accent: 'text-amber-400 bg-amber-500/10 border-amber-400/20' },
   { id: 'query', label: 'Query Lab', subLabel: 'Datalog', icon: Terminal, accent: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20' },
+  { id: 'analytics', label: 'Analytics Lab', subLabel: 'Graph Metrics', icon: BarChart3, accent: 'text-violet-400 bg-violet-500/10 border-violet-500/20' },
 ];
 
 export function LeftNavigation({ activePage, onPageChange }: LeftNavigationProps) {

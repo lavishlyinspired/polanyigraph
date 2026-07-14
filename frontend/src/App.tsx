@@ -23,6 +23,7 @@ import { DocumentsPage } from './components/pages/DocumentsPage';
 import { LogicPage } from './components/pages/LogicPage';
 import { InferencePage } from './components/pages/InferencePage';
 import { QueryPage } from './components/pages/QueryPage';
+import { AnalyticsPage } from './components/pages/AnalyticsPage';
 import { api, type HealthResponse } from './lib/api';
 import { useGraphStore } from './stores/graphStore';
 import { useThemeStore } from './stores/themeStore';
@@ -263,6 +264,7 @@ export function App() {
           {activePage === 'logic' && <LogicPage />}
           {activePage === 'inference' && <InferencePage />}
           {activePage === 'query' && <QueryPage />}
+          {activePage === 'analytics' && <AnalyticsPage />}
         </div>
       </div>
 

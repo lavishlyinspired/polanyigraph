@@ -34,6 +34,13 @@ class GraphNodeRecord:
     note: str = ""
     summary: str = ""
     community_id: int | None = None
+    # Written back by the analytics engine's Neo4jGraphStore (PLAN: plans/
+    # analytical-engine.md Slice 1/9) under the literal property name
+    # "centralityScore" -- callers persisting other centrality algorithms
+    # (pagerank, betweenness, closeness) share this one property, same as
+    # community_id is shared across community algorithms; only the most
+    # recently persisted centrality run is ever visible here.
+    centrality_score: float | None = None
 
 
 @dataclass(frozen=True)
@@ -220,7 +227,8 @@ def get_graph(neo4j: Neo4jClient, graph_id: str) -> GraphRecord:
                coalesce(e.propertiesJson, '{}') AS propertiesJson,
                coalesce(e.note, '') AS note,
                coalesce(e.summary, '') AS summary,
-               e.communityId AS communityId
+               e.communityId AS communityId,
+               e.centralityScore AS centralityScore
         ORDER BY e.id
         """,
         graph_id=graph_id,
@@ -249,6 +257,7 @@ def get_graph(neo4j: Neo4jClient, graph_id: str) -> GraphRecord:
             note=row.get("note") or "",
             summary=row.get("summary") or "",
             community_id=row.get("communityId"),
+            centrality_score=row.get("centralityScore"),
         )
         for row in node_rows
     ]

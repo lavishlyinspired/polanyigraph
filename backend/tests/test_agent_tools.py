@@ -54,15 +54,41 @@ def services():
     graphdb.close()
 
 
-def test_build_tools_returns_the_4_formal_tools(services):
+def test_build_tools_returns_the_5_formal_tools(services):
     neo4j, graphdb, settings, graph_id = services
     llm = FakeLLM(_PAYLOAD)
     tools = build_tools(neo4j, graphdb, llm, settings)
 
     names = {t.name for t in tools}
-    assert names == {"extract_entities", "run_reasoning", "run_enrichment", "query_graph"}
+    assert names == {"extract_entities", "run_reasoning", "run_enrichment", "query_graph", "run_analytics"}
     for t in tools:
         assert t.description  # every tool needs a real description for an LLM to pick from
+
+
+def test_run_analytics_tool_reports_real_scores(services):
+    neo4j, graphdb, settings, graph_id = services
+    graph_service.upsert_entity(neo4j, graph_id=graph_id, entity_id="hub", label="Hub Corp", type_="organization", source_doc="d", extraction_confidence=1.0)
+    graph_service.upsert_entity(neo4j, graph_id=graph_id, entity_id="leaf", label="Leaf Corp", type_="organization", source_doc="d", extraction_confidence=1.0)
+    graph_service.upsert_relationship(neo4j, graph_id=graph_id, edge_id="e1", source_id="hub", target_id="leaf", type_="owns", weight=1.0)
+    llm = FakeLLM(_PAYLOAD)
+    tools = build_tools(neo4j, graphdb, llm, settings)
+    run_analytics = next(t for t in tools if t.name == "run_analytics")
+
+    result = run_analytics.invoke({"graph_id": graph_id, "algorithm": "degree_centrality"})
+
+    assert "Hub Corp" in result
+    assert "Leaf Corp" in result
+
+
+def test_run_analytics_tool_on_empty_graph_reports_gracefully(services):
+    neo4j, graphdb, settings, graph_id = services
+    llm = FakeLLM(_PAYLOAD)
+    tools = build_tools(neo4j, graphdb, llm, settings)
+    run_analytics = next(t for t in tools if t.name == "run_analytics")
+
+    result = run_analytics.invoke({"graph_id": graph_id, "algorithm": "degree_centrality"})
+
+    assert "no" in result.lower() or "empty" in result.lower()
 
 
 def test_extract_entities_tool_writes_to_the_real_graph(services):

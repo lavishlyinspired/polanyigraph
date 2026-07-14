@@ -33,7 +33,7 @@ def test_write_scores_sets_property_on_entity_nodes(neo4j):
         source_doc="d", extraction_confidence=1.0,
     )
     projection = NamedProjection.create(client, name="p1", graph_id=graph_id)
-    store = Neo4jGraphStore(client, graph_id=graph_id)
+    store = Neo4jGraphStore(client)
 
     store.write_scores(projection, "centralityScore", {"a1": 0.75})
 
@@ -52,7 +52,7 @@ def test_write_scores_only_touches_nodes_in_the_scores_dict(neo4j):
             source_doc="d", extraction_confidence=1.0,
         )
     projection = NamedProjection.create(client, name="p1", graph_id=graph_id)
-    store = Neo4jGraphStore(client, graph_id=graph_id)
+    store = Neo4jGraphStore(client)
 
     store.write_scores(projection, "centralityScore", {"a1": 0.5})
 

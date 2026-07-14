@@ -37,6 +37,7 @@ class NodeResponse(ApiModel):
     note: str = ""
     summary: str = ""
     community_id: int | None = None
+    centrality_score: float | None = None
 
 
 class EdgeResponse(ApiModel):
@@ -78,7 +79,7 @@ def get_graph(graph_id: str, neo4j: Neo4jClient = Depends(get_neo4j)) -> GraphRe
                 id=n.id, label=n.label, type=n.type,
                 activation=n.activation, derived=n.derived, source_doc=n.source_doc,
                 salience=n.salience, properties=n.properties, note=n.note, summary=n.summary,
-                community_id=n.community_id,
+                community_id=n.community_id, centrality_score=n.centrality_score,
             )
             for n in record.nodes
         ],
@@ -154,7 +155,7 @@ def add_node(
     return NodeResponse(
         id=node.id, label=node.label, type=node.type, activation=node.activation, derived=node.derived,
         source_doc=node.source_doc, salience=node.salience, properties=node.properties, note=node.note,
-        summary=node.summary, community_id=node.community_id,
+        summary=node.summary, community_id=node.community_id, centrality_score=node.centrality_score,
     )
 
 
@@ -182,7 +183,7 @@ def update_node(
     return NodeResponse(
         id=node.id, label=node.label, type=node.type, activation=node.activation, derived=node.derived,
         source_doc=node.source_doc, salience=node.salience, properties=node.properties, note=node.note,
-        summary=node.summary, community_id=node.community_id,
+        summary=node.summary, community_id=node.community_id, centrality_score=node.centrality_score,
     )
 
 

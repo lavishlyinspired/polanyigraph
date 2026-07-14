@@ -16,6 +16,10 @@ most connections (natural focal points in a force-directed layout), and
 whether any nodes are isolated (no edges at all — worth flagging, since an
 isolated node is often a sign of a missed relationship during extraction).
 
-If the graph has multiple detected communities (from Neo4j GDS Louvain, when
-available), describe them as the natural grouping a "color by community"
-view would highlight, distinct from the type-based coloring.
+If the graph has multiple detected communities (from Louvain community
+detection, when available), describe them as the natural grouping a "color
+by community" view would highlight, distinct from the type-based coloring.
+
+When NOT to use: for a specific computed metric (centrality ranking,
+similarity/classification results, community sizes) rather than a general
+prose overview, that's `kg-analytics` instead.

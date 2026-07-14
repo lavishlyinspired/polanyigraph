@@ -277,19 +277,19 @@ existing `fetch(...).then(json<T>)` convention (see `getCommunities`,
 
 ## Acceptance Criteria
 
-- [ ] Named graph projection loads a graphId-scoped subgraph from Neo4j into a NetworkX graph, preserving `activation`/`community_id`/`derived`/`salience`/`properties` as node attributes
-- [ ] At least 4 centrality algorithms produce correct scores (degree, pagerank, betweenness, closeness)
-- [ ] `community_service.py` runs Louvain via the new engine instead of Neo4j GDS; existing tests (`test_community_service.py`, `test_api_communities.py`) pass unmodified
-- [ ] `path_engine.py` is untouched; new weighted shortest path + graph-health metrics (diameter, avg path length, eccentricity, all-pairs distances) ship as new, separately-named capability
-- [ ] Structural (Jaccard/Adamic-Adar) similarity produces correct scores against known graph structures, with no code path shared with `entity_resolution_service.py`
-- [ ] Node classification (majority vote from neighborhood) predicts labels
-- [ ] Custom analytics: activation pattern, rule coverage, proof chain analysis, wired to real `reasoning_service`/`rules_store` data (no synthetic fixtures at the service layer — fixtures only in tests)
-- [ ] Results can be written back to Neo4j (e.g., `centralityScore` property on `:Entity` nodes)
-- [ ] Results can be returned ephemeral (JSON response, no persistence)
-- [ ] API routes: `POST /analytics/projections`, `GET /analytics/algorithms`, `POST /analytics/run`, `POST /analytics/persist`
-- [ ] Agent: `analyze` intent routes to a real specialist node backed by this engine, narrated via a new `kg-analytics` skill
-- [ ] Frontend: `AnalyticsPage.tsx` runs algorithms and shows results; `GraphCanvas.tsx` gains a centrality coloring mode
-- [ ] All code has tests (unit for algorithms, integration for Neo4j projection + write-back)
+- [x] Named graph projection loads a graphId-scoped subgraph from Neo4j into a NetworkX graph, preserving `activation`/`community_id`/`derived`/`salience`/`properties` as node attributes
+- [x] At least 4 centrality algorithms produce correct scores (degree, pagerank, betweenness, closeness)
+- [x] `community_service.py` runs Louvain via the new engine instead of Neo4j GDS; existing tests (`test_community_service.py`, `test_api_communities.py`) pass unmodified
+- [x] `path_engine.py` is untouched; new weighted shortest path + graph-health metrics (diameter, avg path length, eccentricity, all-pairs distances) ship as new, separately-named capability
+- [x] Structural (Jaccard/Adamic-Adar) similarity produces correct scores against known graph structures, with no code path shared with `entity_resolution_service.py`
+- [x] Node classification (majority vote from neighborhood) predicts labels
+- [x] Custom analytics: activation pattern, rule coverage, proof chain analysis, wired to real `reasoning_service`/`rules_store` data (no synthetic fixtures at the service layer — fixtures only in tests)
+- [x] Results can be written back to Neo4j (e.g., `centralityScore` property on `:Entity` nodes)
+- [x] Results can be returned ephemeral (JSON response, no persistence)
+- [x] API routes: `POST /analytics/projections`, `GET /analytics/algorithms`, `POST /analytics/run`, `POST /analytics/persist`
+- [x] Agent: `analyze` intent routes to a real specialist node backed by this engine, narrated via a new `kg-analytics` skill
+- [x] Frontend: `AnalyticsPage.tsx` runs algorithms and shows results; `GraphCanvas.tsx` gains a centrality coloring mode
+- [x] All code has tests (unit for algorithms, integration for Neo4j projection + write-back)
 
 ## Dependencies
 
@@ -298,7 +298,9 @@ existing `fetch(...).then(json<T>)` convention (see `getCommunities`,
 
 ## Slices
 
-### Slice 1: Core projection + degree centrality (walking skeleton)
+### Slice 1: Core projection + degree centrality (walking skeleton) — ✅ DONE
+
+`backend/analytics/{projection,result,store}.py`, `algorithms/centrality.py`, `api/analytics.py`. 17 new tests, all green; 3 manual mutants applied (edge-direction swap, algorithm-check inversion, graph_id-scoping bypass), all killed; no REFACTOR needed. Pending: commit approval.
 
 **Value**: Proves the end-to-end pipeline: Neo4j → `GraphNodeRecord`/`GraphEdgeRecord` → NetworkX projection → algorithm → result (ephemeral + write-back), with the attribute mapping locked down before anything else is built on top of it.
 **Path**: API route → create projection from Neo4j via `graph_service.get_graph` → run degree centrality (networkx) → return scores + optionally write back to `:Entity` nodes
@@ -320,7 +322,9 @@ existing `fetch(...).then(json<T>)` convention (see `getCommunities`,
 **REFACTOR**: Assess improvements
 **Done when**: All tests pass, mutation report reviewed, human approves commit
 
-### Slice 2: Algorithm registry + PageRank, Betweenness, Closeness
+### Slice 2: Algorithm registry + PageRank, Betweenness, Closeness — ✅ DONE
+
+`analytics/registry.py` (AlgorithmRegistry, default_registry), 3 new centrality functions, `/analytics/run` now dispatches via registry, new `GET /analytics/algorithms`. 26 tests green (9 new); 2 manual mutants (wrong registry key, inverted spec-none check), both killed. Fixture note: pagerank/closeness are direction-sensitive (reward being pointed *to*), so they needed a separate inward-pointing star fixture from degree_centrality's outward one — not a code bug, a test-design correction.
 
 **Value**: Three more centrality algorithms available through the same registry/execution path, and Slice 1's hardcoded dispatch gets replaced by a real registry.
 **Path**: Register algorithms → `POST /analytics/run` with algorithm name → scores returned
@@ -342,7 +346,9 @@ existing `fetch(...).then(json<T>)` convention (see `getCommunities`,
 **REFACTOR**: Assess improvements
 **Done when**: All tests pass, mutation report reviewed, human approves commit
 
-### Slice 3: Migrate community detection off Neo4j GDS
+### Slice 3: Migrate community detection off Neo4j GDS — ✅ DONE
+
+`analytics/algorithms/community.py` (louvain_communities, weakly_connected_components), `community_service.py`'s GDS Cypher calls fully deleted and replaced with the networkx engine. `test_community_service.py`/`test_api_communities.py` pass with **zero diff** (`git diff --stat` confirmed empty) — the live "gds.graph.project.cypher is deprecated" warning that used to fire on every call is gone. New GDS-spy test (`test_community_service_migration.py`) asserts no `gds.` Cypher is issued. 19 tests green; 3 mutants applied, 2 killed. One mutant (skip `to_undirected()`) survived after 3 different real test designs (cluster separation, direction-reversal invariance, asymmetric in/out-star fixture) — networkx's directed-vs-undirected Louvain modularity formulas are genuinely different but converge to the same partition for realistic dense-cluster-plus-weak-bridge graph shapes at this scale. Kept `to_undirected()` anyway (semantically correct: community grouping shouldn't depend on arbitrary relationship-extraction direction) and documented this as a judged near-equivalent survivor rather than chasing an unrealistic counter-example fixture.
 
 **Value**: Removes the Neo4j GDS plugin as a hard runtime dependency; `community_service.py` keeps its exact public contract but no longer needs GDS installed, confirmed, or version-matched.
 **Path**: `community_service.detect_communities` builds a projection, runs the new engine's Louvain, writes `communityId` back through the existing write path — same as today from the API's perspective.
@@ -362,7 +368,9 @@ existing `fetch(...).then(json<T>)` convention (see `getCommunities`,
 **REFACTOR**: Assess improvements
 **Done when**: All tests pass (including the pre-existing `test_community_service.py`/`test_api_communities.py` unmodified), mutation report reviewed, human approves commit
 
-### Slice 4: Graph metrics + weighted pathfinding
+### Slice 4: Graph metrics + weighted pathfinding — ✅ DONE
+
+`analytics/algorithms/pathfinding.py` (weighted_shortest_path, all_pairs_distances, graph_diameter, average_path_length, node_eccentricity). 8 tests green; 2 mutants (disconnected-count off-by-one, dropped edge weight in dijkstra) both killed. `path_engine.py`: zero diff, confirmed via `git diff --stat`.
 
 **Value**: Fills the concrete gap `path_engine.py` structurally can't: weighted shortest path (uses `GraphEdgeRecord.weight`) and whole-graph health metrics (diameter, average path length, eccentricity) — extraction-quality signals, not a replacement for the label-based UI path lookup.
 **Path**: Query weighted shortest path or graph-health metrics on a projection → return path + distance, or metric values
@@ -382,7 +390,9 @@ existing `fetch(...).then(json<T>)` convention (see `getCommunities`,
 **REFACTOR**: Assess improvements
 **Done when**: All tests pass, mutation report reviewed, human approves commit
 
-### Slice 5: Structural similarity
+### Slice 5: Structural similarity — ✅ DONE
+
+`analytics/algorithms/similarity.py` (jaccard_similarity, adamic_adar_similarity, similar_node_pairs). 8 tests green. Found and fixed a real bug during RED, not a mutant: `nx.jaccard_coefficient` silently returns `[]` (no error) when given a generator instead of a materialized list for `ebunch` — consumes it internally more than once. 2 mutants applied post-fix (`>=`→`>` threshold boundary — survived once until a boundary test was added, then killed; the generator-vs-list distinction itself, implicitly re-verified by the fix). No refactor needed.
 
 **Value**: Topology-based "similar role in the graph" signal for link prediction / analyst exploration — explicitly not a dedup mechanism (that's `entity_resolution_service.py`, untouched, different signal).
 **Path**: Compute structural similarity between nodes → return similarity scores
@@ -402,7 +412,9 @@ existing `fetch(...).then(json<T>)` convention (see `getCommunities`,
 **REFACTOR**: Assess improvements
 **Done when**: All tests pass, mutation report reviewed, human approves commit
 
-### Slice 6: Node classification (majority vote, feature-based)
+### Slice 6: Node classification (majority vote, feature-based) — ✅ DONE
+
+`analytics/algorithms/classification.py` (Prediction dataclass, majority_vote_classification, feature_based_classification — k=1 nearest-neighbor over caller-supplied feature dicts). 7 tests green; 2 mutants (least-common instead of most-common vote, farthest instead of nearest neighbor), both killed. No refactor needed.
 
 **Value**: Predicts likely `type` for nodes with low `extraction_confidence` or no ontology mapping, from graph structure and existing labels.
 **Path**: Classify unlabeled/low-confidence nodes → return predicted types + confidence
@@ -421,7 +433,9 @@ existing `fetch(...).then(json<T>)` convention (see `getCommunities`,
 **REFACTOR**: Assess improvements
 **Done when**: All tests pass, mutation report reviewed, human approves commit
 
-### Slice 7: Custom neurosymbolic analytics
+### Slice 7: Custom neurosymbolic analytics — ✅ DONE
+
+`analytics/algorithms/custom.py` (activation_patterns, rule_coverage, proof_chain_analysis w/ networkx-cycle-based circular-derivation detection, fact_impact blast-radius). Built directly against real `reasoning.engine.Rule`/`DerivedFact` dataclasses; integration test runs the real `reason()` engine (pure, no DB) and analyzes its actual output. 12 tests green; 3 mutants applied (in/out-degree swap in bottleneck check, `<=`/`<` boundary on under-activated rules, source/target indexing swap in fact_impact) — 2 initially survived and were fixed with new boundary/direction-specific tests, all 3 ultimately killed. No refactor needed.
 
 **Value**: Aggregate analysis over reasoning output that no existing service computes — wired directly to `reasoning_service.py`, `rules_store.py`, and `GraphNodeRecord.activation`, all of which already produce this data today with no new instrumentation needed.
 **Path**: Analyze reasoning engine output (real, from a live graph) → return structured insights
@@ -441,7 +455,9 @@ existing `fetch(...).then(json<T>)` convention (see `getCommunities`,
 **REFACTOR**: Assess improvements
 **Done when**: All tests pass, mutation report reviewed, human approves commit
 
-### Slice 8: API routes + write-back integration
+### Slice 8: API routes + write-back integration — ✅ DONE
+
+Full `/analytics/*` surface: `GET`/`DELETE /analytics/projections`, `POST /analytics/persist` (reruns the algorithm server-side and calls `AlgorithmResult.persist` — never trusts client-supplied scores). `NamedProjection` gained `list_all()`/`drop()` and `.create()` now raises `EmptyGraphError` → 400 (only `.create()`, the registry-side-effecting path; `community_service.py`'s direct dataclass construction is unaffected). 13 API tests (8 new), 84 tests clean across the whole analytics suite; 2 mutants (bypassed drop-not-found check, inverted empty-graph check) both killed. No refactor needed.
 
 **Value**: Full API surface for the analytical engine, integrated with the existing FastAPI app the same way every other router is registered.
 **Path**: All algorithms accessible via REST API, write-back works end-to-end
@@ -464,7 +480,13 @@ existing `fetch(...).then(json<T>)` convention (see `getCommunities`,
 **REFACTOR**: Assess improvements
 **Done when**: All tests pass, mutation report reviewed, human approves commit
 
-### Slice 9: Agent + UI integration
+### Slice 9: Agent + UI integration — ✅ DONE
+
+**Backend**: `"analyze"` intent + `analyst_node` + `services/analytics_service.py` (throwaway, unregistered projection — same discipline as `community_service.py`) + `backend/skills/kg-analytics/SKILL.md` (with the "When NOT to Use" cross-reference to `kg-visualization`, which got the reverse pointer + a stale-GDS-reference fix) + `run_analytics` tool in `agents/tools.py`. `AlgorithmSpec.chart_type` added to the registry (all 4 centrality algorithms → `"bar"`); `AlgorithmResult.suggested_chart` field added. 8 new backend tests, full suite (369+) clean.
+
+**Frontend**: Vitest + Testing Library set up from scratch (this repo had zero test infra) — `vite.config.ts`, `src/test/setup.ts`, `package.json` `test`/`test:watch` scripts. `api.ts` analytics client functions, `AnalyticsPage.tsx` (run/rank/write-back), `GraphCanvas.tsx` `showCentrality` mode (continuous-score hue interpolation, not hash-hue like community — deliberately different per the plan), `LeftNavigation`/`App.tsx` wiring. 16 frontend tests; 6 total mutants across backend+frontend, all killed (one needed a real test strengthening for row-order, one for exact-mean boundary).
+
+**Real gap found and fixed via actual browser verification** (not just tests): `centralityScore` was computable and persistable but never flowed back — `graph_service.get_graph()`'s Cypher never selected it, so the frontend could never see a written-back score and the `GraphCanvas` toggle would never appear. Added `GraphNodeRecord.centrality_score`, the Cypher `SELECT`, and `api/graph.py`'s `NodeResponse` field (3 call sites) — verified end-to-end in a live browser against the real `default` graph: ran degree centrality (26 real entities, HDFC Bank correctly ranked highest), wrote back, confirmed via direct API call that all 26 nodes now carry `centralityScore`, and confirmed the canvas toggle button appears and recolors nodes. Also caught and fixed a copy-paste bug in the same pass: `AnalyticsPage.tsx` was writing back under a per-algorithm property name (`degree_centralityScore`) instead of the fixed `"centralityScore"` the canvas reads — would have silently never worked for any algorithm.
 
 **Value**: Makes the engine reachable the way every other capability in this product is reachable — through the agent's router and the graph UI — not just via a REST client.
 **Path**: User asks the agent an analytics question, or opens the Analytics page / toggles centrality coloring on the graph canvas.

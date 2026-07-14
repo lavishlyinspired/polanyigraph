@@ -20,7 +20,7 @@ from app.config import Settings
 from db.graphdb_client import GraphDBClient
 from db.neo4j_client import Neo4jClient
 from llm.client import LLMClient
-from services import enrichment_service, graph_service, ingest_service, reasoning_service
+from services import analytics_service, enrichment_service, graph_service, ingest_service, reasoning_service
 from services.query_engine import execute_query
 
 
@@ -67,4 +67,17 @@ def build_tools(neo4j: Neo4jClient, graphdb: GraphDBClient, llm: LLMClient, sett
             return "No results found."
         return "\n".join(f'{r.subject} {r.predicate}("{r.object}")' for r in result.results)
 
-    return [extract_entities, run_reasoning, run_enrichment, query_graph]
+    @tool
+    def run_analytics(graph_id: str, algorithm: str = "degree_centrality") -> str:
+        """Run a graph analytics algorithm (e.g. degree_centrality, pagerank,
+        betweenness_centrality, closeness_centrality) over the real knowledge graph.
+        Returns the top-scoring entities with their real computed scores."""
+        record = graph_service.get_graph(neo4j, graph_id)
+        labels_by_id = {n.id: n.label for n in record.nodes}
+        scores = analytics_service.run_default_analysis(neo4j, graph_id, algorithm=algorithm)
+        if not scores:
+            return "The graph is empty or the algorithm is unknown -- no scores to report."
+        ranked = sorted(scores.items(), key=lambda item: -item[1])
+        return "\n".join(f"{labels_by_id.get(node_id, node_id)}: {score:.3f}" for node_id, score in ranked)
+
+    return [extract_entities, run_reasoning, run_enrichment, query_graph, run_analytics]
